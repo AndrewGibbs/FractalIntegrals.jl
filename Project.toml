@@ -1,0 +1,7 @@
+name = "FractalIntegrals"
+uuid = "1214b007-556e-4c4e-8d39-042f176f8b35"
+authors = ["Andrew Gibbs"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.7"
