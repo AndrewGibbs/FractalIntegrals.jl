@@ -5,6 +5,9 @@ import LinearAlgebra: norm, det
 import LinearAlgebra.I as IdMat
 export Similarity
 
-include("AffineMaps.jl")
+include("affinemaps.jl")
+include("fractalmeasures.jl")
+include("barycentrerule.jl")
+# include("senergy.jl")
 
 end
