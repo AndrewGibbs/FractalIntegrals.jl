@@ -2,79 +2,110 @@
 vcat_(x,y) = vcat(x[x .!= 0],y[y .!= 0])
 hcat_(x,y) = hcat(x[x .!= 0],y[y .!= 0])
 
-function check_if_similar(  Γ::SelfSimilarFractal{V,M},
+# to be similar, two similarities must pass three tests:
+similar_test_one(sₘ::AbstractSimilarity,
+                sₙ::AbstractSimilarity,
+                sₘ_::AbstractSimilarity,
+                sₙ_::AbstractSimilarity
+                ) = isapprox(sₘ.ρ/sₙ.ρ, sₘ_.ρ/sₙ_.ρ, atol=100*eps())
+
+similar_test_two(sₘ::AbstractSimilarity,
+                sₙ::AbstractSimilarity,
+                sₘ_::AbstractSimilarity,
+                sₙ_::AbstractSimilarity,
+                T::AbstractInvariantMap,
+                T_::AbstractInvariantMap
+                ) = isapprox(sₘ.A*T.A*inv(sₙ.A) , sₘ_.A*T_.A*inv(sₙ_.A), atol=100*eps())
+
+similar_test_three(sₘ::AbstractSimilarity,
+                sₙ::AbstractSimilarity,
+                sₘ_::AbstractSimilarity,
+                sₙ_::AbstractSimilarity,
+                T::AbstractInvariantMap,
+                T_::AbstractInvariantMap
+                )=isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*sₘ.A*(T.A/sₙ.ρ*inv(sₙ.A)*sₙ.δ .- T.δ), .- sₘ_.ρ*sₘ_.A*(T_.A/sₙ_.ρ*inv(sₙ_.A)*sₙ_.δ .- T_.δ), atol=100*eps())
+
+# now account for the special case of no rotation
+# similar_test_two(sₘ::TranslatingSimilarity,
+#                 sₙ::TranslatingSimilarity,
+#                 sₘ_::TranslatingSimilarity,
+#                 sₙ_::TranslatingSimilarity,
+#                 T::AbstractInvariantMap,
+#                 T_::AbstractInvariantMap
+#                 ) = true
+
+# similar_test_three(sₘ::TranslatingSimilarity,
+#                 sₙ::TranslatingSimilarity,
+#                 sₘ_::TranslatingSimilarity,
+#                 sₙ_::TranslatingSimilarity,
+#                 T::AbstractInvariantMap,
+#                 T_::AbstractInvariantMap
+#                 ) = isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*T.A*(sₙ.δ .- sₙ_.δ), atol=100*eps())
+
+function check_if_similar(  Γ::AbstractAttractor,
                             m::AbstractVector{<:Integer},
                             n::AbstractVector{<:Integer},
                             m_::AbstractVector{<:Integer},
                             n_::AbstractVector{<:Integer},
-    G::Vector{AutomorphicMap{V,M}}, G_::Vector{AutomorphicMap{V,M}}) where {V<:Union{Real,AbstractVector}, M<:Union{Real,AbstractMatrix}}
+                            G::Vector{<:AbstractInvariantMap},
+                            G_::Vector{<:AbstractInvariantMap}
+                            )
     # get shorthand for IFS
-    S = Γ.IFS
-    test_one = false
-    test_two = false
-    test_three = false
-    is_similar = false # requires above three to be true
-    ρ = 0.0 # initialise
+    S = Γ.ifs
+    test_one_pass = false
+    pass_all = false
+    ρ = zero(sₘ.ρ) # initialise
 
     # define identity similarity, which is a workaround for index [0]
-    s₀ = Similarity(1.0,zero(V),one(M),one(M))
+    s₀ = IdentitySimilarity(typeof(Γ.ifs[1].ρ), Γ.n)
 
-    m != [0] ? sₘ = sim_comp(S,m) : sₘ = s₀
-    n != [0] ? sₙ = sim_comp(S,n) : sₙ = s₀
-    m_ !=[0] ? sₘ_ = sim_comp(S,m_) : sₘ_ = s₀
-    n_ !=[0] ? sₙ_ = sim_comp(S,n_) : sₙ_ = s₀
+    m != [0] ? sₘ = simmulticomp(S,m) : sₘ = s₀
+    n != [0] ? sₙ = simmulticomp(S,n) : sₙ = s₀
+    m_ !=[0] ? sₘ_ = simmulticomp(S,m_) : sₘ_ = s₀
+    n_ !=[0] ? sₙ_ = simmulticomp(S,n_) : sₙ_ = s₀
 
-    # first test (6)
-    if isapprox(sₘ.r/sₙ.r, sₘ_.r/sₙ_.r, atol=100*eps())
-        ρ = sₘ.r/sₙ.r
-        test_one = true
+    if similar_test_one(sₘ, sₙ, sₘ_, sₙ_)
+        ρ = sₘ.ρ/sₙ.ρ
+        test_one_pass = true
     end
 
-    if test_one
+    if test_one_pass
         for T ∈ G, T_ ∈ G_
-            # second test (7)
-            if isapprox(sₘ.A*T.A*inv(sₙ.A) , sₘ_.A*T_.A*inv(sₙ_.A), atol=100*eps())
-                test_two = true
-            else
-                test_two = false
-            end
-            
-            # third test (8)
-            if isapprox(sₘ.δ .- sₘ_.δ .- sₘ.r*sₘ.A*(T.A/sₙ.r*inv(sₙ.A)*sₙ.δ .- T.δ), .- sₘ_.r*sₘ_.A*(T_.A/sₙ_.r*inv(sₙ_.A)*sₙ_.δ .- T_.δ), atol=100*eps())
-                test_three = true
-            else
-                test_three = false
-            end
+            similar_test_two(sₘ, sₙ, sₘ_, sₙ_, T, T_) && similar_test_three(sₘ, sₙ, sₘ_, sₙ_, T, T_) ? pass_all = true : pass_all = false
 
-            # if tests are satisfies for some particular group element, can break loop early:
-            if test_two && test_three
+            # if tests are satisfies for some particular group element pair, can break loop early:
+            if pass_all
                 break
             end
         end
-        is_similar = test_one && test_two && test_three
     end
-    return is_similar, ρ
+    return pass_all, ρ
 end
 
-function check_for_similar_integrals(Γ::SelfSimilarFractal{V,M},
-    X::Vector{Tuple{Vector{Int64}, Vector{Int64}}}, 
-    mcat::Vector{Int64}, mcat_::Vector{Int64},
-    G₁::Vector{AutomorphicMap{V,M}}, G₂::Vector{AutomorphicMap{V,M}},
-    fubini_flag::Bool) where {V<:Union{Real,AbstractVector}, M<:Union{Real,AbstractMatrix}}
+# HAVE EDITED DOWN TO HERE
+
+function check_for_similar_integrals(Γ::AbstractAttractor,
+                                    X::Vector{<:Tuple{Vector{<:Integer}, Vector{<:Integer}}}, 
+                                    mcat::Vector{<:Integer},
+                                    mcat_::Vector{<:Integer},
+                                    G₁::Vector{<:AbstractInvariantMap},
+                                    G₂::Vector{<:AbstractInvariantMap},
+                                    fubini_flag::Bool
+                                    )
     is_X_similar = false
     similar_index = nothing
-    proportionality_const = 0.0
+    proportionality_const = zero(Γ.ifs[1].ρ)
+
     # should compactly write the following as a function, it's almost repeated
-    for ∫∫_index = 1:length(X)
+    for ∫∫_index in 1:length(X)
         ∫∫_indices_higher_level = X[∫∫_index]
         this_is_X_similar = true
-        ρ = 1.0
-        # else # check for less obvious similarities
         this_is_X_similar, ρ = check_if_similar(Γ, ∫∫_indices_higher_level[1], mcat, ∫∫_indices_higher_level[2], mcat_, G₁, G₂)
-        # end
+        
         if !this_is_X_similar && fubini_flag
             this_is_X_similar, ρ = check_if_similar(Γ, ∫∫_indices_higher_level[2], mcat, ∫∫_indices_higher_level[1], mcat_, G₁, G₂)
         end
+
         # if we've found a similarity, terminate the process early
         if this_is_X_similar
             is_X_similar = true
@@ -86,8 +117,8 @@ function check_for_similar_integrals(Γ::SelfSimilarFractal{V,M},
     return is_X_similar, proportionality_const, similar_index
 end
 
-function convert_vector_index_to_integer_index(m::Vector{Int64},M::Int64)
-    ℓ=length(m)
+function convert_vector_index_to_integer_index(m::AbstractVector{<:Integer}, M::Integer)
+    ℓ = length(m)
     m_integer = 0
     for ℓ_=1:(ℓ-1)
         m_integer += M^(ℓ-ℓ_)*(m[ℓ_]-1)
@@ -96,29 +127,23 @@ function convert_vector_index_to_integer_index(m::Vector{Int64},M::Int64)
     return m_integer
 end
 
-function check_for_ℓ_singular_integrals(Γ::SelfSimilarFractal{V,M_}, m::Vector{Int64}, n::Vector{Int64}) where {V<:Union{Real,AbstractVector}, M_<:Union{Real,AbstractMatrix}}
+function check_for_ℓ_singular_integrals(Γ::AbstractAttractor, m::Vector{<:Integer}, n::Vector{<:Integer})
     is_singular = -1
 
     if m==n || m==[0] || n==[0]
         is_singular = 1
     else
         # get important bits
-        M = length(Γ.IFS)
-        Γ_singularities = get_connectedness(Γ)
+        M = length(Γ.ifs)
+        Γ_singularities = Γ.connectedness
         ℓ_depth = Int64(round(log(size(Γ_singularities)[1])/log(M)))
 
         m_ℓ_remainder_depth = ℓ_depth-length(m)
         n_ℓ_remainder_depth = ℓ_depth-length(n)
         if m_ℓ_remainder_depth>=0 && n_ℓ_remainder_depth>=0
-            # println()
-            # println(m)
-            # println(n)
             m_start = convert_vector_index_to_integer_index([m; ones(Int64,m_ℓ_remainder_depth)], M::Int64)
             m_end = convert_vector_index_to_integer_index([m; M*ones(Int64,m_ℓ_remainder_depth)], M::Int64)
             m_range = m_start:m_end
-            
-            # look for any signs of ones in the singularity matrix
-            # sum(Γ_singularities[m_range,n_range])>0 ? is_singular = true : is_singular = fractal_names
             
             n_start = convert_vector_index_to_integer_index([n; ones(Int64,n_ℓ_remainder_depth)], M::Int64)
             n_end = convert_vector_index_to_integer_index([n; M*ones(Int64,n_ℓ_remainder_depth)], M::Int64)
@@ -128,48 +153,49 @@ function check_for_ℓ_singular_integrals(Γ::SelfSimilarFractal{V,M_}, m::Vecto
         end
     end
 
-    # if length(mcat) == length(mcat_) <= ℓ_depth
-    #     ℓ = length(mcat)
-    #     mentry = 0
-    #     m_entry = 0
-    #     for ℓ_=1:(ℓ-1)
-    #         mentry += M^(ℓ-ℓ_)*(mcat[ℓ_]-1)
-    #         m_entry += M^(ℓ-ℓ_)*(mcat_[ℓ_]-1)
-    #     end
-    #     mentry += mcat[end]
-    #     m_entry += mcat_[end]
-    #     Γ_singularities[mentry,m_entry] ? is_singular = true : nothing
-    # end
-
     return is_singular
 end
 
-function construct_singularity_matrix(Γ::SelfSimilarFractal{V,M_}, s::Number; μ₂::Vector{Float64} = getweights(Γ),
-                                     G₂::Vector{AutomorphicMap{V,M_}}=get_symmetry_group(Γ), use_strategy_two::Bool = true
-                                     ) where {V<:Union{Real,AbstractVector}, M_<:Union{Real,AbstractMatrix}}
+function similar_scaler(ρ::Real,
+                        s::Real,
+                        m::AbstractVector{<:Integer},
+                        m_::AbstractVector{<:Integer},
+                        n::AbstractVector{<:Integer},
+                        n_::AbstractVector{<:Integer},
+                        pw₁::AbstractVector{<:Real},
+                        pw₂::AbstractVector{<:Real})
 
-    # add optional third argument for the case when the second set of weights is different.
-    # Need to add a method for computing p_\bm too.
+    # account for convention Γ₀:=Γ
+    m  != [0] ? pₘ = prod(pw₁[m]) : pₘ = one(eltype(pw₁))
+    m_ != [0] ? pₘ_ = prod(pw₂[m_]) : pₘ_ = one(eltype(pw₂))
+    # return ρ^(-s)*pₘ*pₘ_/prod(pw₁[n])/prod(pw₂[n_])
+    return prod(pw₁[n])*prod(pw₂[n_])*ρ^s/(pₘ*pₘ_), pₘ, pₘ_
+end
+
+function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
+                                    μ₂::AbstractInvariantMeasure,
+                                    s::Number;
+                                    use_strategy_two::Bool = true
+                                    ) where {
+                                    V<:Union{Real,AbstractVector},
+                                    M_<:Union{Real,AbstractMatrix}}
 
     # initialise stuff
     S = [([0],[0])] # needs to be a collection of pairs of indices
     f = [false] # S hasn't been processed yet.
     R = Tuple{Vector{Int64}, Vector{Int64}}[] # blank version of S
-    μ₁ = getweights(Γ)
-    G₁ = get_symmetry_group(Γ)
-    M = length(Γ.IFS)
+    @assert μ₁.supp == μ₂.supp "support of measures must match"
+    Γ = μ₁.supp
+    pw₁ = μ₁.weights
+    G₁ = μ₁.symmetries
+    pw₂ = μ₂.weights
+    G₂ = μ₂.symmetries
+    M = length(Γ.ifs)
     A = zeros(1,1)
     B = zeros(1,1)
     L = zeros(1) # constant vector of log terms, only non-zero when s=0
 
-    μ₁ == μ₂ ? fubuni_flag = true : fubuni_flag = false
-
-    function scaler(ρ::Float64, m::Vector{<:Int64},m_::Vector{<:Int64},n::Vector{<:Int64},n_::Vector{<:Int64})
-        # account for convention Γ₀:=Γ
-        m  != [0] ? pₘ = prod(μ₁[m]) : pₘ = 1.0
-        m_ != [0] ? pₘ_ = prod(μ₂[m_]) : pₘ_ = 1.0
-        return ρ^(-s)*pₘ*pₘ_/prod(μ₁[n])/prod(μ₂[n_])
-    end
+    pw₁ == pw₂ ? fubuni_flag = true : fubuni_flag = false
 
     A_rows = 0
     A_cols = 0
@@ -184,8 +210,8 @@ function construct_singularity_matrix(Γ::SelfSimilarFractal{V,M_}, s::Number; �
                 b_row = zeros(length(R))
                 ∫∫_indices = S[∫∫_count]
                 if use_strategy_two # subdivide the largest subfractal
-                    ∫∫_indices[1]==[0] ? diam_m = Γ.diameter : diam_m = Γ.diameter*prod([Γ.IFS[m].r for m ∈ ∫∫_indices[1]])
-                    ∫∫_indices[2]==[0] ? diam_m_ = Γ.diameter : diam_m_ = Γ.diameter*prod([Γ.IFS[m].r for m ∈ ∫∫_indices[2]])
+                    ∫∫_indices[1]==[0] ? diam_m = Γ.diam : diam_m = Γ.diam*prod([Γ.ifs[m].ρ for m ∈ ∫∫_indices[1]])
+                    ∫∫_indices[2]==[0] ? diam_m_ = Γ.diam : diam_m_ = Γ.diam*prod([Γ.ifs[m].ρ for m ∈ ∫∫_indices[2]])
                     if diam_m ≈ diam_m_
                         mrange = 1:M
                         m_range = 1:M
@@ -213,12 +239,10 @@ function construct_singularity_matrix(Γ::SelfSimilarFractal{V,M_}, s::Number; �
                     else
                         is_R_similar = false
                     end
-                    # compute (3) from Dave's notes:
                     is_similar = is_S_similar || is_R_similar
                     if is_similar
                         is_S_similar ? similar_indices = S[similar_index] : similar_indices = R[similar_index]
-                        # scale_adjust = 1/scaler(ρ, ∫∫_indices[1], ∫∫_indices[2], mcat, mcat_)
-                        scale_adjust = 1/scaler(ρ, similar_indices[1], similar_indices[2], mcat, mcat_)
+                        scale_adjust, _, _ = similar_scaler(ρ, s, similar_indices[1], similar_indices[2], mcat, mcat_, pw₁, pw₂)
                     end
 
                     if is_ℓ_singular && !is_S_similar # new singularity type
@@ -232,12 +256,12 @@ function construct_singularity_matrix(Γ::SelfSimilarFractal{V,M_}, s::Number; �
                     elseif is_S_similar # singular, but seen similar
                         a_row[similar_index] -= scale_adjust
                         if s == 0
-                             L[∫∫_count] += Γ.measure^2*log(1/ρ)*prod(μ₁[mcat])*prod(μ₂[mcat_]) # log constant adjustment
+                             L[∫∫_count] += μ₁.suppmeasure*μ₂.suppmeasure*log(1/ρ)*prod(pw₁[mcat])*prod(pw₂[mcat_]) # log constant adjustment
                         end
                     elseif is_R_similar # smooth, but seen similar
                         b_row[similar_index] += scale_adjust
                         if s == 0
-                            L[∫∫_count] += Γ.measure^2*log(1/ρ)*prod(μ₁[mcat])*prod(μ₂[mcat_]) # log constant adjustment
+                            L[∫∫_count] += μ₁.suppmeasure*μ₂.suppmeasure*log(1/ρ)*prod(pw₁[mcat])*prod(pw₂[mcat_]) # log constant adjustment
                         end
                     else # smooth, nothing similar
                         push!(R,(mcat,mcat_))
@@ -269,52 +293,58 @@ function construct_singularity_matrix(Γ::SelfSimilarFractal{V,M_}, s::Number; �
 end
 
 """
-    s_energy(Γ::SelfSimilarFractal, s::Number, quad_rule::Function; μ₂::Vector{Float64} = getweights(Γ),
+    s_energy(Γ::SelfSimilarFractal, s::Number, quad_rule::Function; p₂::Vector{Float64} = getweights(Γ),
      G::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension),
      G₁::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension), G₂::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension))
 
 
 s is the value in |x-y|⁻ˢ, unless s==0, in which case log|x-y| is used.
-μ₂ is an optional set of (probability) weights describing an invariant measure of the outer integral.
+p₂ is an optional set of (probability) weights describing an invariant measure of the outer integral.
 G₁ and G₂ are groups describing the symmetries of the inner and outer measures respectively.
 If G is defined, both measures are assigned this symmetry.
 Computes the s-energy of a fractal Γ, using the function quad_rule. This must be of the form:
 
-    quad_rule = (e,j,f) -> I ≈ ∫ₑ∫ⱼ f(x,y) μ₁(x)μ₂(y)
+    quad_rule = (e,j,f) -> I ≈ ∫ₑ∫ⱼ f(x,y) p₁(x)p₂(y)
 
 where A and B are SelfSimilarFractal.
 If quad_rule is replaced by some h::Number, the barycentre rule is used with meshwidth h.
 """
-function s_energy(Γ::SelfSimilarFractal{V,M}, s::Number, ∫∫::Function;
-                μ₂::Vector{Float64} = getweights(Γ), G₂::Vector{AutomorphicMap{V,M}} = TrivialGroup(get_spatial_dimension(Γ)),
-                use_strategy_two::Bool = true) where {V<:Union{Real,AbstractVector}, M<:Union{Real,AbstractMatrix}}
+function s_energy(μ₁::AbstractInvariantMeasure,
+                μ₂::AbstractInvariantMeasure,
+                s::Number,
+                ∫∫::Function;
+                use_strategy_two::Bool = true
+                )
 
-    if getweights(Γ) == μ₂
-        G₂=get_symmetry_group(Γ)
-        Γ_μ₂ = Γ
-    else
-        Γ_μ₂ = changeweights(Γ,μ₂)
-    end
-
-    A,B,_,R,L = construct_singularity_matrix(Γ, s, μ₂=μ₂, G₂=G₂, use_strategy_two = use_strategy_two)
+    A,B,_,R,L = construct_singularity_matrix(μ₁, μ₂, s, use_strategy_two = use_strategy_two)
     
     r = zeros(length(R))
-    for n=1:length(r)
+    for n in eachindex(r)
         (m,m_) = R[n]
-        # x,y,w = quad_rule(Γ[m],Γ_μ₂[m_])
-        # r[n] = w'*Φₜ.(s,x,y)
-        r[n] = ∫∫(Γ[m],Γ_μ₂[m_],(x,y)->Φₜ(s,x,y))
+        r[n] = ∫∫(μ₁[m], μ₂[m_], (x,y)-> energykernel(s,x,y))
     end
-    # println(r)
     x = A\(B*r+L)
 
     return x[1]
 end
 
-# default to barycentre rule as follows: 
-function s_energy(Γ::SelfSimilarFractal{V,M}, s::Number, h::Real; μ₂::Vector{Float64}=getweights(Γ),
-     G₂::Vector{AutomorphicMap{V,M}} = TrivialGroup(get_spatial_dimension(Γ)), use_strategy_two::Bool = true
-     ) where {V<:Union{Real,AbstractVector}, M<:Union{Real,AbstractMatrix}}
-    return  s_energy(Γ, s, (A::SelfSimilarFractal{V,M}, B::SelfSimilarFractal{V,M}, f::Function)->long_bary(A,B,f,h);
-                     μ₂ = μ₂, G₂=G₂, use_strategy_two = use_strategy_two)
+function s_energy(μ₁::AbstractInvariantMeasure,
+    μ₂::AbstractInvariantMeasure,
+    s::Number,
+    h::Real; # might not need to redefine as const because this is not referenced
+    use_strategy_two::Bool = true
+    )
+    # define local barycentre rule approx to s-energy
+    function ∫∫(A::AbstractInvariantMeasure, B::AbstractInvariantMeasure, f::Function)
+        x, y, w = barycentre_quadrule(A, B, h)
+        return w'*f(x,y)
+    end
+
+    return s_energy(μ₁, μ₂, s, ∫∫; use_strategy_two = use_strategy_two)
 end
+
+s_energy(μ::AbstractInvariantMeasure,
+    s::Number,
+    ∫∫_or_h::Union{Function,Real};
+    use_strategy_two::Bool = true
+    ) = s_energy(μ, μ, s, ∫∫_or_h; use_strategy_two = use_strategy_two)

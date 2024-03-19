@@ -8,6 +8,8 @@ export Similarity
 include("affinemaps.jl")
 include("fractalmeasures.jl")
 include("barycentrerule.jl")
-# include("senergy.jl")
+include("fastkernels.jl")
+include("senergy.jl")
+include("basis.jl")
 
 end

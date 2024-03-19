@@ -19,6 +19,8 @@ end
 struct TranslatingSimilarity{T<:Number, V<:AbstractVector{T}} <: AbstractSimilarity
     ρ :: T
     δ :: V
+    A :: T
+    ρA :: T
 end
 
 struct OneDimensionalSimilarity{T<:Number} <: AbstractSimilarity
@@ -32,7 +34,7 @@ end
 function Similarity(ρ::T1, δ::AbstractVector{T2}) where {T1<:Number, T2<:Number}
     @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
     T = promote_type(T1,T2)
-    return TranslatingSimilarity(T(ρ), SVector{length(δ),T}(δ))
+    return TranslatingSimilarity(T(ρ), SVector{length(δ),T}(δ), one(T), T(ρ))
 end
 
 function Similarity(ρ::T1, δ::AbstractVector{T2}, A::AbstractMatrix{T3}) where {T1<:Number, T2<:Number, T3<:Number}
@@ -62,34 +64,43 @@ end
 # Base.promote_rule(Type{Similarity{T, V, M}}, Type{TranslatingSimilarity{T, V}}) where {T<:Number,V<:AbstractVector,M<:AbstractMatrix} = Similarity{T, V, M}
 Base.promote_rule(::Type{Similarity{T, V, M}}, ::Type{TranslatingSimilarity{T, V}}) where {T<:Number,V<:AbstractVector,M<:AbstractMatrix} = Similarity{T, V, M}
 
+# composition of two similarities
+simcomp(s₁::S,s₂::S) where S<:AbstractSimilarity = S(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
+simcomp(s₁::TranslatingSimilarity,s₂::Similarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρ*s₂.δ, s₂.A, s₂.ρA)
+# (does not commute)
+simcomp(s₁::Similarity,s₂::TranslatingSimilarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A, s₁.ρA)
+simcomp(s₁::TranslatingSimilarity,s₂::TranslatingSimilarity) = TranslatingSimilarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, one(typeof(s₁.ρ*s₂.ρ)), s₁.ρ*s₂.ρ)
+# one dimensional case
+# simcomp(s₁::OneDimensionalSimilarity, s₂::OneDimensionalSimilarity) = OneDimensionalSimilarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
+
 # Similarities as maps, optimised as far as possible
+
+# similarity acting on an IFS
+function simcompifs(s::T, ifs::AbstractVector{T}) where T<:AbstractSimilarity
+    Achain = [s.A*ifs[m].A/s.A for m in eachindex(ifs)]
+    rAchain = [ifs[m].ρ*Achain[m] for m in eachindex(ifs)]
+    return [T(ifs[m].ρ, (IdMat-rAchain[m])*s.δ + s.ρA*ifs[m].δ, Achain[m], rAchain[m]) for m in eachindex(ifs)]
+end
+
+# simplified case without rotation
+function simcompifs(s::TranslatingSimilarity, IFS::Vector{<:TranslatingSimilarity})
+    return [TranslatingSimilarity(IFS[m].ρ, (I-IFS[m].ρA)*s.δ + s.ρA*IFS[m].δ, IFS[m].A, IFS[m].ρA) for m in eachindex(IFS)]
+end
 
 (s::AbstractSimilarity)(x)  = s.ρA*x + s.δ
 (s::TranslatingSimilarity)(x) = s.ρ*convert(typeof(s.δ),x) + s.δ
 
-# function ifs_map!(  Sx::AbstractVector, #output
-#                     S::AbstractVector{<:AbstractSimilarity},
-#                     x::AbstractVector)
-#     N = length(x)
-#     for m in eachindex(S)
-#         # @simd for j in eachindex(x)
-#         @views Sx[N*(m-1)+1 : N*m] .= S[m].ρA.*x .+ S[m].δ
-#         # end
-#     end
-# end
+# nested composition:
+function simmulticomp(IFS::Vector{<:AbstractSimilarity}, m::AbstractVector{<:Integer})
+    s = IFS[m[1]]
+        for j in 2:length(m)
+            s = simcomp(s,IFS[m[j]])
+        end
+    return s
+end
 
-# function ifs_map(S::AbstractVector{<:AbstractSimilarity},
-#                 x::AbstractVector{T}) where T
-#     Sx = zeros(T,length(S)*length(x))
-#     ifs_map!(Sx, S, x)
-#     return Sx
-# end
-
-# can't appear to gain anything by using in-place matvecs
-# function sim_map!(s::AbstractSimilarity, x)
-#     mul!(x,s.ρA,x)
-#     x .+= s.δ
-# end
+#inverse map
+sim_map_inv(s::Similarity, x) = s.rA/(x-s.δ)
 
 # determine how Similarity appears in the REPL
 
@@ -102,6 +113,45 @@ Base.show(io::IO, s::AbstractSimilarity)  = print(io,'\n',typeof(s),':','\n', in
 # affine maps
 
 abstract type AbstractInvariantMap <:AffineMap end
-struct IdentityMap <: AbstractInvariantMap end
+# struct IdentityMap <: AbstractInvariantMap end
 
-(I::IdentityMap)(x) = x
+# (I::IdentityMap)(x) = x
+
+struct InvariantMap{T<:Number, V<:AbstractVector{T}, M<:AbstractMatrix{T}} <: AbstractInvariantMap
+    δ :: V
+    A :: M
+end
+
+struct OneDimensionalInvariantMap{T<:Number} <: AbstractInvariantMap
+    δ :: T
+    A :: T
+end
+
+# need to define identity similarity
+# need to define 'one' equivalent for these three, which unfornately needs extra input
+function IdentitySimilarity(T::Type, n::Integer)
+    if n==1
+        I = OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
+    else
+        I = TranslatingSimilarity(one(T), # contraction
+                                SVector{n,T}(zeros(n)), # translation
+                                one(T), # rotation
+                                one(T)) # rotation*contraction
+    end
+    return I
+end
+
+function IdentityInvariantMap(T::Type, n::Integer)
+    if n==1
+        I = OneDimensionalInvariantMap(zero(T), one(T))
+    else
+        I = InvariantMap(SVector{n,T}(zeros(n)), SMatrix{n,n,T}(Matrix(I(n))))
+    end
+    return I
+end
+
+function simcompsymmetries(s::AbstractSimilarity, symmetries::AbstractVector{T}) where T<:AbstractInvariantMap
+    Achain = [s.A*symmetries[m].A/s.A for m in eachindex(symmetries)]
+    # rAchain = [symmetries[m].ρ*Achain[m] for m in eachindex(symmetries)]
+    return [T((IdMat-Achain[m])*s.δ + s.ρA*symmetries[m].δ, Achain[m]) for m in eachindex(symmetries)]
+end
