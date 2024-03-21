@@ -19,16 +19,16 @@ end
 
 # outer constructor
 function BarycentreHomogInnerProduct(  sio::AbstractSingularIntegralOperator,
-                                        h_mesh::Real,
                                         Vₕ::FractalBasis{<:HausdorffMeasure{T1,T2,T3,Attr},T4},
-                                        hQ::Real
+                                        h_mesh::Real,
+                                        h_quad::Real
                                         ) where {T1,T2,T3,Attr<:HomogenousAttractor,T4}
 
     μ = Vₕ.measure
     Γ = Vₕ.measure.supp
 
     # first, prepare data for singular integrals
-    h_high_scale = Γ.diam * hQ / h_mesh
+    h_high_scale = Γ.diam * h_quad / h_mesh
 
     A, B, singular_indices, R, log_adjustments =
         construct_singularity_matrix(Vₕ.measure, Vₕ.measure, sio.s)
@@ -41,16 +41,16 @@ function BarycentreHomogInnerProduct(  sio::AbstractSingularIntegralOperator,
     prepared_singular_vals = A\(B*r + log_adjustments) # vector of 'singular values'
 
     # second, prepare data for smooth integrals
-    x, w = barycentre_quadrule(Vₕ[1].measure, hQ)
+    x, w = barycentre_quadrule(Vₕ[1].measure, h_quad)
     X = x .- Vₕ[1].measure.barycentre
 
     # create instance, containing everything needed to evaluate dual pairings
-    return BarycentreHomogInnerProduct(sio, X, w, singular_indices, prepared_singular_vals, hQ)
+    return BarycentreHomogInnerProduct(sio, X, w, singular_indices, prepared_singular_vals, h_quad)
 end
 
 function innerproduct(ip::BarycentreHomogInnerProduct, f::Function, ϕ::P0BasisElement)
     x = ip.x0 .+ ϕ.measure.barycentre
-    return conj(ϕ.normalisation) * dot(f.(x), conj(ip.w))
+    return conj(ϕ.normalisation) * dot(conj(ip.w), f.(x))
 end
 
 function sesquilinearform(  ip::BarycentreHomogInnerProduct,
@@ -82,24 +82,26 @@ function sesquilinearform(  ip::BarycentreHomogInnerProduct,
                                 ip.x0 .+ ψ.measure.barycentre, ip.w[1])
 
     if singular_slf
-        scale_adjust, pₙ, pₘ = similar_scaler(ρ,
-                                        ip.sio.s,
-                                        ip.singular_indices[similar_index][1],
-                                        ip.singular_indices[similar_index][2],
-                                        ϕ.vindex, ψ.vindex,
-                                        ϕ.measure.weights, ψ.measure.weights)
+        scale_adjust = similar_scaler(ρ,
+                                    ip.sio.s,
+                                    ip.singular_indices[similar_index][1],
+                                    ip.singular_indices[similar_index][2],
+                                    ϕ.vindex, ψ.vindex,
+                                    ϕ.measure.weights, ψ.measure.weights)
 
         # compute value of singular integral, as sum of singular + Lipschitz
-        I = ip.sio.singularconst * ip.singular_integrals[similar_index] * scale_adjust 
-            + dot(ip.sio.lipschitzpart(x,y), conj(w))
+        I = ip.sio.singularconst * ip.singular_integrals[similar_index] * scale_adjust +
+            dot(conj(w), ip.sio.lipschitzpart(x,y))
 
         # account for additive log terms, if required
         if ip.sio.s == 0
-            I += ip.sio.singularconst * ip.sio.measure.suppmeasure^2 * log(1/ρ) * pₙ * pₘ
+            pϕ = compose_weights(ϕ.measure.weights, ϕ.vindex)
+            pψ = compose_weights(ψ.measure.weights, ψ.vindex)
+            I += ip.sio.singularconst * ip.sio.measure.suppmeasure^2 * log(1/ρ) * pϕ * pψ
         end
     else
         # compute value of smooth integral
-        I = dot(ip.sio.kernel(x,y), conj(w))
+        I = dot(conj(w), ip.sio.kernel(x,y))
     end
 
     # normalise output

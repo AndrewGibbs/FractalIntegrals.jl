@@ -156,6 +156,11 @@ function check_for_ℓ_singular_integrals(Γ::AbstractAttractor, m::Vector{<:Int
     return is_singular
 end
 
+function compose_weights(pw::AbstractVector{<:Real}, m::AbstractVector{<:Integer})
+    m  != [0] ? pₘ = prod(pw[m]) : pₘ = one(eltype(pw))
+    return pₘ
+end
+
 function similar_scaler(ρ::Real,
                         s::Real,
                         m::AbstractVector{<:Integer},
@@ -166,10 +171,12 @@ function similar_scaler(ρ::Real,
                         pw₂::AbstractVector{<:Real})
 
     # account for convention Γ₀:=Γ
-    m  != [0] ? pₘ = prod(pw₁[m]) : pₘ = one(eltype(pw₁))
-    m_ != [0] ? pₘ_ = prod(pw₂[m_]) : pₘ_ = one(eltype(pw₂))
+    pₘ = compose_weights(pw₁, m)
+    pₘ_ = compose_weights(pw₂, m_)
+    # m  != [0] ? pₘ = prod(pw₁[m]) : pₘ = one(eltype(pw₁))
+    # m_ != [0] ? pₘ_ = prod(pw₂[m_]) : pₘ_ = one(eltype(pw₂))
     # return ρ^(-s)*pₘ*pₘ_/prod(pw₁[n])/prod(pw₂[n_])
-    return prod(pw₁[n])*prod(pw₂[n_])*ρ^s/(pₘ*pₘ_), pₘ, pₘ_
+    return prod(pw₁[n])*prod(pw₂[n_])*ρ^s/(pₘ*pₘ_)
 end
 
 function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
@@ -242,7 +249,7 @@ function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
                     is_similar = is_S_similar || is_R_similar
                     if is_similar
                         is_S_similar ? similar_indices = S[similar_index] : similar_indices = R[similar_index]
-                        scale_adjust, _, _ = similar_scaler(ρ, s, similar_indices[1], similar_indices[2], mcat, mcat_, pw₁, pw₂)
+                        scale_adjust = similar_scaler(ρ, s, similar_indices[1], similar_indices[2], mcat, mcat_, pw₁, pw₂)
                     end
 
                     if is_ℓ_singular && !is_S_similar # new singularity type

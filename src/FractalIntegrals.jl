@@ -1,7 +1,7 @@
 module FractalIntegrals
 
 import StaticArrays: SVector, SMatrix, mul!
-import LinearAlgebra: norm, det, dot
+import LinearAlgebra: norm, det, dot, Symmetric
 import LinearAlgebra.I as IdMat
 import SpecialFunctions: hankelh1
 export Similarity
@@ -14,6 +14,7 @@ include("senergy.jl")
 include("basis.jl")
 include("operators.jl")
 include("operatorpresets.jl")
-include("dualpairings.jl")
+include("innerproducts.jl")
+include("projections.jl")
 
 end

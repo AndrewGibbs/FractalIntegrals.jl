@@ -7,7 +7,7 @@ function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
         (x,y)->helmholtzkernel2d(k,x,y), # Hankel function
         (x,y)->helmholtzkernel2d_lipschitzpart(k,x,y), # kernel minus singularity
         0.0, # strength of singularity, corresponding to log singularity
-        -1/(2π), # scaling of singularity
+        ComplexF64(-1/(2π)), # scaling of singularity
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case        
@@ -15,7 +15,7 @@ function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
             (x,y)->helmholtzkernel3d(k,x,y), # Green's function
             (x,y)->helmholtzkernel3d_lipschitzpart(k,x,y), # kernel minus singularity
             1.0, # strength of singularity, corresponding to 1/|x-y|
-            1/(4π), # scaling of singularity
+            ComplexF64(1/(4π)), # scaling of singularity
             )
     else
         error("Haven't coded single layer SIO for this many dimensions")
