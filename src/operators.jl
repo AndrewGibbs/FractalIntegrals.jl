@@ -1,10 +1,11 @@
 abstract type FractalOperator end
-abstract type SingularIntegralOperator <: FractalOperator end
+abstract type AbstractSingularIntegralOperator <: FractalOperator end
 
-struct SeparableIntegralOperator{M <: AbstractInvariantMeasure,
+
+struct SelfAdjointSingularIntegralOperator{M <: AbstractInvariantMeasure,
                                 S <: Number,
                                 Z <: Number
-                                } <: SingularIntegralOperator
+                                } <: AbstractSingularIntegralOperator
     measure::M
     kernel::Function
     lipschitzpart::Function

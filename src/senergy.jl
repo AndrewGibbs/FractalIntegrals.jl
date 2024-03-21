@@ -54,7 +54,7 @@ function check_if_similar(  Γ::AbstractAttractor,
     S = Γ.ifs
     test_one_pass = false
     pass_all = false
-    ρ = zero(sₘ.ρ) # initialise
+    ρ = zero(S[1].ρ) # initialise
 
     # define identity similarity, which is a workaround for index [0]
     s₀ = IdentitySimilarity(typeof(Γ.ifs[1].ρ), Γ.n)

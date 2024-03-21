@@ -26,14 +26,15 @@ end
 # the below function should be in a more generic location.
 # also, there should be a fast version for scalar w, i.e. when all weights are equal
 function combine_quadrules(x1, w1, x2, w2)
-return repeat(x1, inner=length(w2)),
-        repeat(x2, outer=length(w1)),
-        repeat(w1, inner=length(w2)).*repeat(w2,outer=length(w1))
+    return repeat(x1, inner=length(w2)),
+            repeat(x2, outer=length(w1)),
+            repeat(w1, inner=length(w2)).*repeat(w2,outer=length(w1))
+end
 
-function combine_quadrules(x1::AbstractArray{<:SVector},
-                        w1<:AbstractArray{<:Number},
-                        x2::AbstractArray{<:SVector},
-                        w2<:AbstractArray{<:Number})
+function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},
+                        w1::AbstractArray{<:Number},
+                        x2::AbstractArray{<:Union{SVector,Number}},
+                        w2::AbstractArray{<:Number})
     N1 = length(w1)
     N2 = length(w2)
     N = N1*N2
@@ -55,9 +56,9 @@ function combine_quadrules(x1::AbstractArray{<:SVector},
     return X1, X2, W1.*W2
 end
 
-function combine_quadrules(x1::AbstractArray{<:SVector},
+function combine_quadrules(x1::AbstractArray{<:Union{SVector, Number}},
     w1::Number,
-    x2::AbstractArray{<:SVector},
+    x2::AbstractArray{<:Union{SVector, Number}},
     w2::Number)
 
     N1 = length(x1)

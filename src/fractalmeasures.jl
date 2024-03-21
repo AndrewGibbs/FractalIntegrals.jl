@@ -105,6 +105,9 @@ struct HausdorffMeasure{T <: Real,
     symmetries::G
 end
 
+# make natural conversions of attractors to Hausdorff measures
+# HausdorffMeasure(Γ::AbstractAttractor) = HausdorffMeasure(Γ, ...)
+
 # note the situation with symmetries - they need not be the same for an attractor and a measure.
 # But for HausdorffMeasure, the symmetries should be automatically inhereted from the attractor.
 
