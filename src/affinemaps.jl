@@ -84,7 +84,7 @@ end
 
 # simplified case without rotation
 function simcompifs(s::TranslatingSimilarity, IFS::Vector{<:TranslatingSimilarity})
-    return [TranslatingSimilarity(IFS[m].ρ, (I-IFS[m].ρA)*s.δ + s.ρA*IFS[m].δ, IFS[m].A, IFS[m].ρA) for m in eachindex(IFS)]
+    return [TranslatingSimilarity(IFS[m].ρ, (IdMat-IFS[m].ρA)*s.δ + s.ρA*IFS[m].δ, IFS[m].A, IFS[m].ρA) for m in eachindex(IFS)]
 end
 
 (s::AbstractSimilarity)(x)  = s.ρA*x + s.δ
@@ -129,23 +129,33 @@ end
 
 # need to define identity similarity
 # need to define 'one' equivalent for these three, which unfornately needs extra input
-function IdentitySimilarity(T::Type, n::Integer)
-    if n==1
-        I = OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
-    else
-        I = TranslatingSimilarity(one(T), # contraction
-                                SVector{n,T}(zeros(n)), # translation
-                                one(T), # rotation
-                                one(T)) # rotation*contraction
-    end
-    return I
-end
+# Have removed function below because it is not type stable
+# function IdentitySimilarity(T::Type, n::Integer)
+#     if n==1
+#         I = OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
+#     else
+#         I = TranslatingSimilarity(one(T), # contraction
+#                                 SVector{n,T}(zeros(n)), # translation
+#                                 one(T), # rotation
+#                                 one(T)) # rotation*contraction
+#     end
+#     return I
+# end
+
+Base.one(::OneDimensionalSimilarity{T}) where {T<:Number} = 
+    OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
+
+Base.one(::TranslatingSimilarity{T, V}) where {N, T<:Number, V<:SVector{N,T}} = 
+    TranslatingSimilarity(one(T), zero(V), one(T), zero(T))
+
+Base.one(::Similarity{T, V, M}) where {N, T<:Number, V<:SVector{N,T}, M<:SMatrix{N,N,T}} = 
+    Similarity(one(T), zero(V), one(V), zero(M))
 
 function IdentityInvariantMap(T::Type, n::Integer)
     if n==1
         I = OneDimensionalInvariantMap(zero(T), one(T))
     else
-        I = InvariantMap(SVector{n,T}(zeros(n)), SMatrix{n,n,T}(Matrix(I(n))))
+        I = InvariantMap(SVector{n,T}(zeros(n)), SMatrix{n,n,T}(Matrix(IdMat(n))))
     end
     return I
 end

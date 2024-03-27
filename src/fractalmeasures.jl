@@ -125,7 +125,7 @@ struct InvariantMeasure{T <: Real,
 end
 
 function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
-                        weights::Vector{<:Real})
+                        weights::AbstractVector{<:Real})
     M = length(sims)
     divisor = IdMat
     vec_sum = zero(sims[1].δ)

@@ -49,7 +49,9 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},
     end
 
     @simd for n2 in 1:N2
-        X2[((n2-1)*N1+1):(n2*N1)] .= x2[n2]
+        @inbounds for n2_ in ((n2-1)*N1+1):(n2*N1)
+            X2[n2_] = x2[n2]
+        end
         W2[((n2-1)*N1+1):(n2*N1)] .= w2[n2]
     end
 
@@ -75,7 +77,10 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector, Number}},
     end
 
     @simd for n2 in 1:N2
-        X2[((n2-1)*N1+1):(n2*N1)] .= x2[n2]
+        # X2[((n2-1)*N1+1):(n2*N1)] .= x2[n2]
+        @inbounds for n2_ in ((n2-1)*N1+1):(n2*N1)
+            X2[n2_] = x2[n2]
+        end
     # W2[((n2-1)*N1+1):(n2*N1)] .= w2[n2]
     end
 

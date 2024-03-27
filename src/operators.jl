@@ -3,12 +3,14 @@ abstract type AbstractSingularIntegralOperator <: FractalOperator end
 
 
 struct SelfAdjointSingularIntegralOperator{M <: AbstractInvariantMeasure,
-                                S <: Number,
-                                Z <: Number
-                                } <: AbstractSingularIntegralOperator
+                                            F1 <: Function,
+                                            F2 <: Function,
+                                            S <: Number,
+                                            Z <: Number
+                                            } <: AbstractSingularIntegralOperator
     measure::M
-    kernel::Function
-    lipschitzpart::Function
+    kernel::F1
+    lipschitzpart::F2
     s::S
     singularconst::Z
 end

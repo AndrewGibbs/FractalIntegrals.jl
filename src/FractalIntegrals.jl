@@ -4,6 +4,7 @@ import StaticArrays: SVector, SMatrix, mul!
 import LinearAlgebra: norm, det, dot, Symmetric
 import LinearAlgebra.I as IdMat
 import SpecialFunctions: hankelh1
+import Base.Threads: @spawn
 export Similarity
 
 include("affinemaps.jl")

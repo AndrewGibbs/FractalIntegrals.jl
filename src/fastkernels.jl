@@ -41,8 +41,9 @@ end
 
 # Lipschitz parts of Helmholtz kernels
 function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
-    x_approx_y = isapprox.(x, y, atol=100*eps(eltype(x)))
-    Φ = zeros(ComplexF64, length(x))
+    T = eltype(x[1])
+    x_approx_y = isapprox.(x, y, atol=100*eps(T))
+    Φ = zeros(Complex{T}, length(x))
     @views Φ[.~x_approx_y] .= helmholtzkernel2d(k, x[.~x_approx_y], y[.~x_approx_y]) .+
                                 1/(2π)*energykernel(0.0, x[.~x_approx_y], y[.~x_approx_y])
     Φ[x_approx_y] .= im/4 -1/(2π)*(0.577215664901532 + log(k/2))
@@ -50,8 +51,9 @@ function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
 end
 
 function helmholtzkernel3d_lipschitzpart(k::Number, x, y)
-    x_approx_y = isapprox.(x, y, atol=100*eps(eltype(x)))
-    Φ = zeros(ComplexF64, length(x))
+    T = eltype(x[1])
+    x_approx_y = isapprox.(x, y, atol=100*eps(T))
+    Φ = zeros(Complex{T}, length(x))
     @views r = vecdist(x[.~x_approx_y], y[.~x_approx_y])
     Φ[.~x_approx_y] .= expm1.(im*k*r)./(4π*r)
     Φ[x_approx_y] .= im*k/(4π)

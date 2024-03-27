@@ -42,15 +42,15 @@ function BarycentreHomogInnerProduct(  sio::AbstractSingularIntegralOperator,
 
     # second, prepare data for smooth integrals
     x, w = barycentre_quadrule(Vₕ[1].measure, h_quad)
-    X = x .- Vₕ[1].measure.barycentre
+    X = [xⱼ - Vₕ[1].measure.barycentre for xⱼ in x]#x .- Vₕ[1].measure.barycentre
 
     # create instance, containing everything needed to evaluate dual pairings
     return BarycentreHomogInnerProduct(sio, X, w, singular_indices, prepared_singular_vals, h_quad)
 end
 
-function innerproduct(ip::BarycentreHomogInnerProduct, f::Function, ϕ::P0BasisElement)
-    x = ip.x0 .+ ϕ.measure.barycentre
-    return conj(ϕ.normalisation) * dot(conj(ip.w), f.(x))
+function innerproduct(ip::BarycentreHomogInnerProduct, f::Function, ψ::P0BasisElement)
+    x = [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0]
+    return conj(ψ.normalisation) * dot(conj(ip.w), f.(x))
 end
 
 function sesquilinearform(  ip::BarycentreHomogInnerProduct,
@@ -78,8 +78,10 @@ function sesquilinearform(  ip::BarycentreHomogInnerProduct,
     end
 
     # get the tensor product quadrature
-    x, y, w = combine_quadrules(ip.x0 .+ ϕ.measure.barycentre, ip.w[1],
-                                ip.x0 .+ ψ.measure.barycentre, ip.w[1])
+    x, y, w = combine_quadrules([xⱼ + ϕ.measure.barycentre for xⱼ in ip.x0],
+                                ip.w[1],
+                                [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0],
+                                ip.w[1])
 
     if singular_slf
         scale_adjust = similar_scaler(ρ,

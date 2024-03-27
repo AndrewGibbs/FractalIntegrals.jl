@@ -62,6 +62,7 @@ end
 
 Base.getindex(Vₙ::FractalBasis, j::Integer) = Vₙ.elements[j]
 Base.length(Vₙ::FractalBasis) = length(Vₙ.elements)
+Base.iterate(Vₙ::FractalBasis, state=1) = state > length(Vₙ) ? nothing : (Vₙ.elements[state], state+1)
 
 function construct_p0basis(μ::AbstractInvariantMeasure, h::Real)
     Lₕ = subdivide_indices(μ.supp, h::Real)

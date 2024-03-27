@@ -57,7 +57,7 @@ function check_if_similar(  Γ::AbstractAttractor,
     ρ = zero(S[1].ρ) # initialise
 
     # define identity similarity, which is a workaround for index [0]
-    s₀ = IdentitySimilarity(typeof(Γ.ifs[1].ρ), Γ.n)
+    s₀ = one(Γ.ifs[1])
 
     m != [0] ? sₘ = simmulticomp(S,m) : sₘ = s₀
     n != [0] ? sₙ = simmulticomp(S,n) : sₙ = s₀
@@ -93,7 +93,7 @@ function check_for_similar_integrals(Γ::AbstractAttractor,
                                     fubini_flag::Bool
                                     )
     is_X_similar = false
-    similar_index = nothing
+    similar_index = -1
     proportionality_const = zero(Γ.ifs[1].ρ)
 
     # should compactly write the following as a function, it's almost repeated
