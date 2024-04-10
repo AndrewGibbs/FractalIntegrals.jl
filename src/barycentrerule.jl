@@ -10,7 +10,7 @@ function barycentre_quadrule( μ::F, h::H
                                 F<:HausdorffMeasure{T,B,V,A}
                                 }
 
-    ℓmax = ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ))
+    ℓmax = max(ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ)), 0)
     M = length(μ.supp.ifs)
     N = M^ℓmax
     w = fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), N)
@@ -38,10 +38,14 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},
     N1 = length(w1)
     N2 = length(w2)
     N = N1*N2
-    X1 = zeros(eltype(x1), N)
-    X2 = zeros(eltype(x2), N)
-    W1 = zeros(eltype(w1), N)
-    W2 = zeros(eltype(w2), N)
+    # X1 = zeros(eltype(x1), N)
+    # X2 = zeros(eltype(x2), N)
+    X1 = Vector{eltype(x1)}(undef, N)
+    X2 = Vector{eltype(x2)}(undef, N)
+    W1 = Vector{eltype(w1)}(undef, N)
+    W2 = Vector{eltype(w2)}(undef, N)
+    # W1 = zeros(eltype(w1), N)
+    # W2 = zeros(eltype(w2), N)
 
     @simd for n1 in 1:N1
         X1[((n1-1)*N2+1):(n1*N2)] .= x1
@@ -66,8 +70,10 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector, Number}},
     N1 = length(x1)
     N2 = length(x2)
     N = N1*N2
-    X1 = zeros(eltype(x1), N)
-    X2 = zeros(eltype(x2), N)
+    # X1 = zeros(eltype(x1), N)
+    # X2 = zeros(eltype(x2), N)
+    X1 = Vector{eltype(x1)}(undef, N)
+    X2 = Vector{eltype(x2)}(undef, N)
     # W1 = fill(eltype(w1), N)
     # W2 = zeros(eltype(w2), N)
 

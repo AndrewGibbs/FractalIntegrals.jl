@@ -32,7 +32,7 @@ function BarycentreHomogInnerProduct(  sio::AbstractSingularIntegralOperator,
 
     A, B, singular_indices, R, log_adjustments =
         construct_singularity_matrix(Vₕ.measure, Vₕ.measure, sio.s)
-    r = zeros(length(R))
+    r = Vector{Float64}(undef,length(R))
     for n = eachindex(r)
         (m,m_) = R[n]
         x,y,w = barycentre_quadrule(μ[m], μ[m_], h_high_scale)

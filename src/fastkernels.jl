@@ -44,18 +44,26 @@ function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])
     x_approx_y = isapprox.(x, y, atol=100*eps(T))
     Φ = zeros(Complex{T}, length(x))
-    @views Φ[.~x_approx_y] .= helmholtzkernel2d(k, x[.~x_approx_y], y[.~x_approx_y]) .+
-                                1/(2π)*energykernel(0.0, x[.~x_approx_y], y[.~x_approx_y])
-    Φ[x_approx_y] .= im/4 -1/(2π)*(0.577215664901532 + log(k/2))
+    if false ∈ x_approx_y
+        @views Φ[.~x_approx_y] .= helmholtzkernel2d(k, x[.~x_approx_y], y[.~x_approx_y]) .+
+                                    1/(2π)*energykernel(0.0, x[.~x_approx_y], y[.~x_approx_y])
+    end
+    if true ∈ x_approx_y
+        Φ[x_approx_y] .= im/4 -1/(2π)*(0.577215664901532 + log(k/2))
+    end
     return Φ
 end
 
 function helmholtzkernel3d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])
     x_approx_y = isapprox.(x, y, atol=100*eps(T))
-    Φ = zeros(Complex{T}, length(x))
-    @views r = vecdist(x[.~x_approx_y], y[.~x_approx_y])
-    Φ[.~x_approx_y] .= expm1.(im*k*r)./(4π*r)
-    Φ[x_approx_y] .= im*k/(4π)
+    Φ = Vector{Complex{T}}(undef, length(x))
+    if false ∈ x_approx_y
+        @views r = vecdist(x[.~x_approx_y], y[.~x_approx_y])
+        Φ[.~x_approx_y] .= expm1.(im*k*r)./(4π*r)
+    end
+    if true ∈ x_approx_y
+        Φ[x_approx_y] .= im*k/(4π)
+    end
     return Φ
 end

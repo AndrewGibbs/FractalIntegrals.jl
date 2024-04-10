@@ -137,17 +137,22 @@ function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
 end
 
 function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:AbstractInvariantMeasure
-    new_symmetries = μ.symmetries
-    # new_suppmeasure = μ.suppmeasure
-    for m = index[end:-1:1]
-        # new_suppmeasure *= μ.supp.ifs[m].ρ
-        new_symmetries = simcompsymmetries(μ.supp.ifs[m], new_symmetries)
+    if index == [0]
+        new_μ = μ
+    else    
+        new_symmetries = μ.symmetries
+        # new_suppmeasure = μ.suppmeasure
+        for m = index[end:-1:1]
+            # new_suppmeasure *= μ.supp.ifs[m].ρ
+            new_symmetries = simcompsymmetries(μ.supp.ifs[m], new_symmetries)
+        end
+        # new_suppmeasure = new_suppmeasure^μ.supp.d
+        new_supp = get_subattractor(μ.supp, index)
+        new_suppmeasure = μ.suppmeasure * (new_supp.diam / μ.supp.diam) ^ μ.supp.d
+        new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
+        new_μ = M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
     end
-    # new_suppmeasure = new_suppmeasure^μ.supp.d
-    new_supp = get_subattractor(μ.supp, index)
-    new_suppmeasure = μ.suppmeasure * (new_supp.diam / μ.supp.diam) ^ μ.supp.d
-    new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
-    return M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
+    return new_μ
 end
 
 # is there much argument for defining the submeasure?
