@@ -1,3 +1,4 @@
+# needs to be lower case!
 function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
                                         k::Number;
                                         ambient_dimension::Integer = μ.supp.n
@@ -21,3 +22,10 @@ function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
         error("Haven't coded single layer SIO for this many dimensions")
     end
 end
+
+SingleLayerOperatorHelmholtz(Γ::AbstractAttractor, args...; vargs...) = 
+    SingleLayerOperatorHelmholtz(HausdorffMeasure(Γ), args...; vargs...)
+
+# for preset_fn ∈ [SingleLayerOperatorHelmholtz]
+#     preset_fn(Γ::Attractor, args...; vargs...) = preset_fn(HausdorffMeasure(Γ), args...; vargs...)
+# end

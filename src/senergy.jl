@@ -175,9 +175,6 @@ function similar_scaler(ρ::Real,
     pₘ_ = compose_weights(pw₂, m_)
     pₙ = compose_weights(pw₁, n)
     pₙ_ = compose_weights(pw₂, n_)
-    # m  != [0] ? pₘ = prod(pw₁[m]) : pₘ = one(eltype(pw₁))
-    # m_ != [0] ? pₘ_ = prod(pw₂[m_]) : pₘ_ = one(eltype(pw₂))
-    # return ρ^(-s)*pₘ*pₘ_/prod(pw₁[n])/prod(pw₂[n_])
     return pₙ*pₙ_*ρ^s/(pₘ*pₘ_)
 end
 

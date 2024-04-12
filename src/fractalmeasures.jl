@@ -1,11 +1,14 @@
 abstract type Fractal end
 
-abstract type AbstractAttractor end
+abstract type AbstractAttractor{ T<:Real,
+                                S<:AbstractArray{<:AbstractSimilarity},
+                                G<:AbstractArray{<:AbstractInvariantMap}
+                                } end
 
 struct HomogenousAttractor{ T<:Real,
                             S<:AbstractArray{<:AbstractSimilarity},
                             G<:AbstractArray{<:AbstractInvariantMap}
-                            } <: AbstractAttractor
+                            } <: AbstractAttractor{T,S,G}
     ifs::S
     diam::T
     d::T
@@ -18,7 +21,7 @@ end
 struct Attractor{   T<:Real,
                     S<:AbstractArray{<:AbstractSimilarity},
                     G<:AbstractArray{<:AbstractInvariantMap},
-                    } <: AbstractAttractor
+                    } <: AbstractAttractor{T,S,G}
     ifs::S
     diam::T
     d::T
@@ -26,6 +29,9 @@ struct Attractor{   T<:Real,
     connectedness::Matrix{Bool}
     symmetries::G
 end
+
+# define eltype for attractors - will be useful elsewhere
+Base.eltype(::AbstractAttractor{T,S,G}) where {T,S,G} = T
 
 function ifs_map!(  Sx::AbstractVector{<:T},
                     S::AbstractVector{<:AbstractSimilarity},
@@ -105,9 +111,6 @@ struct HausdorffMeasure{T <: Real,
     symmetries::G
 end
 
-# make natural conversions of attractors to Hausdorff measures
-# HausdorffMeasure(Γ::AbstractAttractor) = HausdorffMeasure(Γ, ...)
-
 # note the situation with symmetries - they need not be the same for an attractor and a measure.
 # But for HausdorffMeasure, the symmetries should be automatically inhereted from the attractor.
 
@@ -136,6 +139,8 @@ function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
     return divisor \ vec_sum
 end
 
+get_hausdorff_weights(Γ::AbstractAttractor) = [s.ρ^Γ.d for s in Γ.ifs]
+    
 function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:AbstractInvariantMeasure
     if index == [0]
         new_μ = μ
@@ -155,13 +160,13 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
     return new_μ
 end
 
-# is there much argument for defining the submeasure?
-# The idea is that it points to the 'parent' anyway,
-# and this is memory-cheap because the parent is an immutable struct.
-# But V is an immutable struct anyway and μ is necessarilty different in each submeasure.
-# So the only issue lies with A.
-# dimH and n are the only major duplicates, and these are both tiny in size.
-# I also assume that if I write tte constructor carefully, there will be no extra allocations.
+# make natural conversions of attractors to Hausdorff measures
+HausdorffMeasure(Γ::AbstractAttractor) =
+    HausdorffMeasure(   Γ,
+                        get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
+                        one(eltype(Γ)),
+                        get_hausdorff_weights(Γ),
+                        Γ.symmetries)
 
 # overload the indexing function, so we can get neat vector subscripts
 Base.getindex(μ::AbstractInvariantMeasure, inds...) = get_submeasure(μ, [i for i in inds])
