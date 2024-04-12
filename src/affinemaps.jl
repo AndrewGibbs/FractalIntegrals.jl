@@ -113,19 +113,28 @@ Base.show(io::IO, s::AbstractSimilarity)  = print(io,'\n',typeof(s),':','\n', in
 # affine maps
 
 abstract type AbstractInvariantMap <:AffineMap end
-# struct IdentityMap <: AbstractInvariantMap end
-
-# (I::IdentityMap)(x) = x
 
 struct InvariantMap{T<:Number, V<:AbstractVector{T}, M<:AbstractMatrix{T}} <: AbstractInvariantMap
     δ :: V
     A :: M
+end
+# check this outer constructor fixes the problem!
+function InvariantMap(δ::AbstractVector{T1}, A::AbstractArray{T2}
+                        ) where {
+                    T1<:Number,
+                    T2<:Number}
+    T = promote_type(T1, T2)
+    n = length(δ)
+    δ_ = SVector{n,T}(δ)
+    A_ = SMatrix{n,n,T}(A)
+    return InvariantMap{T, typeof(δ_), typeof(A_)}(δ_, A_)
 end
 
 struct OneDimensionalInvariantMap{T<:Number} <: AbstractInvariantMap
     δ :: T
     A :: T
 end
+OneDimensionalInvariantMap(δ::Number, A::Number) = OneDimensionalInvariantMap(promote(δ, A)...)
 
 # need to define identity similarity
 # need to define 'one' equivalent for these three, which unfornately needs extra input
@@ -170,27 +179,28 @@ end
 
 ## Invariant/automoprhic maps/symmetries - focusing on 2d stuff for now
 
-rotationmatrix2d(θ::T) = SMatrix{2,2,T}([cos(θ) -sin(θ); sin(θ) cos(θ)])
-reflectionmatrix2d(θ::T) = SMatrix{2,2,T}([cos(2θ) sin(2θ); sin(2θ) -cos(2θ)])
+rotationmatrix2d(θ::T) where T = SMatrix{2,2,T}([cos(θ) -sin(θ); sin(θ) cos(θ)])
+reflectionmatrix2d(θ::T) where T = SMatrix{2,2,T}([cos(2θ) sin(2θ); sin(2θ) -cos(2θ)])
 
 function get_group_operations2d(num_rotations::Integer,
                                 reflections::AbstractVector{<:Real},
                                 centre::AbstractVector{T}) where T<:Number
     δθ = 2π / num_rotations
+    num_reflections = length(reflections)
     
-    ivmaps = Vector{InvariantMap{T,SVector{2,T},SMatrix{2,2,T}}
+    ivmaps = Vector{InvariantMap{T, SVector{2,T}, SMatrix{2,2,T,4}}
                     }(undef, num_rotations + num_reflections)#[IdentityMap(2) for _=1:(num_rotations+num_reflections)]
 
     counter = 0
     for θ in 0:δθ:(2π-δθ)
         counter += 1
         rotmat = rotationmatrix2d(θ)
-        ivmaps[counter] = AutomorphicMap(Arot, centre - rotmat * centre)
+        ivmaps[counter] = InvariantMap(centre - rotmat * centre, rotmat)
     end
     for ϑ in reflections
         counter += 1
         refmat = reflectionmatrix2d(ϑ)
-        ivmaps[counter] = AutomorphicMap(refmat, centre - refmat * centre)
+        ivmaps[counter] = InvariantMap(centre - refmat * centre, refmat)
     end
     # the union of rotations and reflections gives all compositions
     return ivmaps
@@ -206,7 +216,8 @@ function DihedralGroup( n::Integer;
         δθ = 2π/n # for odd n, split [0,2π] into n segments
         reflections = (0:δθ:(2π-δθ)) .+ angle_offest
     end
-    return get_group_operations2D(n, reflections,centre)
+    return get_group_operations2d(n, reflections,centre)
 end
 
+trivialgroup(args...) = [IdentityInvariantMap(args...)]
 # D₂_in_1D(;centre::Float64=0.0) = [IdentityMap(1), OneDimensionalInvariantMap(-1.0, 2*centre)]

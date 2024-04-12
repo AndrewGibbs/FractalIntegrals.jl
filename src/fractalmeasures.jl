@@ -92,6 +92,66 @@ function get_subattractor(Γ::A, m::AbstractVector{<:Integer}) where A<:Attracto
             new_symmetries)
 end
 
+function ishomogeneous(ifs::AbstractVector{<:AbstractSimilarity})
+    # check if fractal is homogeneous
+    homogeneous = true
+    for j in 1:(length(ifs)-1)
+        if  homogeneous !(ifs[j].ρ ≈ ifs[j+1].ρ)
+            homogeneous = false
+            break
+        end
+    end
+    return homogeneous
+end
+
+function dimH(ifs::AbstractVector{<:AbstractSimilarity})
+    n = length(ifs[1].δ)
+    r = [s.ρ for s in ifs]
+
+    if ishomogeneous(ifs)
+        d = log(1/length(r))/log(r[1])
+    else
+        # approximate Hausdorff dimension by approximating zero of following:
+        f(d) = sum(r.^d) - 1
+        # over range (0,n]
+        d = find_zero(f, (0, n*(1+10*eps(ifs[1].ρ))), Bisection())
+    end
+    return d
+end
+
+# user-friendly constructor
+function Attractor( ifs::AbstractVector{<:AbstractSimilarity};
+                    diam = diam(ifs),
+                    d::Real = dimH(ifs), # integers welcome
+                    connectedness = Matrix(IdMat(length(ifs))),
+                    symmetries = trivialgroup(length(ifs[1].δ))
+                    )
+
+    n = length(ifs[1].δ) # ambient dimensions
+    diamT, dT = promote(diam, d) # ensure these are of same type
+    # Not type-stable. But I don't think this will be a performance-critical function in practice.
+    if ishomogeneous(ifs)
+        Γ  = HomogenousAttractor(
+                                ifs,
+                                diamT,
+                                dT,
+                                n,
+                                connectedness,
+                                symmetries,
+                                ifs[1].ρ
+                                )
+    else
+        Γ  = Attractor(ifs,
+                    diamT,
+                    dT,
+                    n,
+                    connectedness,
+                    symmetries
+                    )
+    end
+    return Γ
+end
+# ---------------------- Measures ---------------------------------------------------------#
 abstract type AbstractInvariantMeasure{T<:Real, B, V<:AbstractVector{T}, A<:AbstractAttractor} end
 
 # I'm wondering if its actuall worth defining different types of measures.
