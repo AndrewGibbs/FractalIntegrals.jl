@@ -118,6 +118,8 @@ struct InvariantMap{T<:Number, V<:AbstractVector{T}, M<:AbstractMatrix{T}} <: Ab
     δ :: V
     A :: M
 end
+
+
 # check this outer constructor fixes the problem!
 function InvariantMap(δ::AbstractVector{T1}, A::AbstractArray{T2}
                         ) where {
@@ -135,6 +137,13 @@ struct OneDimensionalInvariantMap{T<:Number} <: AbstractInvariantMap
     A :: T
 end
 OneDimensionalInvariantMap(δ::Number, A::Number) = OneDimensionalInvariantMap(promote(δ, A)...)
+
+Base.convert(::Type{OneDimensionalInvariantMap{Tout}},
+            m::OneDimensionalInvariantMap{Tin}
+            ) where {Tin <:Number, Tout <: Number} = 
+            OneDimensionalInvariantMap(convert(Tout, m.δ), convert(Tout, m.A))
+
+Base.promote_rule(::Type{OneDimensionalInvariantMap{T}}, ::Type{OneDimensionalInvariantMap{I}}) where {T<:Number,I<:Number} = OneDimensionalInvariantMap{promote_type(T,I)}
 
 # need to define identity similarity
 # need to define 'one' equivalent for these three, which unfornately needs extra input

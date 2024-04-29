@@ -11,6 +11,23 @@ function vecdist(x::AbstractVector{<:AbstractVector{T}},
     return sqrt.(r)
 end
 
+function vecdist(x::AbstractVector{T},
+    y::AbstractVector{<:AbstractVector{T}}
+    ) where T<:Number
+    r = zeros(T,size(y))
+    n = length(x)
+    @inbounds @simd for i in eachindex(y)
+        @inbounds for j=1:n
+            r[i] += (x[j]-y[i][j])^2
+        end
+    end
+    return sqrt.(r)
+end
+
+# distance commutes
+vecdist(x::AbstractVector{<:AbstractVector{T}}, y::AbstractVector{T}
+        ) where T<:Number = vecdist(y, x)
+
 function vecdist( x::AbstractVector{T},
                     y::AbstractVector{T}
                     ) where T<:Number
@@ -33,7 +50,7 @@ energykernel(s::Number, r::Number) = s==0 ? log(r) : r^-s
 energykernel(s::Number, x, y) = energykernel.(s, vecdist(x,y))
 
 # Helmholtz kernels
-helmholtzkernel2d(k::Number, x, y) = (im/4)*hankelh1.(0,k.*vecdist(x,y))
+helmholtzkernel2d(k::Number, x, y) = (im/4)*hankelh1.(0,k*vecdist(x,y))
 function helmholtzkernel3d(k::Number, x, y)
     r = vecdist(x,y)
     return exp.(im*k*r)./(4π*r)

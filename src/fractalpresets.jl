@@ -1,4 +1,5 @@
-module FractalPresets
+# module FractalPresets
+# using .FractalIntegrals
 
 function cantorset(; ρ = 1/3)
     ifs = [Similarity(ρ, 0.0), Similarity(ρ, 1-ρ)]
@@ -14,4 +15,4 @@ function cantordust(; ρ = 1/3)
     return Attractor(ifs, d = log(4)/log(1/ρ), diam = sqrt(2), symmetries = DihedralGroup(4))
 end
 
-end
+# end

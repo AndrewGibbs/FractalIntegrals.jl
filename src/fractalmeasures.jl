@@ -1,17 +1,19 @@
 abstract type Fractal end
 
 abstract type AbstractAttractor{ T<:Real,
+                                Td<:Real,
                                 S<:AbstractArray{<:AbstractSimilarity},
                                 G<:AbstractArray{<:AbstractInvariantMap}
                                 } end
 
 struct HomogenousAttractor{ T<:Real,
+                            Td<:Real,
                             S<:AbstractArray{<:AbstractSimilarity},
                             G<:AbstractArray{<:AbstractInvariantMap}
-                            } <: AbstractAttractor{T,S,G}
+                            } <: AbstractAttractor{T,Td,S,G}
     ifs::S
     diam::T
-    d::T
+    d::Td
     n::Int64
     connectedness::Matrix{Bool}
     symmetries::G
@@ -19,19 +21,20 @@ struct HomogenousAttractor{ T<:Real,
 end
 
 struct Attractor{   T<:Real,
+                    Td<:Real,
                     S<:AbstractArray{<:AbstractSimilarity},
                     G<:AbstractArray{<:AbstractInvariantMap},
-                    } <: AbstractAttractor{T,S,G}
+                    } <: AbstractAttractor{T,Td,S,G}
     ifs::S
     diam::T
-    d::T
+    d::Td
     n::Int64
     connectedness::Matrix{Bool}
     symmetries::G
 end
 
 # define eltype for attractors - will be useful elsewhere
-Base.eltype(::AbstractAttractor{T,S,G}) where {T,S,G} = T
+Base.eltype(::AbstractAttractor{T,Td,S,G}) where {T,Td,S,G} = T
 
 function ifs_map!(  Sx::AbstractVector{<:T},
                     S::AbstractVector{<:AbstractSimilarity},
@@ -96,7 +99,7 @@ function ishomogeneous(ifs::AbstractVector{<:AbstractSimilarity})
     # check if fractal is homogeneous
     homogeneous = true
     for j in 1:(length(ifs)-1)
-        if  homogeneous !(ifs[j].ρ ≈ ifs[j+1].ρ)
+        if  !(ifs[j].ρ ≈ ifs[j+1].ρ)
             homogeneous = false
             break
         end
@@ -134,7 +137,7 @@ function Attractor( ifs::AbstractVector{<:AbstractSimilarity};
         Γ  = HomogenousAttractor(
                                 ifs,
                                 diamT,
-                                dT,
+                                d,
                                 n,
                                 connectedness,
                                 symmetries,
@@ -143,7 +146,7 @@ function Attractor( ifs::AbstractVector{<:AbstractSimilarity};
     else
         Γ  = Attractor(ifs,
                     diamT,
-                    dT,
+                    d,
                     n,
                     connectedness,
                     symmetries
@@ -187,6 +190,20 @@ struct InvariantMeasure{T <: Real,
     symmetries::G
 end
 
+
+InvariantMeasure(Γ::AbstractAttractor,
+                weights::AbstractVector{<:Real};
+                suppmeasure = 1.0,
+                symmetries = trivialgroup(Γ.n)
+                ) = 
+    InvariantMeasure(Γ,
+                    get_barycentre(Γ.ifs, weights),
+                    suppmeasure,
+                    weights,
+                    symmetries)
+
+InvariantMeasure(Γ::AbstractAttractor; vargs...) = HausdorffMeasure(Γ; vargs...)
+
 function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
                         weights::AbstractVector{<:Real})
     M = length(sims)
@@ -213,7 +230,7 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
         end
         # new_suppmeasure = new_suppmeasure^μ.supp.d
         new_supp = get_subattractor(μ.supp, index)
-        new_suppmeasure = μ.suppmeasure * (new_supp.diam / μ.supp.diam) ^ μ.supp.d
+        new_suppmeasure = μ.suppmeasure * prod(μ.weights[index])#(new_supp.diam / μ.supp.diam) ^ μ.supp.d
         new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
         new_μ = M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
     end

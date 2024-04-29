@@ -8,10 +8,16 @@ struct P0BasisElement{M<:AbstractInvariantMeasure,
     vindex :: I
 end
 
-function subdivide_indices(Γ::AbstractAttractor, h::Real)
+(ϕₙ::P0BasisElement)(::Any) = ϕₙ.normalisation
+# (ϕₙ::P0BasisElement)(x::AbstractArray) = fill(ϕₙ.normalisation, size(x))
+
+function subdivide_indices(Γ::AbstractAttractor, h::Real, max_num_indices = Inf)
     I = Vector{Int64}[]
     M = length(Γ.ifs)
     r = zeros(M)
+
+    @assert (h>0 || max_num_indices<Inf
+            ) "either meshwidth must be positive, or max_num_indices must be finite"
 
     if Γ.diam >= h
         subdiv = true
@@ -23,7 +29,7 @@ function subdivide_indices(Γ::AbstractAttractor, h::Real)
         subdiv = false
     end
 
-    while subdiv
+    while subdiv && (length(I)<max_num_indices)
         subdiv = false
         split_vecs = Int64[]
         for j in eachindex(I)

@@ -36,56 +36,6 @@ function vindex_to_scalar(M::Integer, ℓ::Integer, m::AbstractVector{<:Integer}
     return n
 end
 
-# function find_redundancies( sio::AbstractSingularIntegralOperator,
-#                             Vₕ::FractalBasis)
-
-#     N = length(Vₕ)
-#     M = length(sio.measure.supp.ifs)
-#     ℓ = round(Int,log(N)/log(M))
-
-#     # this is becoming very general... 
-#     # there must be more information we can use about the block structure
-#     can_count = 1
-#     canonical_index_pairs = Vector{Tuple{Int64, Int64}}(undef,N^2)
-#     δ_diff = Vector{eltype(sio.IFS[1].δ)}(undef,N^2)
-#     δ_diffs[1] = zero(eltype(sio.IFS[1].δ))
-#     δcomps = ..
-#     canonical_index_pairs[1] = (1,1)
-
-#     rep_count = 0
-#     repeated_index_pairs = Vector{Tuple{Int64 ,Int64}}(undef,N^2)
-#     associated_index_pairs = Vector{Tuple{Int64 ,Int64}}(undef,N^2)
-
-#     for (n,ϕ) ∈ enumerate(Vₕ)
-#         for (m,ψ) ∈ enumerate(Vₕ)
-#             similar = false
-#             for j in 1:can_count
-#                 if δcomps[m] - δcomps[n] ≈ δ_diffs[j]
-#                     similar = true
-#                 end
-#             end
-#             if (L>0) && (m>1 || n>1)
-#                 rep_count += 1
-#                 # could be done more efficiently, if I can input
-#                 # L to vindex_to_scalar and start loop there.
-#                 # this would remove allocations and redundant loopands
-#                 vn_ = [ones(Int,L); ϕ.vindex[(L+1):end]]
-#                 vm_ = [ones(Int,L); ψ.vindex[(L+1):end]]
-#                 n_ = vindex_to_scalar(M, ℓ, vn_)
-#                 m_ = vindex_to_scalar(M, ℓ, vm_)
-#                 repeated_index_pairs[rep_count] = (m,n)
-#                 associated_index_pairs[rep_count] = (m_,n_)
-#             else
-#                 can_count += 1
-#                 canonical_index_pairs[can_count] = (m,n)
-#             end
-#         end
-#     end
-#     return canonical_index_pairs[1:can_count],
-#             repeated_index_pairs[1:rep_count],
-#             associated_index_pairs[1:rep_count]
-# end
-
 # the code below prevents loops in the repition indices
 function repassign!(galerkinreps, fromindex, toindex)
     if galerkinreps[toindex] != 0 # pointing to canonical entry
@@ -184,7 +134,6 @@ function discretise(sio::AbstractSingularIntegralOperator,
     end
     cleanreps!(galerkinreps)
     
-    2+2;
     # first loop avoids repeated entries
     @sync for n in 1:N #@sync 
         @spawn begin #@spawn 
@@ -213,7 +162,7 @@ function discretise(sio::AbstractSingularIntegralOperator,
     return DiscreteFractalOperator(sio, ip, Vₕ, Symmetric(galerkinmatrix, :L))
 end
 
-struct projection{B<:FractalBasis, V<:AbstractVector}
+struct Projection{B<:FractalBasis, V<:AbstractVector}
     basis::B
     coeffs::V
 end
@@ -224,7 +173,7 @@ function project(bip::BarycentreHomogInnerProduct,
     # non-iterate version:
     #Vₕ[n])/Vₕ[n].normalisation for n in eachindex[Vₕ]
     coeffs = [innerproduct(bip, f, ϕₕ)/ϕₕ.normalisation for ϕₕ ∈ Vₕ]
-    return projection(Vₕ, coeffs)
+    return Projection(Vₕ, coeffs)
 end
 
 function Base.:\(op::DiscreteFractalOperator, f::Function)
@@ -232,5 +181,5 @@ function Base.:\(op::DiscreteFractalOperator, f::Function)
                     op.basis, # basis
                     f)
     coeffs = op.galerkinmatrix \ fₕ.coeffs
-    return projection(op.basis, coeffs)
+    return Projection(op.basis, coeffs)
 end

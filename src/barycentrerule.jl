@@ -5,9 +5,10 @@ function barycentre_quadrule( μ::F, h::H
                                 T,
                                 B,
                                 V,
+                                G,
                                 A<:HomogenousAttractor,
-                                H<:Real, 
-                                F<:HausdorffMeasure{T,B,V,A}
+                                H<:Real,
+                                F<:HausdorffMeasure{T,B,V,A,G}
                                 }
 
     ℓmax = max(ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ)), 0)
@@ -15,7 +16,8 @@ function barycentre_quadrule( μ::F, h::H
     N = M^ℓmax
     w = fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), N)
     # the above line is the only one which needs modifying for more general measures
-    x = zeros(B, N)
+    x = Vector{eltype(μ.barycentre)}(undef, N)
+    # x = zeros(B, N)
     x[1] = μ.barycentre
     @inbounds for ℓ ∈ 1:ℓmax
         @views x[1:(M^ℓ)] .= μ.supp(x[1:(M^(ℓ-1))])

@@ -1,5 +1,5 @@
 # needs to be lower case!
-function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
+function singlelayer_operator_helmholtz(  μ::AbstractInvariantMeasure,
                                         k::Number;
                                         ambient_dimension::Integer = μ.supp.n
     )
@@ -23,8 +23,8 @@ function SingleLayerOperatorHelmholtz(  μ::AbstractInvariantMeasure,
     end
 end
 
-SingleLayerOperatorHelmholtz(Γ::AbstractAttractor, args...; vargs...) = 
-    SingleLayerOperatorHelmholtz(HausdorffMeasure(Γ), args...; vargs...)
+singlelayer_operator_helmholtz(Γ::AbstractAttractor, args...; vargs...) = 
+    singlelayer_operator_helmholtz(HausdorffMeasure(Γ), args...; vargs...)
 
 # for preset_fn ∈ [SingleLayerOperatorHelmholtz]
 #     preset_fn(Γ::Attractor, args...; vargs...) = preset_fn(HausdorffMeasure(Γ), args...; vargs...)
