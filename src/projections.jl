@@ -11,13 +11,41 @@ struct DiscreteFractalOperator{FO<:FractalOperator,
     galerkinmatrix :: M
 end
 
+# following the IFSintegrals style:
+# function discretise(sio::AbstractSingularIntegralOperator;
+#                     h_mesh::Number = sio.measure.supp.diam/5,
+#                     h_quad::Number = h_mesh/5,
+#                     kwargs...)
+#     Vₕ = construct_p0basis(sio.measure, h_mesh)
+#     quadpts, quadweights = barycentre_quadrule(sio.measure, h_quad)
+#     ip = InnerProduct(sio, Vₕ, quadpts, quadweights)
+#     return discretise(sio, ip, Vₕ; kwargs...)
+# end
+
+getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) = 2π / abs(10*sio.wavenumber)
+getdefault_meshwidth(sio::SingularIntegralOperator) = sio.diam / 5
+function getdefault_quad(sio::AbstractSingularIntegralOperator; h_quad::Real = 0.0)
+    if h_quad > 0
+        barycentre_quadrule(sio.measure, h_quad)
+    elseif sio.measure.supp.n == 1
+        # replace this with Gauss rule when I've coded it
+        @warn("Need to replace this option with Mantica Gauss")
+        barycentre_quadrule(sio.measure, getdefault_meshwidth(sio))
+    else
+        barycentre_quadrule(sio.measure, getdefault_meshwidth(sio))
+    end
+end
+
+# new style which allows us to try different quadrature rules
 function discretise(sio::AbstractSingularIntegralOperator;
-                    h_mesh::Number = sio.measure.supp.diam/5,
-                    h_quad::Number = h_mesh/5,
+                    h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
+                    h_quad::Real = 0.0, # quick option for Barycentre rule
+                    quadrule::Tuple{AbstractVector,AbstractVector} = getdefault_quad(sio, h_quad = h_quad),
                     kwargs...)
     Vₕ = construct_p0basis(sio.measure, h_mesh)
-    bip = BarycentreHomogInnerProduct(sio, Vₕ, h_mesh, h_quad)
-    return discretise(sio, bip, Vₕ; kwargs...)
+    # quadpts, quadweights = barycentre_quadrule(sio.measure, h_quad)
+    ip = InnerProduct(sio, Vₕ, quadrule[1], quadrule[2])
+    return discretise(sio, ip, Vₕ; kwargs...)
 end
 
 function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:Integer})
@@ -167,7 +195,7 @@ struct Projection{B<:FractalBasis, V<:AbstractVector}
     coeffs::V
 end
 
-function project(bip::BarycentreHomogInnerProduct,
+function project(bip::InnerProduct,
                 Vₕ::FractalBasis, 
                 f::Function)
     # non-iterate version:

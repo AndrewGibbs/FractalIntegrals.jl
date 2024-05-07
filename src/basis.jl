@@ -2,10 +2,12 @@ abstract type FractalBasisElement end
 
 struct P0BasisElement{M<:AbstractInvariantMeasure,
                     T<:Number,
-                    I<:AbstractVector{<:Integer}}
+                    I<:Integer,
+                    V<:AbstractVector{I}}
     measure :: M
     normalisation :: T
-    vindex :: I
+    index :: I
+    vindex :: V
 end
 
 (ϕₙ::P0BasisElement)(::Any) = ϕₙ.normalisation
@@ -72,6 +74,6 @@ Base.iterate(Vₙ::FractalBasis, state=1) = state > length(Vₙ) ? nothing : (V�
 
 function construct_p0basis(μ::AbstractInvariantMeasure, h::Real)
     Lₕ = subdivide_indices(μ.supp, h::Real)
-    Vₕ = P0Basis(μ, [P0BasisElement(μ[m], 1.0, m) for m in Lₕ])
+    Vₕ = P0Basis(μ, [P0BasisElement(μ[m], 1.0, n, m) for (n,m) in enumerate(Lₕ)])
     return Vₕ
 end

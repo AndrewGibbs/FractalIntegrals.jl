@@ -1,59 +1,91 @@
 abstract type AbstractInnerProduct end
 
-struct BarycentreHomogInnerProduct{X<:AbstractVector,
+struct InnerProduct{X<:AbstractVector,
                                     W<:AbstractVector,
                                     S<:AbstractVector,
-                                    T<:Real,
-                                    I<:AbstractVector{<:T},
+                                    # T<:Real,
+                                    I<:AbstractVector{<:Number},
                                     K<:FractalOperator
                                     } <: AbstractInnerProduct
     
     sio :: K
-    x0 :: X
+    x :: X
     w :: W
     singular_indices :: S
     singular_integrals :: I
-    # log_adjustments :: S
-    hQ :: T
 end
 
-# outer constructor
-function BarycentreHomogInnerProduct(  sio::AbstractSingularIntegralOperator,
-                                        Vₕ::FractalBasis{<:HausdorffMeasure{T1,T2,T3,Attr},T4},
-                                        h_mesh::Real,
-                                        h_quad::Real
-                                        ) where {T1,T2,T3,Attr<:HomogenousAttractor,T4}
+# struct HomogInnerProduct{X<:AbstractVector,
+#                     W<:Real,
+#                     S<:AbstractVector,
+#                     # T<:Real,
+#                     I<:AbstractVector{<:Number},
+#                     K<:FractalOperator
+#                     } <: AbstractInnerProduct
 
-    μ = Vₕ.measure
-    Γ = Vₕ.measure.supp
+#     sio :: K
+#     x :: X
+#     w :: W
+#     singular_indices :: S
+#     singular_integrals :: I
+# end
 
-    # first, prepare data for singular integrals
-    h_high_scale = Γ.diam * h_quad / h_mesh
-
+function getsingularinfo(μ, s, X, W)
     A, B, singular_indices, R, log_adjustments =
-        construct_singularity_matrix(Vₕ.measure, Vₕ.measure, sio.s)
+        construct_singularity_matrix(μ, μ, s)
     r = Vector{Float64}(undef,length(R))
     for n = eachindex(r)
         (m,m_) = R[n]
-        x,y,w = barycentre_quadrule(μ[m], μ[m_], h_high_scale)
-        r[n] = w'*energykernel(sio.s, x, y)
+        Xn, Wxn = mapquadrule(μ, m, X, W)
+        Yn, Wyn = mapquadrule(μ, m_, X, W)
+        x, y, w = combine_quadrules(Xn, Wxn, Yn, Wyn)
+        r[n] = w'*energykernel(s, x, y)
     end
     prepared_singular_vals = A\(B*r + log_adjustments) # vector of 'singular values'
+    return prepared_singular_vals, singular_indices
+end
+
+# outer constructor
+# function InnerProduct(  sio::AbstractSingularIntegralOperator,
+#                                         Vₕ::FractalBasis{<:HausdorffMeasure{T1,T2,T3,Attr},T4},
+#                                         X::AbstractArray,
+#                                         W::AbstractArray
+#                                         ) where {T1,T2,T3,Attr<:HomogenousAttractor,T4}
+function InnerProduct(  sio::AbstractSingularIntegralOperator,
+                        Vₕ::FractalBasis,
+                        X::AbstractArray,
+                        W::AbstractArray)
+
+    μ = Vₕ.measure
+
+    prepared_singular_vals, singular_indices = getsingularinfo(μ, sio.s, X, W)
 
     # second, prepare data for smooth integrals
-    x, w = barycentre_quadrule(Vₕ[1].measure, h_quad)
-    X = [xⱼ - Vₕ[1].measure.barycentre for xⱼ in x]#x .- Vₕ[1].measure.barycentre
+
+    # old homogeneous special case:
+    # x, w =  mapquadrule(μ, Vₕ[1].vindex, X, W)
+    # X = [xⱼ - Vₕ[1].measure.barycentre for xⱼ in x]
+    
+    # second, prepare data for smooth integrals
+    allquads = Vector{typeof(X)}(undef,length(Vₕ))
+    allweights = Vector{typeof(W)}(undef,length(Vₕ))
+    for (n, ϕₙ) in enumerate(Vₕ)
+        allquads[n], allweights[n] = mapquadrule(μ, ϕₙ.vindex, X, W)
+    end
 
     # create instance, containing everything needed to evaluate dual pairings
-    return BarycentreHomogInnerProduct(sio, X, w, singular_indices, prepared_singular_vals, h_quad)
+    return InnerProduct(sio, allquads, allweights, singular_indices, prepared_singular_vals)
 end
 
-function innerproduct(ip::BarycentreHomogInnerProduct, f::Function, ψ::P0BasisElement)
-    x = [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0]
-    return conj(ψ.normalisation) * dot(conj(ip.w), f.(x))
-end
+# function innerproduct(ip::HomogInnerProduct, f::Function, ψ::P0BasisElement)
+#     x = [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0]
+#     return conj(ψ.normalisation) * dot(conj(ip.w), f.(x))
+# end
 
-function sesquilinearform(  ip::BarycentreHomogInnerProduct,
+innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
+    conj(ψ.normalisation) * dot(conj(ip.w[ψ.index]), f.(x[ψ.index]))
+
+function sesquilinearform(  ip::InnerProduct,
                             ϕ::P0BasisElement,
                             ψ::P0BasisElement)
     # first determine if singular or not
@@ -78,10 +110,17 @@ function sesquilinearform(  ip::BarycentreHomogInnerProduct,
     end
 
     # get the tensor product quadrature
-    x, y, w = combine_quadrules([xⱼ + ϕ.measure.barycentre for xⱼ in ip.x0],
-                                ip.w[1],
-                                [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0],
-                                ip.w[1])
+
+    # previous homog special case:
+    # x, y, w = combine_quadrules([xⱼ + ϕ.measure.barycentre for xⱼ in ip.x0],
+    #                             ip.w[1],
+    #                             [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0],
+    #                             ip.w[1])
+
+    x, y, w = combine_quadrules(ip.x[ϕ.index],
+                                ip.w[ϕ.index],
+                                ip.x[ψ.index],
+                                ip.w[ψ.index])
 
     if singular_slf
         scale_adjust = similar_scaler(ρ,

@@ -16,7 +16,7 @@ function barycentre_quadrule( μ::F, h::H
     N = M^ℓmax
     w = fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), N)
     # the above line is the only one which needs modifying for more general measures
-    x = Vector{eltype(μ.barycentre)}(undef, N)
+    x = Vector{typeof(μ.barycentre)}(undef, N)
     # x = zeros(B, N)
     x[1] = μ.barycentre
     @inbounds for ℓ ∈ 1:ℓmax
@@ -100,4 +100,13 @@ function barycentre_quadrule(μ₁, μ₂, h)
     x2, w2 = barycentre_quadrule(μ₂, h)
     
     return combine_quadrules(x1, w1, x2, w2)
+end
+
+function mapquadrule(μ::AbstractInvariantMeasure, m::AbstractVector{<:Integer}, X, W)
+    for mᵢ in reverse(m)
+        X = μ.supp.ifs[mᵢ].(X)
+    end
+    # W = prod(μ.weights[m]).*W
+
+    return X, prod(μ.weights[m]).*W
 end
