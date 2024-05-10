@@ -26,17 +26,17 @@ function map_tilde_coeffs_to_coeffs(tilde_coeffs::Vector{Vector{T}},rₙ::T) whe
     return coeffs
 end
 
-function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::Vector{T},
-                                                Γⁿ⁻²::Vector{T},
-                                                A::Vector{T},
-                                                r::Vector{T},
-                                                sₘ::Similarity
+function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::AbstractVector{T},
+                                                Γⁿ⁻²::AbstractVector{T},
+                                                A::AbstractVector{T},
+                                                r::AbstractVector{T},
+                                                sₘ::AbstractSimilarity
                                                 ) where T<:Real
     # rule of thumb: square bracket indices should always be incremented by one compared with what's written above,
      # to account for the zero index
 
      # Conflicting notation between Mantica '96 and myself, so this step should switch everything to his notation:
-     δᵢ = sₘ.r
+     δᵢ = sₘ.ρ
      βᵢ = sₘ.δ
      # that's better.
      
@@ -86,7 +86,7 @@ function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::Vector{T},
                 μ::AbstractInvariantMeasure
                 ) where T<:Real
     n = length(modΓⁿ[1])-1
-     M = length(μ.ifs)
+     M = length(μ.supp.ifs)
      B = zeros(T,M)
      C = zeros(T,M)
     #  D = zeros(Float64,M)
@@ -94,13 +94,13 @@ function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::Vector{T},
      
      for i=1:M
          for ℓ=0:(n-1)
-            B[i] += (μ.ifs[i].δ + μ.ifs[i].r*A[ℓ+1])*modΓⁿ[i][ℓ+1]*Γⁿ⁻¹[i][ℓ+1]
+            B[i] += (μ.supp.ifs[i].δ + μ.supp.ifs[i].ρ*A[ℓ+1])*modΓⁿ[i][ℓ+1]*Γⁿ⁻¹[i][ℓ+1]
          end
          for ℓ=0:(n-2) # Not used for n=1
             C[i] += r[ℓ+2]*(modΓⁿ[i][ℓ+1]*Γⁿ⁻¹[i][ℓ+2] + modΓⁿ[i][ℓ+2]*Γⁿ⁻¹[i][ℓ+1])
          end
-         C[i] *= μ.ifs[i].r
-         D_nominator[i] = μ.ifs[i].r*modΓⁿ[i][n+1]*Γⁿ⁻¹[i][n]
+         C[i] *= μ.supp.ifs[i].ρ
+         D_nominator[i] = μ.supp.ifs[i].ρ*modΓⁿ[i][n+1]*Γⁿ⁻¹[i][n]
      end
      
      rₙ² = (μ.weights'*(B+C)) / (1-(μ.weights'*D_nominator))
@@ -111,38 +111,36 @@ function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::Vector{T},
  function get_Aₙ(coeffs_this_level::Vector{Vector{T}},
                 A::Vector{T},
                 r::Vector{T},
-                Γ::SelfSimilarFractal
+                μ::AbstractInvariantMeasure
                 ) where T<:Real
-    M = length(Γ.IFS)
+    M = length(μ.supp.ifs)
     n = length(coeffs_this_level[1])-1
     big_sum = zeros(M)
     denominator = 0.0
     for i=1:M
-        big_sum[i] += coeffs_this_level[i][n+1]^2*Γ.IFS[i].δ
+        big_sum[i] += coeffs_this_level[i][n+1]^2*μ.supp.ifs[i].δ
         for m=0:(n-1)
-            #big_sum[i] += coeffs_this_level[i][m+1]^2*(Γ.IFS[i].δ+Γ.IFS[i].r*A[m+1]) + coeffs_this_level[i][m+1]*coeffs_this_level[i][m+2]*Γ.IFS[i].r*(r[m+1]+r[m+2])
-            big_sum[i] += coeffs_this_level[i][m+1]^2*(Γ.IFS[i].δ+Γ.IFS[i].r*A[m+1])# +...
-            big_sum[i] += Γ.IFS[i].r*(2*coeffs_this_level[i][m+1]*coeffs_this_level[i][m+2])*r[m+2]
+            big_sum[i] += coeffs_this_level[i][m+1]^2*(μ.supp.ifs[i].δ+μ.supp.ifs[i].ρ*A[m+1])# +...
+            big_sum[i] += μ.supp.ifs[i].ρ*(2*coeffs_this_level[i][m+1]*coeffs_this_level[i][m+2])*r[m+2]
         end
-        # big_sum[i] *= getweights(Γ)[i]
-        denominator += getweights(Γ)[i]*coeffs_this_level[i][n+1]^2*Γ.IFS[i].r
+        denominator += μ.weights[i]*coeffs_this_level[i][n+1]^2*μ.supp.ifs[i].ρ
     end
-    return (getweights(Γ)'*big_sum)/(1-denominator)
+    return (μ.weights'*big_sum)/(1-denominator)
 end
 
-function get_Jacobi_matrix( μ::AbstractInvariantMeasure{T, B, V, A_},
+function getjacobimatrix( μ::AbstractInvariantMeasure{<:AbstractAttractor{T, <:Real}},
                             N::Integer
-                            ) where {T, B, V, A_}
+                            ) where {T<:Real}
 
     @assert μ.supp.n == 1 "Attractor must be compact subset of real line"
     # initialisation
-    A = zeros(B,N+1)
-    r = zeros(B,N+1)
-    J = zeros(B,N+1,N+1)
-    M = length(μ.ifs)
-    coeffs_one_below = [[T(1.0)] for _=1:M]
-    coeffs_two_below = [[T(0.0)] for _=1:M]
-    A[1] = μ.measure*μ.barycentre # checks out, given def'n of barycentre, should be ∫_Γ x dμ(x)
+    A = zeros(T, N+1)
+    r = zeros(T, N+1)
+    J = zeros(T, N+1, N+1)
+    M = length(μ.supp.ifs)
+    coeffs_one_below = [[one(T)] for _=1:M]
+    coeffs_two_below = [[zero(T)] for _=1:M]
+    A[1] = μ.suppmeasure*μ.barycentre # checks out, given def'n of barycentre, should be ∫_Γ x dμ(x)
 
     # iteration
     for n=1:N #we've done n=0 above
@@ -152,7 +150,7 @@ function get_Jacobi_matrix( μ::AbstractInvariantMeasure{T, B, V, A_},
         # step one
         modified_coeffs = [zeros(T,n+1) for _=1:M]
         for m=1:M
-            modified_coeffs[m] = get_next_modified_coeffs_from_coeffs(coeffs_one_below[m], coeffs_two_below[m], A, r, μ.ifs[m])
+            modified_coeffs[m] = get_next_modified_coeffs_from_coeffs(coeffs_one_below[m], coeffs_two_below[m], A, r, μ.supp.ifs[m])
         end
         
         # step two
@@ -178,4 +176,21 @@ function get_Jacobi_matrix( μ::AbstractInvariantMeasure{T, B, V, A_},
     J[N+1,N+1] = A[N+1]
     
     return J
+end
+
+"""
+    x,w = gauss_quadrule(Γ::AbstractInvariantMeasure{<:AbstractAttractor{<:Real, <:Real}},
+    N::Integer)
+
+Returns N Gaussian weights w ∈ Rᴺ and nodes x ∈ Rᴺˣᴺ.
+Here Γ must be an SelfSimilarFractal in one spatial dimension.
+N is the order of the Gauss rule, i.e. number of weights and nodes.
+"""
+function gauss_quadrule(μ::AbstractInvariantMeasure{<:AbstractAttractor{<:Real, <:Real}},
+                        N::Integer)
+    J = getjacobimatrix(μ, N-1)
+    vv = real.(eigvecs(J))
+    x = real.(eigvals(J))
+    w = vv[1,:].^2
+    return x,w
 end

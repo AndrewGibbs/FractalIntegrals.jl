@@ -285,6 +285,9 @@ HausdorffMeasure(Γ::AbstractAttractor{T, R}) where {T, R} =
                         get_hausdorff_weights(Γ),
                         Γ.symmetries)
 
+# create a nice shorthand for Hausdorff measure
+ℋᵈ = HausdorffMeasure
+
 # overload the indexing function, so we can get neat vector subscripts
 Base.getindex(μ::AbstractInvariantMeasure, inds...) = get_submeasure(μ, [i for i in inds])
 Base.getindex(μ::AbstractInvariantMeasure, inds::AbstractVector{<:Integer}) = get_submeasure(μ, inds)
