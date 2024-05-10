@@ -1,28 +1,42 @@
 
 
-function barycentre_quadrule( μ::F, h::H
-                                ) where {
-                                T,
-                                B,
-                                V,
-                                G,
-                                A<:HomogenousAttractor,
-                                H<:Real,
-                                F<:HausdorffMeasure{T,B,V,A,G}
-                                }
+# function barycentre_quadrule( μ::F, h::H
+#                                 ) where {
+#                                 T,
+#                                 B,
+#                                 V,
+#                                 G,
+#                                 A<:HomogenousAttractor,
+#                                 H<:Real,
+#                                 F<:HausdorffMeasure{T,B,V,A,G}
+#                                 }
 
+function get_bary_weights(μ::AbstractInvariantMeasure{A}, ℓmax::Integer
+                        ) where {A<:HomogenousAttractor}
+    w = μ.suppmeasure*copy(μ.weights)
+    for _ in 2:ℓmax
+        w = kron(μ.weights, w)
+    end
+    return w
+end
+
+get_bary_weights(μ::HausdorffMeasure, ℓmax::Integer) = 
+    fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), length(μ.supp.ifs)^ℓmax)
+
+function barycentre_quadrule( μ::AbstractInvariantMeasure{A}, h::Real
+                                ) where {T, R, A<:HomogenousAttractor{T, R}}
+
+    @assert h>0 "Quadrature parameter (second input) must be positive."
     ℓmax = max(ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ)), 0)
     M = length(μ.supp.ifs)
     N = M^ℓmax
-    w = fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), N)
     # the above line is the only one which needs modifying for more general measures
-    x = Vector{typeof(μ.barycentre)}(undef, N)
-    # x = zeros(B, N)
+    x = Vector{T}(undef, N)
     x[1] = μ.barycentre
     @inbounds for ℓ ∈ 1:ℓmax
         @views x[1:(M^ℓ)] .= μ.supp(x[1:(M^(ℓ-1))])
     end
-    return x, w
+    return x, get_bary_weights(μ, ℓmax)
 end
 
 # the below function should be in a more generic location.
@@ -40,14 +54,10 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},
     N1 = length(w1)
     N2 = length(w2)
     N = N1*N2
-    # X1 = zeros(eltype(x1), N)
-    # X2 = zeros(eltype(x2), N)
     X1 = Vector{eltype(x1)}(undef, N)
     X2 = Vector{eltype(x2)}(undef, N)
     W1 = Vector{eltype(w1)}(undef, N)
     W2 = Vector{eltype(w2)}(undef, N)
-    # W1 = zeros(eltype(w1), N)
-    # W2 = zeros(eltype(w2), N)
 
     @simd for n1 in 1:N1
         X1[((n1-1)*N2+1):(n1*N2)] .= x1
@@ -72,24 +82,17 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector, Number}},
     N1 = length(x1)
     N2 = length(x2)
     N = N1*N2
-    # X1 = zeros(eltype(x1), N)
-    # X2 = zeros(eltype(x2), N)
     X1 = Vector{eltype(x1)}(undef, N)
     X2 = Vector{eltype(x2)}(undef, N)
-    # W1 = fill(eltype(w1), N)
-    # W2 = zeros(eltype(w2), N)
 
     @simd for n1 in 1:N1
         X1[((n1-1)*N2+1):(n1*N2)] .= x1
-    # W1[((n1-1)*N2+1):(n1*N2)] .= w1
     end
 
     @simd for n2 in 1:N2
-        # X2[((n2-1)*N1+1):(n2*N1)] .= x2[n2]
         @inbounds for n2_ in ((n2-1)*N1+1):(n2*N1)
             X2[n2_] = x2[n2]
         end
-    # W2[((n2-1)*N1+1):(n2*N1)] .= w2[n2]
     end
 
     return X1, X2, fill(w1*w2, N)
@@ -106,7 +109,5 @@ function mapquadrule(μ::AbstractInvariantMeasure, m::AbstractVector{<:Integer},
     for mᵢ in reverse(m)
         X = μ.supp.ifs[mᵢ].(X)
     end
-    # W = prod(μ.weights[m]).*W
-
     return X, prod(μ.weights[m]).*W
 end

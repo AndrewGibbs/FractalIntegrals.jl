@@ -145,24 +145,44 @@ function fractaloffdiagblocks!(galerkinreps, N, M)
     end
 end
 
-function discretise(sio::AbstractSingularIntegralOperator,
+function get_galerkinreps(N::Integer, sio::AbstractSingularIntegralOperator)
+        M = length(sio.measure.supp.ifs)
+        # predetermine which entries are repeated in fractal matrix structures
+        galerkinreps = zeros(Int64, N, N)
+        if sio.selfadjoint
+            selfadjointreps!(galerkinreps, N) # not 'fractal' feature - follows from self-adjointness
+        end
+        if isa(sio.measure.supp.ifs, AbstractVector{<:TranslatingSimilarity})
+            fractaldiagblocks!(galerkinreps, N, M)
+        end
+        cleanreps!(galerkinreps)
+        return galerkinreps
+end
+
+function discretise(sio::AbstractSingularIntegralOperator{
+                            <:AbstractInvariantMeasure{
+                                <:AbstractAttractor{T, R}}, 
+                            Z},
                     ip::AbstractInnerProduct,
                     Vₕ::FractalBasis;
                     reps = true
-                    )
+                    ) where {
+                    T, R<:Real, Z<:Number}
     N = length(Vₕ)
-    M = length(sio.measure.supp.ifs)
-    galerkinmatrix = Array{typeof(sio.singularconst)}(undef, N, N)
-
-    # predetermine which entries are repeated in fractal matrix structures
-    galerkinreps = zeros(Int64, N, N)
-    selfadjointreps!(galerkinreps, N) # not 'fractal' feature - follows from self-adjointness
-    if reps
-        fractaldiagblocks!(galerkinreps, N, M)
-    end
-    cleanreps!(galerkinreps)
+    μ = sio.measure
     
-    # first loop avoids repeated entries
+    # get element type of Galerkin matrix
+    ElementType = promote_type(Z, eltype(T), R)
+
+    # initliase Galerkin matrix
+    galerkinmatrix = Array{ElementType}(undef, N, N)
+
+    # get matrix detailing repeated Galerkin entries
+    reps ? galerkinreps =
+        get_galerkinreps(N, sio) :
+        galerkinreps = zeros(Int64, N, N)
+    
+    # double loop computing inner products, avoiding repeated entries
     @sync for n in 1:N #@sync 
         @spawn begin #@spawn 
             for m in 1:N
@@ -173,7 +193,7 @@ function discretise(sio::AbstractSingularIntegralOperator,
         end
     end
 
-    # second loop fills in repeated entries
+    # second loop filling in repeated entries
     @sync for n in 1:N
         @spawn begin
             for m in 1:N
@@ -184,10 +204,7 @@ function discretise(sio::AbstractSingularIntegralOperator,
         end
     end
 
-    # store matrix as symmetric:
-    # most efficient way to invert matrix, also allows to do everything column major
-
-    return DiscreteFractalOperator(sio, ip, Vₕ, Symmetric(galerkinmatrix, :L))
+    return DiscreteFractalOperator(sio, ip, Vₕ, galerkinmatrix)
 end
 
 struct Projection{B<:FractalBasis, V<:AbstractVector}

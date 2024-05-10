@@ -1,7 +1,7 @@
 module FractalIntegrals
 
 import StaticArrays: SVector, SMatrix, mul!
-import LinearAlgebra: norm, det, dot, Symmetric
+import LinearAlgebra: norm, det, dot, Symmetric, kron
 import LinearAlgebra.I as IdMat
 import SpecialFunctions: hankelh1
 import Roots: find_zero, Bisection
@@ -21,9 +21,9 @@ include("operators.jl")
 include("operatorpresets.jl")
 include("innerproducts.jl")
 include("projections.jl")
-export discretise
+# export discretise
 include("fractalpresets.jl")
-export cantorset, cantordust
+# export cantorset, cantordust
 include("potentials.jl")
 include("plots.jl")
 

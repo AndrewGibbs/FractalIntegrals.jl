@@ -5,26 +5,26 @@
 # abstract types
 
 abstract type AffineMap end
-abstract type AbstractSimilarity <: AffineMap end
+abstract type AbstractSimilarity{R<:Real, T} <: AffineMap end
 
 # concrete types
 
-struct Similarity{T<:Number, V<:AbstractVector{T}, M<:AbstractMatrix{T}} <: AbstractSimilarity
-    ρ :: T
-    δ :: V
+struct Similarity{R, T, M<:AbstractMatrix} <: AbstractSimilarity{R, T}
+    ρ :: R
+    δ :: T
     A :: M
     ρA :: M
 end
 
-struct TranslatingSimilarity{T<:Number, V<:AbstractVector{T}} <: AbstractSimilarity
-    ρ :: T
-    δ :: V
-    A :: T
-    ρA :: T
+struct TranslatingSimilarity{R, T} <: AbstractSimilarity{R, T}
+    ρ :: R
+    δ :: T
+    A :: R
+    ρA :: R
 end
 
-struct OneDimensionalSimilarity{T<:Number} <: AbstractSimilarity
-    ρ :: T
+struct OneDimensionalSimilarity{R, T} <: AbstractSimilarity{R, T}
+    ρ :: R
     δ :: T
     A :: T
     ρA :: T
@@ -33,17 +33,17 @@ end
 # outer constructors
 function Similarity(ρ::T1, δ::AbstractVector{T2}) where {T1<:Number, T2<:Number}
     @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
-    T = promote_type(T1,T2)
+    T = promote_type(T1, T2)
     return TranslatingSimilarity(T(ρ), SVector{length(δ),T}(δ), one(T), T(ρ))
 end
 
-function Similarity(ρ::T1, δ::AbstractVector{T2}, A::AbstractMatrix{T3}) where {T1<:Number, T2<:Number, T3<:Number}
+function Similarity(ρ::T1, δ::AbstractVector{T2}, A::AbstractMatrix{T3}
+                    ) where {T1<:Number, T2<:Number, T3<:Number}
     @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
     @assert abs(det(A)) ≈ 1 "Matrix (third argument) must have determinant one"
     N = length(δ)
     @assert (N,N) == size(A) "Matrix dimension must match translation vector"
     T = promote_type(T1,T2,T3)
-    #{T,SVector{N,T},SMatrix{N,N,T,N^2}(A)}
     return Similarity(T(ρ), SVector{N,T}(δ), SMatrix{N,N,T}(A), SMatrix{N,N,T}(ρ*A))
 end
 
@@ -56,17 +56,19 @@ end
 
 # promotion of non-rotating map to rotating map (with identity rotation matrix)
 
-function Base.convert(::Type{Similarity{T,V,M}}, s::TranslatingSimilarity{T,V}) where {T<:Number,V<:AbstractVector,M<:AbstractMatrix}
-    A = convert(M,IdMat(length(s.δ)))
+function Base.convert(::Type{Similarity{R, T, M}}, s::TranslatingSimilarity{R, T}
+                        ) where {R<:Real, T<:AbstractVector, M<:AbstractMatrix}
+    A = convert(M, IdMat(length(s.δ)))
     return Similarity(s.ρ, s.δ, A, s.ρ*A)
 end
 
 # Base.promote_rule(Type{Similarity{T, V, M}}, Type{TranslatingSimilarity{T, V}}) where {T<:Number,V<:AbstractVector,M<:AbstractMatrix} = Similarity{T, V, M}
-Base.promote_rule(::Type{Similarity{T, V, M}}, ::Type{TranslatingSimilarity{T, V}}) where {T<:Number,V<:AbstractVector,M<:AbstractMatrix} = Similarity{T, V, M}
+Base.promote_rule(::Type{Similarity{R, T, M}}, ::Type{TranslatingSimilarity{R, T}}
+                ) where {R<:Real, T<:AbstractVector, M<:AbstractMatrix} = Similarity{R, T, M}
 
 # composition of two similarities
-simcomp(s₁::S,s₂::S) where S<:AbstractSimilarity = S(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
-simcomp(s₁::TranslatingSimilarity,s₂::Similarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρ*s₂.δ, s₂.A, s₂.ρA)
+simcomp(s₁::S, s₂::S) where S<:AbstractSimilarity = S(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
+simcomp(s₁::TranslatingSimilarity, s₂::Similarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρ*s₂.δ, s₂.A, s₂.ρA)
 # (does not commute)
 simcomp(s₁::Similarity,s₂::TranslatingSimilarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A, s₁.ρA)
 simcomp(s₁::TranslatingSimilarity,s₂::TranslatingSimilarity) = TranslatingSimilarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, one(typeof(s₁.ρ*s₂.ρ)), s₁.ρ*s₂.ρ)
@@ -112,13 +114,12 @@ Base.show(io::IO, s::AbstractSimilarity)  = print(io,'\n',typeof(s),':','\n', in
 
 # affine maps
 
-abstract type AbstractInvariantMap <:AffineMap end
+abstract type AbstractInvariantMap{T} <:AffineMap end
 
-struct InvariantMap{T<:Number, V<:AbstractVector{T}, M<:AbstractMatrix{T}} <: AbstractInvariantMap
-    δ :: V
+struct InvariantMap{T<:SVector, M<:SMatrix} <: AbstractInvariantMap{T}
+    δ :: T
     A :: M
 end
-
 
 # check this outer constructor fixes the problem!
 function InvariantMap(δ::AbstractVector{T1}, A::AbstractArray{T2}
@@ -129,36 +130,23 @@ function InvariantMap(δ::AbstractVector{T1}, A::AbstractArray{T2}
     n = length(δ)
     δ_ = SVector{n,T}(δ)
     A_ = SMatrix{n,n,T}(A)
-    return InvariantMap{T, typeof(δ_), typeof(A_)}(δ_, A_)
+    return InvariantMap{typeof(δ_), typeof(A_)}(δ_, A_)
+    #InvariantMap{typeof(δ_), typeof(A_)}(δ_, A_)
 end
 
-struct OneDimensionalInvariantMap{T<:Number} <: AbstractInvariantMap
+struct OneDimensionalInvariantMap{T} <: AbstractInvariantMap{T}
     δ :: T
     A :: T
 end
-OneDimensionalInvariantMap(δ::Number, A::Number) = OneDimensionalInvariantMap(promote(δ, A)...)
+# OneDimensionalInvariantMap(δ::Number, A::Number) = OneDimensionalInvariantMap(promote(δ, A)...)
 
 Base.convert(::Type{OneDimensionalInvariantMap{Tout}},
             m::OneDimensionalInvariantMap{Tin}
             ) where {Tin <:Number, Tout <: Number} = 
             OneDimensionalInvariantMap(convert(Tout, m.δ), convert(Tout, m.A))
 
-Base.promote_rule(::Type{OneDimensionalInvariantMap{T}}, ::Type{OneDimensionalInvariantMap{I}}) where {T<:Number,I<:Number} = OneDimensionalInvariantMap{promote_type(T,I)}
-
-# need to define identity similarity
-# need to define 'one' equivalent for these three, which unfornately needs extra input
-# Have removed function below because it is not type stable
-# function IdentitySimilarity(T::Type, n::Integer)
-#     if n==1
-#         I = OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
-#     else
-#         I = TranslatingSimilarity(one(T), # contraction
-#                                 SVector{n,T}(zeros(n)), # translation
-#                                 one(T), # rotation
-#                                 one(T)) # rotation*contraction
-#     end
-#     return I
-# end
+Base.promote_rule(::Type{OneDimensionalInvariantMap{T}}, ::Type{OneDimensionalInvariantMap{I}}
+                    ) where {T<:Number,I<:Number} = OneDimensionalInvariantMap{promote_type(T,I)}
 
 Base.one(::OneDimensionalSimilarity{T}) where {T<:Number} = 
     OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
@@ -197,7 +185,7 @@ function get_group_operations2d(num_rotations::Integer,
     δθ = 2π / num_rotations
     num_reflections = length(reflections)
     
-    ivmaps = Vector{InvariantMap{T, SVector{2,T}, SMatrix{2,2,T,4}}
+    ivmaps = Vector{InvariantMap{SVector{2,T}, SMatrix{2,2,T,4}}
                     }(undef, num_rotations + num_reflections)#[IdentityMap(2) for _=1:(num_rotations+num_reflections)]
 
     counter = 0

@@ -59,7 +59,7 @@ function subdivide_indices(Γ::AbstractAttractor, h::Real, max_num_indices = Inf
     return I
 end
 
-abstract type FractalBasis{M<: AbstractInvariantMeasure, E<: AbstractVector} end
+abstract type FractalBasis{M<:AbstractInvariantMeasure, E<:AbstractVector} end
 
 struct P0Basis{ M <: AbstractInvariantMeasure,
                 E <: AbstractVector{<:P0BasisElement}

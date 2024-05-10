@@ -182,9 +182,7 @@ function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
                                     μ₂::AbstractInvariantMeasure,
                                     s::Number;
                                     use_strategy_two::Bool = true
-                                    ) where {
-                                    V<:Union{Real,AbstractVector},
-                                    M_<:Union{Real,AbstractMatrix}}
+                                    )
 
     # initialise stuff
     S = [([0],[0])] # needs to be a collection of pairs of indices

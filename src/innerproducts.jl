@@ -1,12 +1,11 @@
 abstract type AbstractInnerProduct end
 
 struct InnerProduct{X<:AbstractVector,
-                                    W<:AbstractVector,
-                                    S<:AbstractVector,
-                                    # T<:Real,
-                                    I<:AbstractVector{<:Number},
-                                    K<:FractalOperator
-                                    } <: AbstractInnerProduct
+                    W<:AbstractVector,
+                    S<:AbstractVector,
+                    I<:AbstractVector{<:Number},
+                    K<:FractalOperator
+                    } <: AbstractInnerProduct
     
     sio :: K
     x :: X
@@ -96,13 +95,15 @@ function sesquilinearform(  ip::InnerProduct,
 
     # first do cheap test - if elements are touching,
     # distance of barycentres must be more than combined diameter:
-    if norm(ϕ.measure.barycentre - ψ.measure.barycentre) < (ϕ.measure.supp.diam + ψ.measure.supp.diam)
+    if norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
+        (ϕ.measure.supp.diam + ψ.measure.supp.diam)
         # passed initial cheap test for being singular
         # assume that singularity is 'similar' to canonical singular integral
         singular_slf, ρ, similar_index = 
             check_for_similar_integrals(ip.sio.measure.supp,
                                     ip.singular_indices, 
-                                    ϕ.vindex,  ψ.vindex,
+                                    ϕ.vindex,
+                                    ψ.vindex,
                                     ip.sio.measure.symmetries,
                                     ip.sio.measure.symmetries,
                                     true

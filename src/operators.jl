@@ -1,7 +1,6 @@
 abstract type FractalOperator end
-abstract type IntegralOperator <: FractalOperator end
-abstract type AbstractSingularIntegralOperator <: IntegralOperator end
-
+abstract type IntegralOperator{M<:AbstractInvariantMeasure, Z<:Number} <: FractalOperator end
+abstract type AbstractSingularIntegralOperator{M, Z} <: IntegralOperator{M, Z} end
 
 struct SingularIntegralOperator{
         M <: AbstractInvariantMeasure,
@@ -9,7 +8,7 @@ struct SingularIntegralOperator{
         F2 <: Function,
         S <: Real,
         Z <: Number
-        } <: AbstractSingularIntegralOperator
+        } <: AbstractSingularIntegralOperator{M, Z}
     measure::M
     kernel::F1
     lipschitzpart::F2
@@ -23,14 +22,14 @@ struct OscillatorySingularIntegralOperator{
         F1 <: Function,
         F2 <: Function,
         S <: Real,
-        Zc <: Number,
+        Z <: Number,
         Zk <: Number
-        } <: AbstractSingularIntegralOperator
+        } <: AbstractSingularIntegralOperator{M, Z}
     measure::M
     kernel::F1
     lipschitzpart::F2
     s::S
-    singularconst::Zc
+    singularconst::Z
     selfadjoint::Bool
     wavenumber::Zk
 end
