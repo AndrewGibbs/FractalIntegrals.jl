@@ -42,3 +42,5 @@ function (pot::Potential)(X::AbstractArray{<:AbstractArray{<:Number}})
     # end
     return U
 end
+
+include("potentialpresets.jl")
