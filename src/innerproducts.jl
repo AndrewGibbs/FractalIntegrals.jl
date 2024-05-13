@@ -76,11 +76,6 @@ function InnerProduct(  sio::AbstractSingularIntegralOperator,
     return InnerProduct(sio, allquads, allweights, singular_indices, prepared_singular_vals)
 end
 
-# function innerproduct(ip::HomogInnerProduct, f::Function, ψ::P0BasisElement)
-#     x = [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0]
-#     return conj(ψ.normalisation) * dot(conj(ip.w), f.(x))
-# end
-
 innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
     conj(ψ.normalisation) * dot(conj(ip.w[ψ.index]), f.(ip.x[ψ.index]))
 

@@ -10,6 +10,8 @@ export Similarity, FractaPresets
 import ChunkSplitters: chunks
 using Plots
 
+export getfractal
+
 include("affinemaps.jl")
 include("fractalmeasures.jl")
 include("boundingball.jl")

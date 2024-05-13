@@ -16,3 +16,20 @@ function cantordust(; ρ = 1/3)
 end
 
 # end
+
+# the following dict will be used to get fractals without exporting all of these functions
+fractaldict = Dict(
+                    :cantorset => cantorset,
+                    :cantordust => cantordust
+                    )
+
+function getfractal(fractalname::Symbol; vargs...)
+    if haskey(fractaldict, fractalname)
+        return fractaldict[fractalname](;vargs...)
+    else
+        str_fractalname = String(fractalname)
+        error("Invalid fractal name: $str_fractalname")
+    end
+end
+
+getfractal(fractalname::String; vargs...) = getfractal(Symbol(fractalname); vargs...)
