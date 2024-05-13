@@ -82,7 +82,7 @@ end
 # end
 
 innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
-    conj(ψ.normalisation) * dot(conj(ip.w[ψ.index]), f.(x[ψ.index]))
+    conj(ψ.normalisation) * dot(conj(ip.w[ψ.index]), f.(ip.x[ψ.index]))
 
 function sesquilinearform(  ip::InnerProduct,
                             ϕ::P0BasisElement,

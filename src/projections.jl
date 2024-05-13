@@ -22,25 +22,48 @@ end
 #     return discretise(sio, ip, Vₕ; kwargs...)
 # end
 
-getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) = 2π / abs(10*sio.wavenumber)
-getdefault_meshwidth(sio::SingularIntegralOperator) = sio.diam / 5
-function getdefault_quad(sio::AbstractSingularIntegralOperator; h_quad::Real = 0.0)
+# default constants
+DOFS_PER_WAVELENGTH = 10
+DOFS_FOR_NONOSCILLATORS = 5
+QUAD_EXTRA_LEVELS = 5
+QUAD_DEFAULT_GAUSS = 5
+
+getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) =
+    2π / abs(DOFS_PER_WAVELENGTH*sio.wavenumber)
+
+getdefault_meshwidth(sio::IntegralOperator) =
+    sio.diam / DOFS_FOR_NONOSCILLATORS
+
+getdefault_quadwidth(sio::IntegralOperator) =
+    getdefault_meshwidth(sio) /
+        maximum(sₘ.ρ for sₘ in sio.measure.supp.ifs)^QUAD_EXTRA_LEVELS
+
+getdefault_gaussorder(::IntegralOperator) = QUAD_DEFAULT_GAUSS
+
+function getdefault_quad(sio::AbstractSingularIntegralOperator;
+                        h_quad::Real = 0.0,
+                        N_quad::Integer = 0)
     if h_quad > 0
-        barycentre_quadrule(sio.measure, h_quad)
+        x, w = barycentre_quadrule(sio.measure, h_quad)
     elseif sio.measure.supp.n == 1
-        # replace this with Gauss rule when I've coded it
-        @warn("Need to replace this option with Mantica Gauss")
-        barycentre_quadrule(sio.measure, getdefault_meshwidth(sio))
+        if N_quad >= 1
+            x, w = gauss_quadrule(sio.measure, N_quad)
+        else
+            x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
+        end
     else
-        barycentre_quadrule(sio.measure, getdefault_meshwidth(sio))
+        x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
     end
+    return x, w
 end
 
 # new style which allows us to try different quadrature rules
 function discretise(sio::AbstractSingularIntegralOperator;
                     h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
                     h_quad::Real = 0.0, # quick option for Barycentre rule
-                    quadrule::Tuple{AbstractVector,AbstractVector} = getdefault_quad(sio, h_quad = h_quad),
+                    N_quad::Integer = 0,
+                    quadrule::Tuple{AbstractVector,AbstractVector} =
+                        getdefault_quad(sio, h_quad = h_quad, N_quad = N_quad),
                     kwargs...)
     Vₕ = construct_p0basis(sio.measure, h_mesh)
     # quadpts, quadweights = barycentre_quadrule(sio.measure, h_quad)
@@ -227,4 +250,13 @@ function Base.:\(op::DiscreteFractalOperator, f::Function)
                     f)
     coeffs = op.galerkinmatrix \ fₕ.coeffs
     return Projection(op.basis, coeffs)
+end
+
+function Base.:\(op::FractalOperator, f::Function)
+    discop = discretise(op)
+    fₕ = project(   discop.ip, # inner product
+                    discop.basis, # basis
+                    f)
+    coeffs = discop.galerkinmatrix \ fₕ.coeffs
+    return Projection(discop.basis, coeffs)
 end
