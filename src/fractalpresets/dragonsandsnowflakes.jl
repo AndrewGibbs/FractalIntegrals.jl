@@ -4,8 +4,8 @@
 
 function heighwaydragon(T = Float64)
     # get the iterated function system
-    ifs = [ Similarity(1/sqrt(T(2)), Vector{T}([0.0, 0.0]), rotation2d(T(π)/4)),
-            Similarity(1/sqrt(T(2)), Vector{T}([1.0, 0.0]), rotation2d(3T(π)/4))]
+    ifs = [ Similarity(1/sqrt(T(2)), Vector{T}([0.0, 0.0]), rotationmatrix2d(T(π)/4)),
+            Similarity(1/sqrt(T(2)), Vector{T}([1.0, 0.0]), rotationmatrix2d(3T(π)/4))]
 
     # construct the connectedness matrix
     connectedness = Bool[  1 0 0 0;
@@ -14,13 +14,13 @@ function heighwaydragon(T = Float64)
                             0 0 0 1]
 
     # no symmetries or analytic formula for the diameter
-    InvariantMeasure(ifs, d = 2, connectedness = connectedness)
+    Attractor(ifs, d = 2, connectedness = connectedness)
 end
 
 function kochsnowflake(T = Float64; rescale = sqrt(T(3))/3)
     
     # construct the iterated function system for the Koch
-    ifs = [ Similarity(sqrt(1/T(3)), rescale*[0, 0], T(π)/6),
+    ifs = [ Similarity(sqrt(1/T(3)), rescale*[0, 0], rotationmatrix2d(T(π)/6)),
             Similarity(1/3, rescale*[0, 2/3]),
             Similarity(1/3, rescale*[-1/sqrt(T(3)), 1/3]),
             Similarity(1/3, rescale*[-1/sqrt(T(3)), -1/3]),
@@ -100,5 +100,8 @@ function kochsnowflake(T = Float64; rescale = sqrt(T(3))/3)
     end
     area =  2*3*sqrt(T(3))/5 * rescale^2
     
-    InvariantMeasure(ifs, d = 2, connectedness = connectedness, selfmeasure = area)
+    Attractor(  ifs,
+                d = 2,
+                connectedness = connectedness,
+                symmetries = DihedralGroup(T, 6))
 end

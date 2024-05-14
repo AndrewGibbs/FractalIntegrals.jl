@@ -16,7 +16,7 @@ fractaldict = Dict(
                     # Lebesgue measurable d=2 attractors / dragons
                     :heighwaydragon => heighwaydragon,
                     :kochsnowflake => kochsnowflake,
-                    :kochflake => :kochsnowflake, # alt name for kochsnowflake
+                    :kochflake => kochsnowflake, # alt name for kochsnowflake
                     :kochcurve => kochcurve,
                     :sierpinskicarpet => sierpinskicarpet,
                     :carpet => sierpinskicarpet # alt name for sierpinskicarpet
@@ -32,7 +32,8 @@ function getfractal(T::Type, fractalname::Symbol; vargs...)
 end
 
 # make option to pass String instead of Symbol
-getfractal(fractalname::String; vargs...) = getfractal(Symbol(fractalname); vargs...)
+getfractal(T::Type, fractalname::String; vargs...) =
+    getfractal(T::Type, Symbol(fractalname); vargs...)
 
 # define default type
 getfractal(fractalname; vargs...) = getfractal(Float64, fractalname; vargs...)

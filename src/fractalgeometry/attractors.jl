@@ -147,7 +147,7 @@ function Attractor( ifs::AbstractVector{S};
                     diam = diam(ifs),
                     d::Real = dimH(ifs), # integers welcome
                     connectedness = Matrix(IdMat(length(ifs))),
-                    symmetries = trivialgroup(length(ifs[1].δ))
+                    symmetries = trivialgroup(typeof(ifs[1].ρ), length(ifs[1].δ))
                     ) where S<:AbstractSimilarity
 
     n = length(ifs[1].δ) # ambient dimensions

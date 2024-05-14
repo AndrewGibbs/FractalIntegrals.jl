@@ -42,12 +42,12 @@ function cantordust(T = Float64; ρ = 1/T(3))
     return Attractor(   ifs,
                         d = log(T(4))/log(1/ρ),
                         diam = sqrt(T(2)),
-                        symmetries = DihedralGroup(4),
+                        symmetries = DihedralGroup(T, 4),
                         connectedness = connectedness)
 end
 
 function vicsek(T = Float64; ρ = 1/T(3))
-        @assert 0 < ρ <= 1/3 "Contraction must satisfy ρ∈(0,1/3]"
+        @assert 0 < ρ <= 1/T(3) "Contraction must satisfy ρ∈(0,1/3]"
         @assert isa(ρ, T) "Contraction ρ must be same type as first input"
         # note that automatic conversion T(ρ) will truncate ρ in some cases, so is best avoided
 
@@ -74,7 +74,7 @@ function vicsek(T = Float64; ρ = 1/T(3))
         return Attractor(ifs,
                         d = log(T(5))/log(1/ρ),
                         diam = sqrt(T(2)),
-                        symmetries = DihedralGroup(4),
+                        symmetries = DihedralGroup(T, 4),
                         connectedness = connectedness)
 end
 
@@ -84,9 +84,9 @@ function sierpinskitriangle(T = Float64; ρ = T(1/2))
     # note that automatic conversion T(ρ) will truncate ρ in some cases, so is best avoided
     
     # get iterated function system
-    courage = Similarity(T, [zero(T), zero(T)])
-    wisdom  = Similarity(T, [1/T(2), zero(T)])
-    power   = Similarity(T, [1/T(4), sqrt(T(3))/4])
+    courage = Similarity(ρ, [zero(T), zero(T)])
+    wisdom  = Similarity(ρ, [1/T(2), zero(T)])
+    power   = Similarity(ρ, [1/T(4), sqrt(T(3))/4])
     ifs = [courage, wisdom, power]
 
     # get connectedness matrix, depends on if subcomponents are touching
@@ -96,7 +96,7 @@ function sierpinskitriangle(T = Float64; ρ = T(1/2))
     return Attractor(ifs,
                     d = log(T(5))/log(1/T(ρ)),
                     diam = one(T),
-                    symmetries = DihedralGroup(3),
+                    symmetries = DihedralGroup(T, 3),
                     connectedness = connectedness)
 end
 
@@ -104,7 +104,7 @@ function kochcurve(T = Float64)
 
     # get iterated function system:
     ifs = [ Similarity(1/T(3), [0, 0]),
-            Similarity(1/T(3), [1/T(3),0], T(π)/T(3)),
+            Similarity(1/T(3), [1/T(3),0], rotationmatrix2d(T(π)/T(3))),
             Similarity(1/T(3), [1/2, sqrt(T(3))/6], rotationmatrix2d(-T(π)/T(3))),
             Similarity(1/T(3), [2/T(3),0])]
 
@@ -115,13 +115,15 @@ function kochcurve(T = Float64)
                         false false true true]
 
     # get reflective symmetry group:
-    G = [IdentityInvariantMap(T, 1), OneDimensionalInvariantMap(T(1), T(-1))]
+    
+    horizontal_reflection_group =
+        [IdentityInvariantMap(T, 2), InvariantMap(Vector{T}([1,0]), Matrix{T}([-1 0; 0 1]))]
 
     # return attractor
     return Attractor(ifs,
                     diam = one(T),
                     connectedness = connectedness,
-                    symmetries = G);
+                    symmetries = horizontal_reflection_group);
 end
 
 function sierpinskicarpet(T = Float64; ρ = T(1/3))
@@ -162,7 +164,7 @@ function sierpinskicarpet(T = Float64; ρ = T(1/3))
     return Attractor(ifs,
                     d = log(T(8))/log(T(3)),
                     diam = sqrt(T(2)),
-                    symmetries = DihedralGroup(4),
+                    symmetries = DihedralGroup(T, 4),
                     connectedness = connectedness)
 
 end
