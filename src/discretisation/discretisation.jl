@@ -3,8 +3,6 @@
 # default constants
 DOFS_PER_WAVELENGTH = 20
 DOFS_FOR_NONOSCILLATORS = 5
-QUAD_EXTRA_LEVELS = 5
-QUAD_DEFAULT_GAUSS = 5
 
 function vindex_to_scalar(M::Integer, ℓ::Integer, m::AbstractVector{<:Integer})
     n = 1

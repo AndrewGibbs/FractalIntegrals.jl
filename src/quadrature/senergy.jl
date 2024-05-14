@@ -313,42 +313,36 @@ Computes the s-energy of a fractal Γ, using the function quad_rule. This must b
 where A and B are SelfSimilarFractal.
 If quad_rule is replaced by some h::Number, the barycentre rule is used with meshwidth h.
 """
-function s_energy(μ₁::AbstractInvariantMeasure,
-                μ₂::AbstractInvariantMeasure,
-                s::Number,
-                ∫∫::Function;
-                use_strategy_two::Bool = true
-                )
+function s_energy(  μ₁::AbstractInvariantMeasure,
+                    μ₂::AbstractInvariantMeasure,
+                    s::Number;
+                    h_quad::Float64 = 0.0,
+                    N_quad::Int64 = 0,
+                    quadrule::Tuple{AbstractArray, AbstractArray, AbstractArray} =
+                        getdefault_quad(μ₁, μ₂, h_quad = h_quad, N_quad = N_quad),
+                    use_strategy_two::Bool = true
+                    )
 
+    @assert μ₁.supp == μ₂.supp "Supports of measures must match."
+
+    # execute main algorithm to express singular integral in terms of smooth integrals
     A,B,_,R,L = construct_singularity_matrix(μ₁, μ₂, s, use_strategy_two = use_strategy_two)
     
     r = zeros(length(R))
     for n in eachindex(r)
         (m,m_) = R[n]
-        r[n] = ∫∫(μ₁[m], μ₂[m_], (x,y)-> energykernel(s,x,y))
+        # map quadrature rule to (m,m') subcomponents
+        x, y, w = mapquadrule(μ₁, μ₂, m, m_, quadrule[1], quadrule[2], quadrule[3])
+        r[n] = dot(transpose(w), energykernel(s, x, y))
     end
     x = A\(B*r+L)
 
     return x[1]
 end
 
-function s_energy(μ₁::AbstractInvariantMeasure,
-    μ₂::AbstractInvariantMeasure,
-    s::Number,
-    h::Real; # might not need to redefine as const because this is not referenced
-    use_strategy_two::Bool = true
-    )
-    # define local barycentre rule approx to s-energy
-    function ∫∫(A::AbstractInvariantMeasure, B::AbstractInvariantMeasure, f::Function)
-        x, y, w = barycentre_quadrule(A, B, h)
-        return w'*f(x,y)
-    end
+# common case of using the same measure twice
+s_energy(μ, s; vargs...) = s_energy(μ, μ, s; vargs...)
 
-    return s_energy(μ₁, μ₂, s, ∫∫; use_strategy_two = use_strategy_two)
-end
-
-s_energy(μ::AbstractInvariantMeasure,
-    s::Number,
-    ∫∫_or_h::Union{Function,Real};
-    use_strategy_two::Bool = true
-    ) = s_energy(μ, μ, s, ∫∫_or_h; use_strategy_two = use_strategy_two)
+# default to Hausdorff measure when attractor is passed as first argument
+s_energy(Γ::AbstractAttractor, s; vargs...) =
+    s_energy(HausdorffMeasure(Γ), HausdorffMeasure(Γ), s; vargs...)

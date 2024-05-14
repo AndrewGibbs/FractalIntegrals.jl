@@ -11,6 +11,17 @@ using Test
     end
 end
 
+@testset "singular line segment" begin
+    Γ = FractalIntegrals.cantorset(ρ = 1/2)
+    for s in rand(5)
+        I = 2/((1 - s)*(2 - s))
+        @testset "s=$s" begin
+            @test FractalIntegrals.s_energy(Γ, s, N_quad = 10) ≈ I
+            @test FractalIntegrals.s_energy(Γ, s, h_quad = 0.001) ≈ I rtol=1e-4
+        end
+    end
+end
+
 # other tests to implement
 
 # wave-based

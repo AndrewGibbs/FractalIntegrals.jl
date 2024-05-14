@@ -15,10 +15,14 @@ getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) =
     2π / abs(DOFS_PER_WAVELENGTH*sio.wavenumber)
 
 getdefault_meshwidth(sio::IntegralOperator) =
-    sio.diam / DOFS_FOR_NONOSCILLATORS
+    sio.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
+
+
+# getdefault_quadwidth(Γ::AbstractAttractor) =
+#     maximum(sₘ.ρ for sₘ in Γ.ifs)^QUAD_EXTRA_LEVELS
 
 getdefault_quadwidth(sio::IntegralOperator) =
-    getdefault_meshwidth(sio) /
+    getdefault_meshwidth(sio) *
         maximum(sₘ.ρ for sₘ in sio.measure.supp.ifs)^QUAD_EXTRA_LEVELS
 
 getdefault_gaussorder(::IntegralOperator) = QUAD_DEFAULT_GAUSS
@@ -39,6 +43,23 @@ function getdefault_quad(sio::AbstractSingularIntegralOperator;
     end
     return x, w
 end
+
+# function getdefault_quad(sio::AbstractSingularIntegralOperator;
+#                         h_quad::Real = 0.0,
+#                         N_quad::Integer = 0)
+#     if h_quad > 0
+#         x, w = barycentre_quadrule(sio.measure, h_quad)
+#     elseif sio.measure.supp.n == 1
+#         if N_quad >= 1
+#             x, w = gauss_quadrule(sio.measure, N_quad)
+#         else
+#             x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
+#         end
+#     else
+#         x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
+#     end
+#     return x, w
+# end
 
 # new style which allows us to try different quadrature rules
 function discretise(sio::AbstractSingularIntegralOperator;

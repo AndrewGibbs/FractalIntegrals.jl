@@ -32,3 +32,9 @@ function barycentre_quadrule(μ₁, μ₂, h)
     
     return combine_quadrules(x1, w1, x2, w2)
 end
+
+barycentre_quadrule(Γ₁::AbstractAttractor, h::Real) =
+    barycentre_quadrule(HausdorffMeasure(Γ₁), h::Real)
+
+barycentre_quadrule(Γ₁::AbstractAttractor, Γ₂::AbstractAttractor, h::Real) =
+    barycentre_quadrule(HausdorffMeasure(Γ₁), HausdorffMeasure(Γ₂), h::Real)

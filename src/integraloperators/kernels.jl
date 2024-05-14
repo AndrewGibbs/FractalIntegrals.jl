@@ -84,3 +84,6 @@ function helmholtzkernel3d_lipschitzpart(k::Number, x, y)
     end
     return Φ
 end
+
+# zero kernel - a useful convention
+zero_kernel(x::AbstractArray, y::AbstractArray) = zeros(length(x)) 
