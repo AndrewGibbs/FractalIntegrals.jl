@@ -50,10 +50,10 @@ energykernel(s::Number, r::Number) = s==0 ? log(r) : r^-s
 energykernel(s::Number, x, y) = energykernel.(s, vecdist(x,y))
 
 # Helmholtz kernels
-helmholtzkernel2d(k::Number, x, y) = (im/4)*hankelh1.(0,k*vecdist(x,y))
+helmholtzkernel2d(k::Number, x, y) = (im/4) * hankelh1.(0, k*vecdist(x,y))
 function helmholtzkernel3d(k::Number, x, y)
-    r = vecdist(x,y)
-    return exp.(im*k*r)./(4π*r)
+    r = vecdist(x, y)
+    return cis.(k*r)./(4π*r)
 end
 
 # Lipschitz parts of Helmholtz kernels
