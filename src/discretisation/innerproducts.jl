@@ -58,19 +58,9 @@ function InnerProduct(  sio::AbstractSingularIntegralOperator,
     μ = Vₕ.measure
 
     prepared_singular_vals, singular_indices = getsingularinfo(μ, sio.s, X, W)
-
-    # second, prepare data for smooth integrals
-
-    # old homogeneous special case:
-    # x, w =  mapquadrule(μ, Vₕ[1].vindex, X, W)
-    # X = [xⱼ - Vₕ[1].measure.barycentre for xⱼ in x]
     
     # second, prepare data for smooth integrals
-    allquads = Vector{typeof(X)}(undef,length(Vₕ))
-    allweights = Vector{typeof(W)}(undef,length(Vₕ))
-    for (n, ϕₙ) in enumerate(Vₕ)
-        allquads[n], allweights[n] = mapquadrule(μ, ϕₙ.vindex, X, W)
-    end
+    allquads, allweights = mapquadrule_to_elements(Vₕ, X, W)
 
     # create instance, containing everything needed to evaluate dual pairings
     return InnerProduct(sio, allquads, allweights, singular_indices, prepared_singular_vals)

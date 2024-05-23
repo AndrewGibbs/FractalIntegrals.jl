@@ -77,3 +77,16 @@ function construct_p0basis(μ::AbstractInvariantMeasure, h::Real)
     Vₕ = P0Basis(μ, [P0BasisElement(μ[m], 1.0, n, m) for (n,m) in enumerate(Lₕ)])
     return Vₕ
 end
+
+# quadrature type function - but needs to be defined after FractalBasis
+
+function mapquadrule_to_elements(Vₕ::FractalBasis, X, W)
+
+    allquads = Vector{typeof(X)}(undef, length(Vₕ))
+    allweights = Vector{typeof(W)}(undef, length(Vₕ))
+    for (n, ϕₙ) in enumerate(Vₕ)
+        allquads[n], allweights[n] = mapquadrule(Vₕ.measure, ϕₙ.vindex, X, W)
+    end
+
+    return allquads, allweights
+end
