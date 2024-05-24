@@ -80,13 +80,18 @@ end
 
 # quadrature type function - but needs to be defined after FractalBasis
 
-function mapquadrule_to_elements(Vₕ::FractalBasis, X, W)
+# function mapquadrule_to_elements(Vₕ::FractalBasis, X, W)
+function mapquadrule_to_elements(Vₕ::FractalBasis, q::QuadStruct)
 
-    allquads = Vector{typeof(X)}(undef, length(Vₕ))
-    allweights = Vector{typeof(W)}(undef, length(Vₕ))
-    for (n, ϕₙ) in enumerate(Vₕ)
-        allquads[n], allweights[n] = mapquadrule(Vₕ.measure, ϕₙ.vindex, X, W)
-    end
+    # allquads = Vector{typeof(X)}(undef, length(Vₕ))
+    # allweights = Vector{typeof(W)}(undef, length(Vₕ))
+    # quads = Vector{QuadStruct{typeof(X),typeof(W)}}(undef, length(Vₕ))
+    # for (n, ϕₙ) in enumerate(Vₕ)
+    #     allquads[n], allweights[n] = mapquadrule(Vₕ.measure, ϕₙ.vindex, X, W)
+    # end
 
-    return allquads, allweights
+    # return allquads, allweights
+    return [QuadStruct(mapquadrule(Vₕ.measure, ϕₙ.vindex, q.nodes, q.weights)...) for ϕₙ in Vₕ]
 end
+
+get_h_mesh(Vₕ::FractalBasis) = maximum(ϕₙ.measure.supp.diam for ϕₙ in Vₕ)

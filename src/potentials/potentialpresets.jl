@@ -5,6 +5,7 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
                                         N_quad::Integer = 0,
                                         quadrule::Tuple{AbstractVector, AbstractVector} =
                                             getdefault_quad(ϕ.basis.measure,
+                                                            get_h_mesh(ϕ.basis),
                                                             h_quad = h_quad,
                                                             N_quad = N_quad
                                                             ),
@@ -19,23 +20,24 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
     end
 
     # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule[1], quadrule[2])
+    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
     return Potential(ϕ, Φ, quadrules_mapped)
 end
 
 function farfield_pattern(ϕ::Projection,
-                                    k::Number;
-                                    ambient_dimension::Integer = ϕ.basis.measure.supp.n,
-                                    h_quad::Real = 0.0,
-                                    N_quad::Integer = 0,
-                                    quadrule::Tuple{AbstractVector, AbstractVector} =
-                                        getdefault_quad(ϕ.basis.measure,
-                                                        h_quad = h_quad,
-                                                        N_quad = N_quad
-                                                        ),
-                                    )
+                        k::Number;
+                        ambient_dimension::Integer = ϕ.basis.measure.supp.n,
+                        h_quad::Real = 0.0,
+                        N_quad::Integer = 0,
+                        quadrule::QuadStruct =
+                            getdefault_quad_premap(ϕ.basis.measure,
+                                            get_h_mesh(ϕ.basis),
+                                            h_quad,
+                                            N_quad
+                                            ),
+                        )
 
     # const kwave = k
 
@@ -54,7 +56,7 @@ function farfield_pattern(ϕ::Projection,
     end
 
     # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule[1], quadrule[2])
+    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
     return Potential(ϕ, ffkernel, quadrules_mapped)
@@ -66,6 +68,7 @@ function singlelayer_potential_laplace(ϕ::Projection,
                                         N_quad::Integer = 0,
                                         quadrule::Tuple{AbstractVector, AbstractVector} =
                                             getdefault_quad(ϕ.basis.measure,
+                                                            get_h_mesh(ϕ.basis),
                                                             h_quad = h_quad,
                                                             N_quad = N_quad
                                                             ),

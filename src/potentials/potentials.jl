@@ -1,6 +1,6 @@
 struct Potential{P<:Projection,
                 F<:Function,
-                Q<:Tuple{<:AbstractArray, <:AbstractArray}}
+                Q<:AbstractArray{<:QuadStruct}}
     density::P # measure, support etc contained in here
     kernel::F
     quadrules::Q
@@ -10,8 +10,8 @@ function (pot::Potential)(x)
     val = zero(typeof(x))
     @inbounds @simd for n in 1:length(pot.density.basis)
         @fastmath val += (pot.density.coeffs[n] * (
-                transpose(pot.quadrules[2][n]) *
-                (pot.kernel(x, pot.quadrules[1][n]) .* pot.density.basis[n].(pot.quadrules[1][n]))
+                transpose(pot.quadrules[n].weights) *
+                (pot.kernel.(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
                 ))
     end
     return val

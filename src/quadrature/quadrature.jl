@@ -8,31 +8,24 @@ include("senergy.jl")
 QUAD_DEFAULT_GAUSS = 5
 QUAD_EXTRA_LEVELS = 2
 
-default_barywidth(μ::AbstractInvariantMeasure) =
-    maximum(sₘ.ρ for sₘ in μ.supp.ifs)^QUAD_EXTRA_LEVELS
+getdefault_quadwidth(Γ::AbstractAttractor) =
+    Γ.diam * maximum(sₘ.ρ for sₘ in Γ.ifs)^QUAD_EXTRA_LEVELS
+
+default_barywidth(μ::AbstractInvariantMeasure) = getdefault_quadwidth(μ.supp)
 
 default_senergy_barywidth(μ₁, μ₂) = max(default_barywidth(μ₁), default_barywidth(μ₂))
 
-function getdefault_quad(μ::AbstractInvariantMeasure;
-                        h_quad::Real = 0.0,
-                        N_quad::Integer = 0)
-    if h_quad > 0
-        x, w = barycentre_quadrule(μ, h_quad)
-    elseif μ.supp.n == 1
-        if N_quad >= 1
-            x, w = gauss_quadrule(μ, N_quad)
-        else
-            x, w = gauss_quadrule(μ, QUAD_DEFAULT_GAUSS)
-        end
-    else
-        x, w = barycentre_quadrule(μ, default_barywidth(μ))
-    end
-    return x, w
-end
+getdefault_quad(μ₁, μ₂, h_mesh = max(diam(μ₁),diam(μ₂)); h_quad = 0.0, N_quad = 0) =
+    combine_quadrules(  getdefault_quad(μ₁, h_mesh; h_quad = h_quad, N_quad = N_quad)...,
+                        getdefault_quad(μ₂, h_mesh; h_quad = h_quad, N_quad = N_quad)...)
 
-getdefault_quad(μ₁, μ₂; h_quad = 0.0, N_quad = 0) =
-    combine_quadrules(  getdefault_quad(μ₁; h_quad = h_quad, N_quad = N_quad)...,
-                        getdefault_quad(μ₂; h_quad = h_quad, N_quad = N_quad)...)
+
+# quadrature struct, to be compactly passed around inside other structs
+
+struct QuadStruct{T<:AbstractArray, R<:AbstractArray}
+    nodes::T
+    weights::R
+end
 
 # generic quadrature function:
 

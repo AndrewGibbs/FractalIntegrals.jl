@@ -21,27 +21,49 @@ getdefault_meshwidth(sio::IntegralOperator) =
 # getdefault_quadwidth(Γ::AbstractAttractor) =
 #     maximum(sₘ.ρ for sₘ in Γ.ifs)^QUAD_EXTRA_LEVELS
 
-getdefault_quadwidth(sio::IntegralOperator) =
-    getdefault_meshwidth(sio) *
-        maximum(sₘ.ρ for sₘ in sio.measure.supp.ifs)^QUAD_EXTRA_LEVELS
+# getdefault_quadwidth(sio::IntegralOperator) =
+#     # getdefault_meshwidth(sio) *
+#         diam(sio.measure) * maximum(sₘ.ρ for sₘ in sio.measure.supp.ifs)^QUAD_EXTRA_LEVELS
 
-getdefault_gaussorder(::IntegralOperator) = QUAD_DEFAULT_GAUSS
+# getdefault_gaussorder(::IntegralOperator) = QUAD_DEFAULT_GAUSS
 
-function getdefault_quad(sio::AbstractSingularIntegralOperator;
-                        h_quad::Real = 0.0,
-                        N_quad::Integer = 0)
-    if h_quad > 0
-        x, w = barycentre_quadrule(sio.measure, h_quad)
-    elseif sio.measure.supp.n == 1
-        if N_quad >= 1
-            x, w = gauss_quadrule(sio.measure, N_quad)
+# function getdefault_quad(sio::AbstractSingularIntegralOperator,
+#                         h_mesh = diam(sio.measure);
+#                         h_quad::Real = 0.0,
+#                         N_quad::Integer = 0)
+#     if h_quad > 0
+#         x, w = barycentre_quadrule(sio.measure, h_quad*diam(sio.measure)/h_mesh)
+#     elseif sio.measure.supp.n == 1
+#         if N_quad >= 1
+#             x, w = gauss_quadrule(sio.measure, N_quad)
+#         else
+#             x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
+#         end
+#     else
+#         x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
+#     end
+#     return x, w
+# end
+
+getdefault_quad_premap(μ, h_mesh, h_quad, N_quad) =
+    getdefault_quad(μ, h_quad*diam(μ)/h_mesh, N_quad)
+
+
+function getdefault_quad(μ::AbstractInvariantMeasure,
+                        h_quad,
+                        N_quad)
+        if h_quad > 0
+            x, w = barycentre_quadrule(μ, h_quad)
+        elseif μ.supp.n == 1
+            if N_quad >= 1
+                x, w = gauss_quadrule(μ, N_quad)
+            else
+                x, w = gauss_quadrule(μ, QUAD_DEFAULT_GAUSS)
+            end
         else
-            x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
+            x, w = barycentre_quadrule(μ, default_barywidth(μ))
         end
-    else
-        x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
-    end
-    return x, w
+    return QuadStruct(x, w)
 end
 
 # function getdefault_quad(sio::AbstractSingularIntegralOperator;
@@ -66,12 +88,12 @@ function discretise(sio::AbstractSingularIntegralOperator;
     h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
     h_quad::Real = 0.0, # quick option for Barycentre rule
     N_quad::Integer = 0,
-    quadrule::Tuple{AbstractVector,AbstractVector} =
-            getdefault_quad(sio, h_quad = h_quad, N_quad = N_quad),
+    quadrule::QuadStruct =
+            getdefault_quad_premap(sio.measure, h_mesh, h_quad, N_quad),
             kwargs...)
     Vₕ = construct_p0basis(sio.measure, h_mesh)
     # quadpts, quadweights = barycentre_quadrule(sio.measure, h_quad)
-    ip = InnerProduct(sio, Vₕ, quadrule[1], quadrule[2])
+    ip = InnerProduct(sio, Vₕ, quadrule)
     return discretise(sio, ip, Vₕ; kwargs...)
 end
 
@@ -102,8 +124,8 @@ galerkinmatrix = Array{ElementType}(undef, N, N)
 
 # get matrix detailing repeated Galerkin entries
 reps ? galerkinreps =
-get_galerkinreps(N, sio) :
-galerkinreps = zeros(Int64, N, N)
+    get_galerkinreps(N, sio) :
+    galerkinreps = zeros(Int64, N, N)
 
 # double loop computing inner products, avoiding repeated entries
 @sync for n in 1:N #@sync 

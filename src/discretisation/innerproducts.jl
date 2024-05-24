@@ -1,42 +1,25 @@
 abstract type AbstractInnerProduct end
 
-struct InnerProduct{X<:AbstractVector,
-                    W<:AbstractVector,
+struct InnerProduct{Q<:AbstractVector{<:QuadStruct},
                     S<:AbstractVector,
                     I<:AbstractVector{<:Number},
                     K<:FractalOperator
                     } <: AbstractInnerProduct
     
     sio :: K
-    x :: X
-    w :: W
+    quadrules :: Q
     singular_indices :: S
     singular_integrals :: I
 end
 
-# struct HomogInnerProduct{X<:AbstractVector,
-#                     W<:Real,
-#                     S<:AbstractVector,
-#                     # T<:Real,
-#                     I<:AbstractVector{<:Number},
-#                     K<:FractalOperator
-#                     } <: AbstractInnerProduct
-
-#     sio :: K
-#     x :: X
-#     w :: W
-#     singular_indices :: S
-#     singular_integrals :: I
-# end
-
-function getsingularinfo(μ, s, X, W)
+function getsingularinfo(μ, s, q::QuadStruct)
     A, B, singular_indices, R, log_adjustments =
         construct_singularity_matrix(μ, μ, s)
-    r = Vector{Float64}(undef,length(R))
+    r = Vector{Float64}(undef, length(R))
     for n = eachindex(r)
         (m,m_) = R[n]
-        Xn, Wxn = mapquadrule(μ, m, X, W)
-        Yn, Wyn = mapquadrule(μ, m_, X, W)
+        Xn, Wxn = mapquadrule(μ, m, q.nodes, q.weights)
+        Yn, Wyn = mapquadrule(μ, m_, q.nodes, q.weights)
         x, y, w = combine_quadrules(Xn, Wxn, Yn, Wyn)
         r[n] = w'*energykernel(s, x, y)
     end
@@ -44,30 +27,29 @@ function getsingularinfo(μ, s, X, W)
     return prepared_singular_vals, singular_indices
 end
 
-# outer constructor
-# function InnerProduct(  sio::AbstractSingularIntegralOperator,
-#                                         Vₕ::FractalBasis{<:HausdorffMeasure{T1,T2,T3,Attr},T4},
-#                                         X::AbstractArray,
-#                                         W::AbstractArray
-#                                         ) where {T1,T2,T3,Attr<:HomogenousAttractor,T4}
+# outer constructor 1
+InnerProduct(  sio::AbstractSingularIntegralOperator,
+                Vₕ::FractalBasis,
+                X::AbstractArray,
+                W::AbstractArray) = InnerProduct(sio, Vₕ, QuadStruct(X,W))
+# outer constructor 2
 function InnerProduct(  sio::AbstractSingularIntegralOperator,
                         Vₕ::FractalBasis,
-                        X::AbstractArray,
-                        W::AbstractArray)
+                        q::QuadStruct)
 
     μ = Vₕ.measure
 
-    prepared_singular_vals, singular_indices = getsingularinfo(μ, sio.s, X, W)
+    prepared_singular_vals, singular_indices = getsingularinfo(μ, sio.s, q)
     
     # second, prepare data for smooth integrals
-    allquads, allweights = mapquadrule_to_elements(Vₕ, X, W)
+    allquads = mapquadrule_to_elements(Vₕ, q)
 
     # create instance, containing everything needed to evaluate dual pairings
-    return InnerProduct(sio, allquads, allweights, singular_indices, prepared_singular_vals)
+    return InnerProduct(sio, allquads, singular_indices, prepared_singular_vals)
 end
 
 innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
-    conj(ψ.normalisation) * dot(conj(ip.w[ψ.index]), f.(ip.x[ψ.index]))
+    conj(ψ.normalisation) * dot(conj(ip.quadrules[ψ.index].weights), f.(ip.quadrules[ψ.index].nodes))
 
 function sesquilinearform(  ip::InnerProduct,
                             ϕ::P0BasisElement,
@@ -97,16 +79,10 @@ function sesquilinearform(  ip::InnerProduct,
 
     # get the tensor product quadrature
 
-    # previous homog special case:
-    # x, y, w = combine_quadrules([xⱼ + ϕ.measure.barycentre for xⱼ in ip.x0],
-    #                             ip.w[1],
-    #                             [xⱼ + ψ.measure.barycentre for xⱼ in ip.x0],
-    #                             ip.w[1])
-
-    x, y, w = combine_quadrules(ip.x[ϕ.index],
-                                ip.w[ϕ.index],
-                                ip.x[ψ.index],
-                                ip.w[ψ.index])
+    x, y, w = combine_quadrules(ip.quadrules[ϕ.index].nodes,
+                                ip.quadrules[ϕ.index].weights,
+                                ip.quadrules[ψ.index].nodes,
+                                ip.quadrules[ψ.index].weights)
 
     if singular_slf
         scale_adjust = similar_scaler(ρ,
