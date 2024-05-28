@@ -1,3 +1,10 @@
+# quadrature struct, to be compactly passed around inside other structs
+
+struct QuadStruct{T<:AbstractArray, R<:AbstractArray}
+    nodes::T
+    weights::R
+end
+
 include("jacobimatrices.jl")
 include("productquadrature.jl")
 include("barycentrerule.jl")
@@ -15,17 +22,10 @@ default_barywidth(μ::AbstractInvariantMeasure) = getdefault_quadwidth(μ.supp)
 
 default_senergy_barywidth(μ₁, μ₂) = max(default_barywidth(μ₁), default_barywidth(μ₂))
 
-getdefault_quad(μ₁, μ₂, h_mesh = max(diam(μ₁),diam(μ₂)); h_quad = 0.0, N_quad = 0) =
-    combine_quadrules(  getdefault_quad(μ₁, h_mesh; h_quad = h_quad, N_quad = N_quad)...,
-                        getdefault_quad(μ₂, h_mesh; h_quad = h_quad, N_quad = N_quad)...)
+getdefault_quad_premap(μ₁, μ₂, h_mesh = max(diam(μ₁),diam(μ₂)); h_quad = 0.0, N_quad = 0) =
+    combine_quadrules(  getdefault_quad_premap(μ₁, h_mesh, h_quad, N_quad),
+                        getdefault_quad_premap(μ₂, h_mesh, h_quad, N_quad))
 
-
-# quadrature struct, to be compactly passed around inside other structs
-
-struct QuadStruct{T<:AbstractArray, R<:AbstractArray}
-    nodes::T
-    weights::R
-end
 
 # generic quadrature function:
 

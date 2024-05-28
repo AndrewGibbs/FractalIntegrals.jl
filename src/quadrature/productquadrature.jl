@@ -56,3 +56,6 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector, Number}},
 
     return X1, X2, fill(w1*w2, N)
 end
+
+combine_quadrules(q1::QuadStruct, q2::QuadStruct) =
+    combine_quadrules(q1.nodes, q1.weights, q2.nodes, q2.weights)

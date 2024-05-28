@@ -319,7 +319,7 @@ function s_energy(  μ₁::AbstractInvariantMeasure,
                     h_quad::Float64 = 0.0,
                     N_quad::Int64 = 0,
                     quadrule::Tuple{AbstractArray, AbstractArray, AbstractArray} =
-                        getdefault_quad(μ₁, μ₂, h_quad = h_quad, N_quad = N_quad),
+                        getdefault_quad_premap(μ₁, μ₂, h_quad = h_quad, N_quad = N_quad),
                     use_strategy_two::Bool = true
                     )
 
