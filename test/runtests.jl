@@ -1,7 +1,8 @@
 using FractalIntegrals
 using Test, MAT
-import LinearAlgebra: norm
+import LinearAlgebra: norm, transpose
 
+# test that fractal presets all load
 @testset "Preset fractals" begin
     for Γ in keys(FractalIntegrals.fractaldict)
         strΓ = String(Γ)
@@ -12,6 +13,7 @@ import LinearAlgebra: norm
     end
 end
 
+# Approximate ∫₀¹∫₀¹ Φₛ(x,y) dx dy using s-energy on cantor set with ρ=1/2.
 @testset "singular line segment" begin
     Γ = FractalIntegrals.cantorset(ρ = 1/2)
     for s in rand(5)
@@ -23,8 +25,8 @@ end
     end
 end
 
+# Andrea Moiola's 'prefractal BEM' data, produced using a different method
 @testset "Comparison against prefractal BEM" begin
-    
     # physical parameters
     k = 30.0
     d = [0.5000, -0.8660]
@@ -56,13 +58,43 @@ end
     end
 end
 
+@testset "2D reciprocity test" begin
+    for Γname in ["cantordust", "sierpinski"]
+        for k in [1, 2, 5]
+            Γ = getfractal(Γname)
+
+            N = 10 # number of angles to test reciprocity
+            recipangles = rand(N)
+
+            # create RHS data for each incident angle
+            fθ = [x -> exp(-im*k*(x[1]*cos(θ)+x[2]*sin(θ))) for θ in recipangles]
+
+            # create LHS
+            Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
+            Sₖₕ =FractalIntegrals. discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
+
+            # solve discrete problem
+            ϕ = [Sₖₕ \ fθ[n] for n in eachindex(recipangles)]
+
+            # initialise matrix of ffps evaluated at different incident angles
+            recip_matrix = zeros(ComplexF64, N, N)
+
+            # construct ffps and evaluate to fill matrix
+            for n in eachindex(recipangles)
+                ffp = FractalIntegrals.farfield_pattern(ϕ[n], k, h_quad = 0.01)
+                recip_matrix[n, :] .= ffp.(recipangles)
+            end
+            @testset "$Γname, wavenumber $k" begin
+                @test recip_matrix ≈ transpose(recip_matrix) rtol = 1e-2
+            end
+        end
+    end
+end
+
 # other tests to implement
 
 # wave-based
-    # reciprocity
     # check that scattered field converges to far-field
-    # test against Andrea's old code
 
 # quadrature
-    # check s-energy line integrals for singularities which can be calculated by hand
     # check gauss and barycentre converge to the same thing, for invaiant measures 
