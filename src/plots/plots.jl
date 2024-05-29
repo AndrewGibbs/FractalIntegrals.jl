@@ -9,10 +9,11 @@ function plothelper(Γ::AbstractAttractor,
                     markersize_const,
                     marker_adjust_scale)
 
+    @assert Γ.n in [1,2] "ambient dimension of attractor must be at most two."
     # get points and convert to x,y coords for plotting
     pts = sketch_attractor(Γ; max_num_pts = max_num_pts)
     xpts = [pt[1] for pt in pts]
-    ypts = [pt[2] for pt in pts]
+    Γ.n == 2 ? ypts = [pt[2] for pt in pts] : ypts = zeros(length(xpts))
 
     # default marker size is based on def'n of Hausdorff dimension
     if markersize <= 0
@@ -31,10 +32,13 @@ function plothelper(μ::AbstractInvariantMeasure,
                 markersize_const,
                 marker_adjust_scale)
 
+
+    @assert μ.supp.n in [1,2] "ambient dimension of support must be at most two."
+
     # get points and convert to x,y coords for plotting
     pts, weights = sketch_measure(μ; max_num_pts = max_num_pts)
     xpts = [pt[1] for pt in pts]
-    ypts = [pt[2] for pt in pts]
+    μ.supp.n == 2 ? ypts = [pt[2] for pt in pts] : ypts = zeros(length(xpts))
 
     # default marker size is based on def'n of Hausdorff dimension
     if markersize <= 0
