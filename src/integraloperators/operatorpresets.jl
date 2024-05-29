@@ -38,8 +38,8 @@ end
 
 
 # Hausdorff default
-singlelayer_operator_laplace(Γ::AbstractAttractor, args...; vargs...) = 
-    singlelayer_operator_laplace(HausdorffMeasure(Γ), args...; vargs...)
+singlelayer_operator_laplace(Γ::AbstractAttractor; vargs...) = 
+    singlelayer_operator_laplace(HausdorffMeasure(Γ); vargs...)
 
 
 function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
@@ -76,8 +76,8 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
 end
 
 # Hausdorff default
-singlelayer_operator_helmholtz(Γ::AbstractAttractor, args...; vargs...) = 
-    singlelayer_operator_helmholtz(HausdorffMeasure(Γ), args...; vargs...)
+singlelayer_operator_helmholtz(Γ::AbstractAttractor, k; vargs...) = 
+    singlelayer_operator_helmholtz(HausdorffMeasure(Γ), k; vargs...)
 
 # @default_to_hausdorff singlelayer_operator_laplace
 # @default_to_hausdorff singlelayer_operator_helmholtz

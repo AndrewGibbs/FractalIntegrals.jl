@@ -15,9 +15,17 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
 
     # select appropriate kernel for ambient dimension
     if ambient_dimension == 2
-        Φ = (x,y) -> helmholtzkernel2d(k, x, y)
+        if ϕ.basis.measure.supp.n == 1
+            Φ = (x,y) -> helmholtzkernel2d_screenpot(k, x, y)
+        else
+            Φ = (x,y) -> helmholtzkernel2d(k, x, y)
+        end
     elseif ambient_dimension == 3
-        Φ = (x,y) -> helmholtzkernel3d(k, x, y)
+        if ϕ.basis.measure.supp.n == 2
+            Φ = (x,y) -> helmholtzkernel3d_screenpot(k, x, y)
+        else
+            Φ = (x,y) -> helmholtzkernel3d(k, x, y)
+        end
     else
         error("Haven't coded single layer potential for this many dimensions")
     end
@@ -50,13 +58,16 @@ function farfield_pattern(ϕ::Projection,
         if ϕ.basis.measure.supp.n == 1
             ffkernel = (θ, y) -> -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*y))
         else
-            ffkernel = (θ, y) -> -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*y[1]+sin(θ)*y[2]))
+            ffkernel = (θ, Y) -> 
+                -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*[y[1] for y in Y] + sin(θ)*[y[2] for y in Y]))
         end
     elseif ambient_dimension == 3
         if ϕ.basis.measure.supp.n == 2
-            ffkernel = ((θ, ψ), y) -> -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*y[1] + sin(θ)*sin(ψ)*y[2]))
+            ffkernel = ((θ, ψ), Y) -> 
+                -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*[y[1] for y in Y] + sin(θ)*sin(ψ)*[y[2] for y in Y]))
         else
-            ffkernel = ((θ, ψ), y) -> -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*y[1] + sin(θ)*sin(ψ)*y[2] + cos(θ)*y[3]))
+            ffkernel = ((θ, ψ), Y) -> 
+                -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*[y[1] for y in Y] + sin(θ)*sin(ψ)*[y[2] for y in Y] + cos(θ)*[y[3] for y in Y]))
         end
     else
         @error "Haven't coded ffp for this many dimensions... does it even make sense?"

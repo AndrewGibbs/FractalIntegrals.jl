@@ -56,6 +56,26 @@ function helmholtzkernel3d(k::Number, x, y)
     return cis.(k*r)./(4π*r)
 end
 
+# screen Helmholtz kernels
+function vecdist_screenpot( x,#in domain
+                            y#on screen
+                            )
+    r = fill(x[end]^2, length(y))
+    @inbounds @simd for i in eachindex(y)
+        @inbounds for j in 1:length(x)
+            r[i] += (x[j]-y[i][j])^2
+        end
+    end
+    return sqrt.(r)
+end
+
+helmholtzkernel2d_screenpot(k::Number, x, y) = (im/4) * hankelh1.(0, k*vecdist_screenpot(x,y))
+function helmholtzkernel3d_screenpot(k::Number, x, y)
+    r = vecdist_screenpot(x, y)
+    return cis.(k*r)./(4π*r)
+end
+
+
 # Lipschitz parts of Helmholtz kernels
 function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])

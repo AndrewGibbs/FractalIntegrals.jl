@@ -6,12 +6,19 @@ struct Potential{P<:Projection,
     quadrules::Q
 end
 
+# µ─        ~Aya, 29/5/2024
+
 function (pot::Potential)(x)
-    val = zero(typeof(x))
-    @inbounds @simd for n in 1:length(pot.density.basis)
-        @fastmath val += (pot.density.coeffs[n] * (
+    val = zero(eltype(x))
+    # @inbounds @simd for n in 1:length(pot.density.basis)
+    #     @fastmath val += (pot.density.coeffs[n] * (
+    #             transpose(pot.quadrules[n].weights) *
+    #             (pot.kernel.(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
+    #             ))
+    for n in 1:length(pot.density.basis)
+        val += (pot.density.coeffs[n] * (
                 transpose(pot.quadrules[n].weights) *
-                (pot.kernel.(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
+                (pot.kernel(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
                 ))
     end
     return val

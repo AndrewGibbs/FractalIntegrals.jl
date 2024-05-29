@@ -71,7 +71,7 @@ end
 
             # create LHS
             Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
-            Sₖₕ =FractalIntegrals. discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
+            Sₖₕ =FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
 
             # solve discrete problem
             ϕ = [Sₖₕ \ fθ[n] for n in eachindex(recipangles)]
@@ -91,10 +91,33 @@ end
     end
 end
 
-# other tests to implement
+@testset "Near- and far-field Comparison" begin
+    θ = 0:0.01:2π
+    d = [1, 1]/sqrt(2)
+    r = 10 # some big number, to approximate the limit r → ∞
+    x = [r*[cos(θ_), sin(θ_)] for θ_ in θ]
+    k = 5
+    f₁(x) = exp(im*k*d[1]*x)
+    f₂(x) = exp(im*k*(d[1]*x[1]+d[2]*x[2]))
 
-# wave-based
-    # check that scattered field converges to far-field
+    for Γname in ["cantor set", "cantor dust"]
+        Γ = getfractal(Γname)
+        # data depends on ambient dimension
+        Γ.n == 1 ? f = f₁ : f = f₂
+        # operators, and the discretisation
+        Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
+        Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
+        ϕ = Sₖₕ \ f 
+        # get near- and far-field operators
+        ffp = FractalIntegrals.farfield_pattern(ϕ, k)
+        slp = FractalIntegrals.singlelayer_potential_helmholtz(ϕ, k)
+        @testset "$Γname" begin
+            @test (exp(im*k*r)/sqrt(r)) * ffp.(θ) ≈ slp.(x)
+        end
+    end
+end
+
+# other tests to implement
 
 # quadrature
     # check gauss and barycentre converge to the same thing, for invaiant measures 
