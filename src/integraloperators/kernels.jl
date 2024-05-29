@@ -62,7 +62,7 @@ function vecdist_screenpot( x,#in domain
                             )
     r = fill(x[end]^2, length(y))
     @inbounds @simd for i in eachindex(y)
-        @inbounds for j in 1:length(x)
+        @inbounds for j in 1:(length(x)-1)
             r[i] += (x[j]-y[i][j])^2
         end
     end

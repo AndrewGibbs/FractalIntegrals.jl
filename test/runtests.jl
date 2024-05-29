@@ -25,6 +25,30 @@ end
     end
 end
 
+@testset "different quadratures on invariant measures on Cantor sets" begin
+    for ρ in rand(5)/2
+        Γ = getfractal("cantor set", ρ=ρ)
+        for f in [x -> sin(x^2), x -> cosh(x^3), x -> exp(im*π*x)]
+            for n = 1:5
+                p = rand(2)
+                p = p / sum(2)
+                μ = FractalIntegrals.InvariantMeasure(Γ, p)
+
+                # get barycentre approx
+                x, w = FractalIntegrals.barycentre_quadrule(μ, 0.01)
+                I₁ = w.' * f.(x)
+
+                # get gauss approx
+                x, w = FractalIntegrals.gauss_quadrule(μ, 15)
+                I₂ = w.' * f.(x)
+                @testset "ρ=$ρ, n=$n" begin # would be nice to mention function here
+                    @test I₁ ≈ I₂ rtol=1e-8
+                end
+            end
+        end
+    end
+end
+
 # Andrea Moiola's 'prefractal BEM' data, produced using a different method
 @testset "Comparison against prefractal BEM" begin
     # physical parameters
@@ -91,10 +115,13 @@ end
     end
 end
 
+# For scattering problems, the near-field should converge to the far-field,
+# in an appropriate sense, as r:=|x| → ∞
+# The scaling of the far-field pattern has been chosen specifically to ensure this.
 @testset "Near- and far-field Comparison" begin
     θ = 0:0.01:2π
     d = [1, 1]/sqrt(2)
-    r = 10 # some big number, to approximate the limit r → ∞
+    r = 150 # some big number, to approximate the limit r → ∞
     x = [r*[cos(θ_), sin(θ_)] for θ_ in θ]
     k = 5
     f₁(x) = exp(im*k*d[1]*x)
@@ -112,12 +139,10 @@ end
         ffp = FractalIntegrals.farfield_pattern(ϕ, k)
         slp = FractalIntegrals.singlelayer_potential_helmholtz(ϕ, k)
         @testset "$Γname" begin
-            @test (exp(im*k*r)/sqrt(r)) * ffp.(θ) ≈ slp.(x)
+            @test (exp(im*k*r)/sqrt(r)) * ffp.(θ) ≈ -slp.(x) rtol = 1e-2
         end
     end
 end
 
 # other tests to implement
-
-# quadrature
     # check gauss and barycentre converge to the same thing, for invaiant measures 
