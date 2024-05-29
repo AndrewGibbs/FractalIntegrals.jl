@@ -31,9 +31,9 @@ function getfractal(T::Type, fractalname::Symbol; vargs...)
     end
 end
 
-# make option to pass String instead of Symbol
+# Option to pass String instead of Symbol. Converts to lowercase and removes spaces from string.
 getfractal(T::Type, fractalname::String; vargs...) =
-    getfractal(T::Type, Symbol(fractalname); vargs...)
+    getfractal(T::Type, Symbol(lowercase(replace(fractalname, " " => "")); vargs...))
 
 # define default type
 getfractal(fractalname; vargs...) = getfractal(Float64, fractalname; vargs...)

@@ -1,9 +1,19 @@
+function check_ambient_dimension(ambient_dimension)
+    if ambient_dimension == 1
+        @warn "Cannot have ambient_dimension=1, assuming two-dimensional 'screen' problem"
+        ambient_dimension = 2
+    end
+    return ambient_dimension
+end
 
 function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
                                         <:AbstractAttractor{<:Any, R}
-                                        },
+                                        };
                                     ambient_dimension::Integer = μ.supp.n
                                     ) where {R <: Real}
+
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
+
     if ambient_dimension == 2     
         K = SingularIntegralOperator(μ, #fractal domain
         (x,y) -> energykernel(0, x, y), # Hankel function
@@ -26,12 +36,21 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
     end
 end
 
+
+# Hausdorff default
+singlelayer_operator_laplace(Γ::AbstractAttractor, args...; vargs...) = 
+    singlelayer_operator_laplace(HausdorffMeasure(Γ), args...; vargs...)
+
+
 function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
                                                 <:AbstractAttractor{<:Any, R}
                                             },
                                         k::Number;
                                         ambient_dimension::Integer = μ.supp.n
     ) where {R <: Real}
+
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
+
     if ambient_dimension == 2     
         K = OscillatorySingularIntegralOperator(μ, #fractal domain
         (x,y) -> helmholtzkernel2d(k, x, y), # Hankel function
@@ -56,8 +75,12 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
     end
 end
 
+# Hausdorff default
 singlelayer_operator_helmholtz(Γ::AbstractAttractor, args...; vargs...) = 
     singlelayer_operator_helmholtz(HausdorffMeasure(Γ), args...; vargs...)
+
+# @default_to_hausdorff singlelayer_operator_laplace
+# @default_to_hausdorff singlelayer_operator_helmholtz
 
 # for preset_fn ∈ [SingleLayerOperatorHelmholtz]
 #     preset_fn(Γ::Attractor, args...; vargs...) = preset_fn(HausdorffMeasure(Γ), args...; vargs...)

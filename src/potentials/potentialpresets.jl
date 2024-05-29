@@ -3,13 +3,16 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
                                         ambient_dimension::Integer = ϕ.basis.measure.supp.n,
                                         h_quad::Real = 0.0,
                                         N_quad::Integer = 0,
-                                        quadrule::Tuple{AbstractVector, AbstractVector} =
-                                            getdefault_quad(ϕ.basis.measure,
+                                        quadrule::QuadStruct =
+                                            getdefault_quad_premap(ϕ.basis.measure,
                                                             get_h_mesh(ϕ.basis),
-                                                            h_quad = h_quad,
-                                                            N_quad = N_quad
-                                                            ),
+                                                            h_quad,
+                                                            N_quad
+                                                            )
                                         )
+
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
+
     # select appropriate kernel for ambient dimension
     if ambient_dimension == 2
         Φ = (x,y) -> helmholtzkernel2d(k, x, y)
@@ -41,6 +44,8 @@ function farfield_pattern(ϕ::Projection,
 
     # const kwave = k
 
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
+
     if ambient_dimension == 2
         if ϕ.basis.measure.supp.n == 1
             ffkernel = (θ, y) -> -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*y))
@@ -53,6 +58,8 @@ function farfield_pattern(ϕ::Projection,
         else
             ffkernel = ((θ, ψ), y) -> -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*y[1] + sin(θ)*sin(ψ)*y[2] + cos(θ)*y[3]))
         end
+    else
+        @error "Haven't coded ffp for this many dimensions... does it even make sense?"
     end
 
     # map (X,W) quadrature rule to each basis element
@@ -66,15 +73,15 @@ function singlelayer_potential_laplace(ϕ::Projection,
                                         ambient_dimension::Integer = ϕ.basis.measure.supp.n,
                                         h_quad::Real = 0.0,
                                         N_quad::Integer = 0,
-                                        quadrule::Tuple{AbstractVector, AbstractVector} =
-                                            getdefault_quad(ϕ.basis.measure,
+                                        quadrule::QuadStruct =
+                                            getdefault_quad_premap(ϕ.basis.measure,
                                                             get_h_mesh(ϕ.basis),
-                                                            h_quad = h_quad,
-                                                            N_quad = N_quad
+                                                            h_quad,
+                                                            N_quad
                                                             ),
                                         )
-    # select appropriate kernel for ambient dimension
-    @assert ambient_dimension <= 1 "Ambeint dimension must be greater than one"
+                                        
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     n = ambient_dimension + 1
     n == 2 ? Aₙ = -1/(2π) :  Aₙ = 2π^((n-1)/2)/gammafn((n-1)/2)
@@ -82,7 +89,7 @@ function singlelayer_potential_laplace(ϕ::Projection,
     Φ = (x,y) -> 1/((n-2)*Aₙ)*energykernel(n-2, x, y)
 
     # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule[1], quadrule[2])
+    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
     return Potential(ϕ, Φ, quadrules_mapped)

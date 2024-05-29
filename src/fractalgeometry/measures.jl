@@ -97,3 +97,14 @@ Base.getindex(μ::AbstractInvariantMeasure, inds...) = get_submeasure(μ, [i for
 Base.getindex(μ::AbstractInvariantMeasure, inds::AbstractVector{<:Integer}) = get_submeasure(μ, inds)
 Base.getindex(Γ::AbstractAttractor, inds...) = get_subattractor(Γ, [i for i in inds])
 Base.getindex(Γ::AbstractAttractor, inds::AbstractVector{<:Integer}) = get_subattractor(Γ, inds)
+
+# there will be lots of cases where we want to default to HausdorffMeasure
+
+# Use metaprogramming to do this
+# macro default_to_hausdorff(funcs...)
+#     quote
+#         $(Expr(:block, [:(function $func(Γ::AbstractAttractor, varargs...; kwargs...)
+#                               $func(HausdorffMeasure(Γ), varargs...; kwargs...)
+#                           end) for func in funcs]...))
+#     end
+# end
