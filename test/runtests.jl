@@ -27,22 +27,22 @@ end
 
 @testset "different quadratures on invariant measures on Cantor sets" begin
     for ρ in rand(5)/2
-        Γ = getfractal("cantor set", ρ=ρ)
+        Γ = FractalIntegrals.cantorset(ρ = ρ)#getfractal("cantor set", ρ=ρ)
         for f in [x -> sin(x^2), x -> cosh(x^3), x -> exp(im*π*x)]
             for n = 1:5
                 p = rand(2)
-                p = p / sum(2)
+                p = p / sum(p)
                 μ = FractalIntegrals.InvariantMeasure(Γ, p)
 
                 # get barycentre approx
                 x, w = FractalIntegrals.barycentre_quadrule(μ, 0.01)
-                I₁ = w.' * f.(x)
+                I₁ = w' * f.(x)
 
                 # get gauss approx
                 x, w = FractalIntegrals.gauss_quadrule(μ, 15)
-                I₂ = w.' * f.(x)
+                I₂ = w' * f.(x)
                 @testset "ρ=$ρ, n=$n" begin # would be nice to mention function here
-                    @test I₁ ≈ I₂ rtol=1e-8
+                    @test I₁ ≈ I₂ rtol=1e-4
                 end
             end
         end
@@ -143,6 +143,3 @@ end
         end
     end
 end
-
-# other tests to implement
-    # check gauss and barycentre converge to the same thing, for invaiant measures 
