@@ -37,3 +37,5 @@ getfractal(T::Type, fractalname::String; vargs...) =
 
 # define default type
 getfractal(fractalname; vargs...) = getfractal(Float64, fractalname; vargs...)
+
+

@@ -7,6 +7,20 @@ function get_boundingball_centre(ifs::AbstractArray{<:AbstractSimilarity})
     return (IdMat(ndims) - 𝐀) \ 𝐁
 end
 
+function get_boundingball_centre(ifs::AbstractArray{OneDimensionalSimilarity{R,T}}
+                                ) where {R<:Real, T<:Real}
+    min_pt = T(Inf)
+    max_pt = -T(Inf)
+    # consider extremal fixed points
+    for s in ifs
+        min_pt = min(fixed_point(s),min_pt)
+        max_pt = max(fixed_point(s),max_pt)
+    end
+    
+    # take halfway point between endpoints
+    return (min_pt + max_pt)/2
+end
+
 get_boundingball_centre(Γ::AbstractAttractor) = get_boundingball_centre(Γ.ifs)
 get_boundingball_centre(μ::AbstractInvariantMeasure) = get_boundingball_centre(μ.supp.ifs)
 

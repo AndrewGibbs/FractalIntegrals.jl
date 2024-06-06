@@ -1,5 +1,6 @@
 # seems that markers aren't visible if smaller than this:
 MIN_MARKER_SIZE = 0.1
+MAX_PLOT_PTS =  Integer(1e3)
 
 include("sketch.jl")
 
@@ -53,7 +54,7 @@ end
 
 function Plots.plot( Γ::AbstractAttractor,
                 args...;
-                max_num_pts::Integer = Integer(1e4),
+                max_num_pts::Integer = MAX_PLOT_PTS,
                 markershape = :circle,
                 linewidth::Real = 0.0,
                 markersize::Real = 0.0,
@@ -81,7 +82,7 @@ end
 
 function Plots.plot!( Γ::AbstractAttractor,
                 args...;
-                max_num_pts::Integer = Integer(1e5),
+                max_num_pts::Integer = MAX_PLOT_PTS,
                 markershape = :circle,
                 linewidth::Real = 0.0,
                 markersize::Real = 0.0,
@@ -109,7 +110,7 @@ end
 
 function Plots.plot( μ::AbstractInvariantMeasure,
                     args...;
-                    max_num_pts::Integer = Integer(1e4),
+                    max_num_pts::Integer = MAX_PLOT_PTS,
                     markershape = :circle,
                     linewidth::Real = 0.0,
                     markersize::Real = 0.0,
@@ -138,7 +139,7 @@ end
 
 function Plots.plot!( μ::AbstractInvariantMeasure,
                     args...;
-                    max_num_pts::Integer = Integer(1e5),
+                    max_num_pts::Integer = MAX_PLOT_PTS,
                     markershape = :circle,
                     linewidth::Real = 0.0,
                     markersize::Real = 0.0,

@@ -104,3 +104,10 @@ info_string(s::Similarity) = "x ↦ "*string(round.(s.ρ,digits=2))*string(round
 info_string(s::OneDimensionalSimilarity) = "x ↦ "*string(round(s.ρA,digits=2))*"x + "*string(round(s.δ,digits=2))
 
 Base.show(io::IO, s::AbstractSimilarity)  = print(io,'\n',typeof(s),':','\n', info_string(s))
+
+# fixed points
+
+# x = ρAx + δ
+# (I - ρA)x = δ
+# x = δ \ (I-ρA)
+fixed_point(s::AbstractSimilarity) =  (IdMat - s.ρA) \ s.δ
