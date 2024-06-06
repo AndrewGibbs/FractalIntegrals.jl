@@ -7,3 +7,5 @@ sols/
 debug/
 
 *odt*
+
+*/.ipynb_checkpoints
