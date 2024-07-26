@@ -13,16 +13,16 @@ similar_test_two(sₘ::AbstractSimilarity,
                 sₙ::AbstractSimilarity,
                 sₘ_::AbstractSimilarity,
                 sₙ_::AbstractSimilarity,
-                T::AbstractInvariantMap,
-                T_::AbstractInvariantMap
+                T::AbstractSimilarity,
+                T_::AbstractSimilarity
                 ) = isapprox(sₘ.A*T.A*inv(sₙ.A) , sₘ_.A*T_.A*inv(sₙ_.A), atol=100*eps())
 
 similar_test_three(sₘ::AbstractSimilarity,
                 sₙ::AbstractSimilarity,
                 sₘ_::AbstractSimilarity,
                 sₙ_::AbstractSimilarity,
-                T::AbstractInvariantMap,
-                T_::AbstractInvariantMap
+                T::AbstractSimilarity,
+                T_::AbstractSimilarity
                 )=isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*sₘ.A*(T.A/sₙ.ρ*inv(sₙ.A)*sₙ.δ .- T.δ), .- sₘ_.ρ*sₘ_.A*(T_.A/sₙ_.ρ*inv(sₙ_.A)*sₙ_.δ .- T_.δ), atol=100*eps())
 
 # now account for the special case of no rotation
@@ -42,14 +42,14 @@ similar_test_three(sₘ::AbstractSimilarity,
 #                 T_::AbstractInvariantMap
 #                 ) = isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*T.A*(sₙ.δ .- sₙ_.δ), atol=100*eps())
 
-function check_if_similar(  Γ::AbstractAttractor,
+function check_if_similar(  Γ::AbstractAttractor{R, V},
                             m::AbstractVector{<:Integer},
                             n::AbstractVector{<:Integer},
                             m_::AbstractVector{<:Integer},
                             n_::AbstractVector{<:Integer},
-                            G::Vector{<:AbstractInvariantMap},
-                            G_::Vector{<:AbstractInvariantMap}
-                            )
+                            G::AbstractVector{<:AbstractSimilarity},
+                            G_::AbstractVector{<:AbstractSimilarity}
+                            ) where {R, V}
     # get shorthand for IFS
     S = Γ.ifs
     test_one_pass = false
@@ -88,8 +88,8 @@ function check_for_similar_integrals(Γ::AbstractAttractor,
                                     X::Vector{<:Tuple{Vector{<:Integer}, Vector{<:Integer}}}, 
                                     mcat::Vector{<:Integer},
                                     mcat_::Vector{<:Integer},
-                                    G₁::Vector{<:AbstractInvariantMap},
-                                    G₂::Vector{<:AbstractInvariantMap},
+                                    G₁::AbstractVector{<:AbstractSimilarity},
+                                    G₂::AbstractVector{<:AbstractSimilarity},
                                     fubini_flag::Bool
                                     )
     is_X_similar = false

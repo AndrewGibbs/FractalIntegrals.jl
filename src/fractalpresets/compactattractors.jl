@@ -14,7 +14,7 @@ function cantorset(T = Float64; ρ = 1/T(3))
     ρ == 1/2 ? connectedness = ones(Bool, 2, 2) : connectedness = Matrix(IdMat(2))
 
     # get symmetry group
-    reflectiongroup1d = [IdentityInvariantMap(T, 1), OneDimensionalInvariantMap(T(1), T(-1))]
+    reflectiongroup1d = [one(ifs[1]), InvariantMap(T(1), T(-1))]
 
     # return fractal attractor
     return Attractor(   ifs,
@@ -117,7 +117,7 @@ function kochcurve(T = Float64)
     # get reflective symmetry group:
     
     horizontal_reflection_group =
-        [IdentityInvariantMap(T, 2), InvariantMap(Vector{T}([1,0]), Matrix{T}([-1 0; 0 1]))]
+        [one(ifs[1]), InvariantMap(Vector{T}([1,0]), Matrix{T}([-1 0; 0 1]))]
 
     # return attractor
     return Attractor(ifs,

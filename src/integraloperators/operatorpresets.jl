@@ -7,7 +7,7 @@ function check_ambient_dimension(ambient_dimension)
 end
 
 function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
-                                        <:AbstractAttractor{<:Any, R}
+                                        <:AbstractAttractor{R, <:Any}
                                         };
                                     ambient_dimension::Integer = μ.supp.n
                                     ) where {R <: Real}
@@ -43,7 +43,7 @@ singlelayer_operator_laplace(Γ::AbstractAttractor; vargs...) =
 
 
 function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
-                                                <:AbstractAttractor{<:Any, R}
+                                                <:AbstractAttractor{R, <:Any}
                                             },
                                         k::Number;
                                         ambient_dimension::Integer = μ.supp.n

@@ -1,45 +1,45 @@
-abstract type AbstractAttractor{T, R<:Real} end
-abstract type AbstractHomogenousAttractor{T, R} <: AbstractAttractor{T, R} end
+abstract type AbstractAttractor{R<:Real, T} end
+abstract type AbstractHomogenousAttractor{R, T} <: AbstractAttractor{R, T} end
 
-struct HomogenousAttractor{ T,
-                            R<:Real,
-                            S<:AbstractArray{<:AbstractSimilarity{R, T}},
-                            G<:AbstractArray{<:AbstractInvariantMap{T}}
-                            } <: AbstractHomogenousAttractor{T, R}
-    ifs::S
+struct HomogenousAttractor{ R<:Real,
+                            T,
+                            Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
+                            Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
+                            } <: AbstractHomogenousAttractor{R, T}
+    ifs::Sifs
     diam::R
     d::R
     n::Int64
     connectedness::Matrix{Bool}
-    symmetries::G
+    symmetries::Ssym
     ρ::R
 end
 
 struct HomogenousNonRotatingAttractor{  T,
                                         R<:Real,
-                                        S<:AbstractArray{TranslatingSimilarity{R, T}},
-                                        G<:AbstractArray{<:AbstractInvariantMap{T}}
-                                        } <: AbstractHomogenousAttractor{T, R}
-    ifs::S
+                                        Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
+                                        Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
+                                        } <: AbstractHomogenousAttractor{R, T}
+    ifs::Sifs
     diam::R
     d::R
     n::Int64
     connectedness::Matrix{Bool}
-    symmetries::G
+    symmetries::Ssym
     ρ::R
 end
 
 struct Attractor{   T,
                     R<:Real,
-                    S<:AbstractArray{<:AbstractSimilarity{R, T}},
-                    G<:AbstractArray{<:AbstractInvariantMap{T}}
-                    } <: AbstractAttractor{T, R}
-    ifs::S
+                    Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
+                    Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
+                    } <: AbstractAttractor{R, T}
+    ifs::Sifs
     diam::R
     d::R
     n::Int64
     connectedness::Matrix{Bool}
-    symmetries::G
+    symmetries::Ssym
 end
 
 # ALSO DEFINE HomogenousNonRotatingAttractor, OneDimensionalAttractor and OneDimensionalHomogenousAttractor
@@ -49,12 +49,12 @@ end
 # and I can choose a heirarcy that fits best - I think AbstractHomogenousAttractor < AbstractAttractor?
 
 # Actually based on this:
-#   AbstractInvariantMeasure{<:AbstractAttractor{T, R}} where {T <: Real, R}
+#   AbstractInvariantMeasure{<:AbstractAttractor{R, T}} where {R, T <: Real}
 # things will still be quite elegant without the need for OneDimensionalBlahBlah
 # which means I can have a heirarchy easily
 
 # define eltype for attractors - will be useful elsewhere
-Base.eltype(::AbstractAttractor{T, R}) where {T, R} = T
+Base.eltype(::AbstractAttractor{R, T}) where {R, T} = T
 
 function ifs_map!(  Sx::AbstractVector{<:T},
                     S::AbstractVector{<:AbstractSimilarity},
@@ -88,7 +88,8 @@ function get_subattractor_elements(Γ::AbstractAttractor, index::AbstractVector{
     for m = index[end:-1:1]
         new_diam *= Γ.ifs[m].ρ
         new_ifs = simcompifs(Γ.ifs[m], new_ifs)
-        new_symmetries = simcompsymmetries(Γ.ifs[m], new_symmetries)
+        new_symmetries = simcompifs(Γ.ifs[m], new_symmetries)
+        # new_symmetries = simcompsymmetries(Γ.ifs[m], new_symmetries)
     end
 
     return new_diam, new_ifs, new_symmetries

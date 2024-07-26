@@ -97,6 +97,11 @@ function discretise(sio::AbstractSingularIntegralOperator;
     return discretise(sio, ip, Vₕ; kwargs...)
 end
 
+function convert_quad_to_tuple(Q::QuadStruct)
+    (; nodes, weights) = Q
+    return (nodes, weights)
+end
+
 function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:Integer})
     count = 0
     for j in eachindex(m)
@@ -107,7 +112,7 @@ end
 
 function discretise(sio::AbstractSingularIntegralOperator{
                         <:AbstractInvariantMeasure{
-                            <:AbstractAttractor{T, R}}, 
+                            <:AbstractAttractor{R, T}}, 
                         Z},
                     ip::AbstractInnerProduct,
                     Vₕ::FractalBasis;

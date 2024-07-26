@@ -8,11 +8,11 @@ abstract type AbstractInvariantMeasure{A <:AbstractAttractor} end
     # Is it worth specifying T, R above?
     # Should I define an AbstractSymmetryGroup struct? This would be analagous to AbstractAttractor
 
-struct HausdorffMeasure{T,
-                        R <: Real,
-                        A <: AbstractAttractor{T, R},
+struct HausdorffMeasure{R <: Real,
+                        T,
+                        A <: AbstractAttractor{R, T},
                         V <: AbstractVector{R},
-                        G <: AbstractArray{<:AbstractInvariantMap{T}}
+                        G <: AbstractArray{<:AbstractSimilarity{R, T}}
                         } <: AbstractInvariantMeasure{A}
     supp::A
     barycentre::T
@@ -24,11 +24,11 @@ end
 # note the situation with symmetries - they need not be the same for an attractor and a measure.
 # But for HausdorffMeasure, the symmetries should be automatically inhereted from the attractor.
 
-struct InvariantMeasure{T,
-                        R <: Real,
-                        A <: AbstractAttractor{T, R},
+struct InvariantMeasure{R <: Real,
+                        T,
+                        A <: AbstractAttractor{R, T},
                         V <: AbstractVector{T},
-                        G <: AbstractArray{<:AbstractInvariantMap{T}}
+                        G <: AbstractArray{<:AbstractSimilarity{R, T}}
                         } <: AbstractInvariantMeasure{A}
     supp::A
     barycentre::T
@@ -73,7 +73,8 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
         # new_suppmeasure = μ.suppmeasure
         for m = index[end:-1:1]
             # new_suppmeasure *= μ.supp.ifs[m].ρ
-            new_symmetries = simcompsymmetries(μ.supp.ifs[m], new_symmetries)
+            new_symmetries = simcompifs(μ.supp.ifs[m], new_symmetries)
+            # new_symmetries = [simcomp(μ.supp.ifs[m], ns) for ns in new_symmetries]#simcompsymmetries(μ.supp.ifs[m], new_symmetries)
         end
         # new_suppmeasure = new_suppmeasure^μ.supp.d
         new_supp = get_subattractor(μ.supp, index)
@@ -85,7 +86,7 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
 end
 
 # make natural conversions of attractors to Hausdorff measures
-HausdorffMeasure(Γ::AbstractAttractor{T, R}) where {T, R} =
+HausdorffMeasure(Γ::AbstractAttractor{R, T}) where {R, T} =
     HausdorffMeasure(   Γ,
                         get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
                         one(R),

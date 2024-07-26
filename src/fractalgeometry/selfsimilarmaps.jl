@@ -25,14 +25,14 @@ end
 
 # outer constructors
 function Similarity(ρ::T1, δ::AbstractVector{T2}) where {T1<:Number, T2<:Number}
-    @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
+    # @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
     T = promote_type(T1, T2)
     return TranslatingSimilarity(T(ρ), SVector{length(δ),T}(δ), one(T), T(ρ))
 end
 
 function Similarity(ρ::T1, δ::AbstractVector{T2}, A::AbstractMatrix{T3}
                     ) where {T1<:Number, T2<:Number, T3<:Number}
-    @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
+    # @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
     @assert abs(det(A)) ≈ 1 "Matrix (third argument) must have determinant one"
     N = length(δ)
     @assert (N,N) == size(A) "Matrix dimension must match translation vector"
@@ -41,7 +41,7 @@ function Similarity(ρ::T1, δ::AbstractVector{T2}, A::AbstractMatrix{T3}
 end
 
 function Similarity(ρ::T1, δ::T2, r::T3=one(T1)) where {T1<:Number, T2<:Number, T3<:Number}
-    @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
+    # @assert abs(ρ) < 1 "Contraction (first argument) must be less than one"
     @assert abs(r) ≈ 1 "Reflection (third argument) must have length one"
     T = promote_type(T1,T2,T3)
     return OneDimensionalSimilarity(T(ρ), T(δ), T(r), convert(T,ρ*r))
@@ -71,7 +71,7 @@ simcomp(s₁::TranslatingSimilarity,s₂::TranslatingSimilarity) = TranslatingSi
 # Similarities as maps, optimised as far as possible
 
 # similarity acting on an IFS
-function simcompifs(s::T, ifs::AbstractVector{T}) where T<:AbstractSimilarity
+function simcompifs(s::AbstractSimilarity, ifs::AbstractVector{T}) where T<:AbstractSimilarity
     Achain = [s.A*ifs[m].A/s.A for m in eachindex(ifs)]
     rAchain = [ifs[m].ρ*Achain[m] for m in eachindex(ifs)]
     return [T(ifs[m].ρ, (IdMat-rAchain[m])*s.δ + s.ρA*ifs[m].δ, Achain[m], rAchain[m]) for m in eachindex(ifs)]
@@ -106,8 +106,4 @@ info_string(s::OneDimensionalSimilarity) = "x ↦ "*string(round(s.ρA,digits=2)
 Base.show(io::IO, s::AbstractSimilarity)  = print(io,'\n',typeof(s),':','\n', info_string(s))
 
 # fixed points
-
-# x = ρAx + δ
-# (I - ρA)x = δ
-# x = δ \ (I-ρA)
 fixed_point(s::AbstractSimilarity) =  (IdMat - s.ρA) \ s.δ

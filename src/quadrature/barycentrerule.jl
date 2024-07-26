@@ -11,7 +11,7 @@ get_bary_weights(μ::HausdorffMeasure, ℓmax::Integer) =
     fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), length(μ.supp.ifs)^ℓmax)
 
 function barycentre_quadrule( μ::AbstractInvariantMeasure{A}, h::Real
-                                ) where {T, R, A<:HomogenousAttractor{T, R}}
+                                ) where {T, R, A<:HomogenousAttractor{R, T}}
 
     @assert h>0 "Quadrature parameter (second input) must be positive."
     ℓmax = max(ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ)), 0)

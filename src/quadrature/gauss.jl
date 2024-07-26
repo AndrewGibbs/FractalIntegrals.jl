@@ -15,3 +15,5 @@ function gauss_quadrule(μ::AbstractInvariantMeasure{<:AbstractAttractor{<:Real,
     w = vv[1,:].^2
     return x,w
 end
+
+gauss_quadrule(γ::AbstractAttractor{<:Real, <:Real}, N::Integer) = gauss_quadrule(HausdorffMeasure(γ),N)
