@@ -9,3 +9,5 @@ debug/
 *odt*
 
 */.ipynb_checkpoints
+
+.vscode/
