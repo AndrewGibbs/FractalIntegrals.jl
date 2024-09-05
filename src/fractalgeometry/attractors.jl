@@ -1,60 +1,61 @@
-abstract type AbstractAttractor{R<:Real, T} end
-abstract type AbstractHomogenousAttractor{R, T} <: AbstractAttractor{R, T} end
+# ------------------ definitions of different attractor types -----------------------#
 
-struct HomogenousAttractor{ R<:Real,
-                            T,
-                            Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
-                            Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
-                            } <: AbstractHomogenousAttractor{R, T}
-    ifs::Sifs
-    diam::R
-    d::R
-    n::Int64
+abstract type AbstractAttractor{N, M, T} end
+abstract type AbstractHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T} end
+
+struct Attractor{N, M, T} <: AbstractAttractor{N, M, T}
+    ifs::SVector{M, Similarity{N, T}}
+    diam::T
+    d::T
     connectedness::Matrix{Bool}
-    symmetries::Ssym
-    ρ::R
+    symmetries::Vector{Similarity{N, T}}
 end
 
-struct HomogenousNonRotatingAttractor{  T,
-                                        R<:Real,
-                                        Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
-                                        Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
-                                        } <: AbstractHomogenousAttractor{R, T}
-    ifs::Sifs
-    diam::R
-    d::R
-    n::Int64
+struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
+    ifs::SVector{M, Similarity{N, M, T}}
+    diam::T
+    d::T
     connectedness::Matrix{Bool}
-    symmetries::Ssym
-    ρ::R
+    symmetries::Vector{Similarity{N, T}}
+    ρ::T
 end
 
-struct Attractor{   T,
-                    R<:Real,
-                    Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
-                    Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
-                    } <: AbstractAttractor{R, T}
-    ifs::Sifs
-    diam::R
-    d::R
-    n::Int64
+struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
+    ifs::SVector{M, OneDimensionalSimilarity{N, T}}
+    diam::T
+    d::T
     connectedness::Matrix{Bool}
-    symmetries::Ssym
+    symmetries::Vector{OneDimensionalSimilarity{T}}
 end
 
-# ALSO DEFINE HomogenousNonRotatingAttractor, OneDimensionalAttractor and OneDimensionalHomogenousAttractor
-# - this will be very useful and elegant later on
-# the most inelegand thing about it is there is no type hierarcy - it's a type matix :/
-# but this can be addressed by taking type unions in method calls,
-# and I can choose a heirarcy that fits best - I think AbstractHomogenousAttractor < AbstractAttractor?
+struct OneDimensionalHomogenousAttractor{M, T} <: AbstractHomogenousAttractor{1, M, T}
+    ifs::SVector{M, OneDimensionalSimilarity{N, T}}
+    diam::T
+    d::T
+    connectedness::Matrix{Bool}
+    symmetries::Vector{OneDimensionalSimilarity{T}}
+    ρ::T
+end
 
-# Actually based on this:
-#   AbstractInvariantMeasure{<:AbstractAttractor{R, T}} where {R, T <: Real}
-# things will still be quite elegant without the need for OneDimensionalBlahBlah
-# which means I can have a heirarchy easily
+# struct HomogenousNonRotatingAttractor{  T,
+#                                         R<:Real,
+#                                         Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
+#                                         Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
+#                                         } <: AbstractHomogenousAttractor{R, T}
+#     ifs::Sifs
+#     diam::R
+#     d::R
+#     n::Int64
+#     connectedness::Matrix{Bool}
+#     symmetries::Ssym
+#     ρ::R
+# end
+
 
 # define eltype for attractors - will be useful elsewhere
-Base.eltype(::AbstractAttractor{R, T}) where {R, T} = T
+Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
+
+# ----------- mappings of the underlying IFS to vector points --------------- 
 
 function ifs_map!(  Sx::AbstractVector{<:T},
                     S::AbstractVector{<:AbstractSimilarity},
@@ -79,35 +80,36 @@ end
 
 (Γ::AbstractAttractor)(x::AbstractVector) = ifs_map(Γ.ifs, x)
 
+# ------------------------ sub-attractors ----------------------------------------#
+
 function get_subattractor_elements(Γ::AbstractAttractor, index::AbstractVector{<:Integer})
     # get new measure and diameter. First initialise:
     new_diam = Γ.diam
     new_ifs = Γ.ifs
     new_symmetries = Γ.symmetries
 
-    for m = index[end:-1:1]
-        new_diam *= Γ.ifs[m].ρ
-        new_ifs = simcompifs(Γ.ifs[m], new_ifs)
-        new_symmetries = simcompifs(Γ.ifs[m], new_symmetries)
+    for 𝐦 = index[end:-1:1]
+        new_diam *= Γ.ifs[𝐦].ρ
+        new_ifs = simcompifs(Γ.ifs[𝐦], new_ifs)
+        new_symmetries = simcompifs(Γ.ifs[𝐦], new_symmetries)
         # new_symmetries = simcompsymmetries(Γ.ifs[m], new_symmetries)
     end
 
     return new_diam, new_ifs, new_symmetries
 end
 
-function get_subattractor(Γ::HomogenousAttractor, m::AbstractVector{<:Integer})
-    new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, m)
+function get_subattractor(Γ::HomogenousAttractor, 𝐦::AbstractVector{<:Integer})
+    new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, 𝐦)
     return HomogenousAttractor(new_ifs,
             new_diam,
             Γ.d,
-            Γ.n,
             Γ.connectedness,
             new_symmetries,
             Γ.ρ)
 end
 
-function get_subattractor(Γ::A, m::AbstractVector{<:Integer}) where A<:Attractor
-    new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, m)
+function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:AbstractAttractor
+    new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, 𝐦)
     return A(new_ifs,
             new_diam,
             Γ.d,
@@ -116,6 +118,7 @@ function get_subattractor(Γ::A, m::AbstractVector{<:Integer}) where A<:Attracto
             new_symmetries)
 end
 
+# -------------------- outer constructor ---------------------------------- #
 function ishomogeneous(ifs::AbstractVector{<:AbstractSimilarity})
     # check if fractal is homogeneous
     homogeneous = true
@@ -147,44 +150,53 @@ end
 function Attractor( ifs::AbstractVector{S};
                     diam = diam(ifs),
                     d::Real = dimH(ifs), # integers welcome
-                    connectedness = Matrix(IdMat(length(ifs))),
-                    symmetries = trivialgroup(typeof(ifs[1].ρ), length(ifs[1].δ))
-                    ) where S<:AbstractSimilarity
+                    connectedness = IdMat(N),
+                    symmetries = trivialgroup(T, N)
+                    ) where {N, T, S<:AbstractSimilarity{N, T}}
 
-    n = length(ifs[1].δ) # ambient dimensions
-    diamT, dT = promote(diam, d) # ensure these are of same type
+                    
+    diamT, dT, _ = promote(diam, d, T) # ensure these are of same type
     # Not type-stable. But I don't think this will be a performance-critical function in practice.
-    if isa(S, AbstractSimilarity)
-        Γ  = HomogenousNonRotatingAttractor(
-                ifs,
-                diamT,
-                dT,
-                n,
-                connectedness,
-                symmetries,
-                ifs[1].ρ
-                )
-
-    elseif ishomogeneous(ifs)
-        Γ  = HomogenousAttractor(
-                ifs,
-                diamT,
-                dT,
-                n,
-                connectedness,
-                symmetries,
-                ifs[1].ρ
-                )
-                
+    if N == 1
+        if ishomogeneous(ifs)
+            Γ  = OneDimensionalHomogenousAttractor(
+                    ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries,
+                    ifs[1].ρ
+                    )
+                    
+        else
+            Γ  = OneDimensionalAttractor(
+                    ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries
+                    )
+        end
     else
-        Γ  = Attractor(
-                ifs,
-                diamT,
-                dT,
-                n,
-                connectedness,
-                symmetries
-                )
+        if ishomogeneous(ifs)
+            Γ  = HomogenousAttractor(
+                    ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries,
+                    ifs[1].ρ
+                    )
+                    
+        else
+            Γ  = Attractor(
+                    ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries
+                    )
+        end
     end
     return Γ
 end

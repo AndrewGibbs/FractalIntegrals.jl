@@ -1,56 +1,23 @@
 # ---------------------- Measures ---------------------------------------------------------#
 # abstract type AbstractInvariantMeasure{T<:Real, B, V<:AbstractVector{T}, A<:AbstractAttractor} end
 
-abstract type AbstractInvariantMeasure{A <:AbstractAttractor} end
-
-# AbstractInvariantMeasure{<:AbstractAttractor{T, R}} where T<: Real
-# questions: 
-    # Is it worth specifying T, R above?
-    # Should I define an AbstractSymmetryGroup struct? This would be analagous to AbstractAttractor
-
-struct HausdorffMeasure{R <: Real,
-                        T,
-                        A <: AbstractAttractor{R, T},
-                        V <: AbstractVector{R},
-                        G <: AbstractArray{<:AbstractSimilarity{R, T}}
-                        } <: AbstractInvariantMeasure{A}
+abstract type AbstractInvariantMeasure{N, M, T<:Real, A <:AbstractAttractor} end
+ 
+struct InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
+                        } <: AbstractInvariantMeasure{N, M, T, A}
     supp::A
-    barycentre::T
-    suppmeasure::R
-    weights::V
-    symmetries::G
+    suppmeasure::T
+    weights::SVector{M, T}
 end
 
-# note the situation with symmetries - they need not be the same for an attractor and a measure.
-# But for HausdorffMeasure, the symmetries should be automatically inhereted from the attractor.
-
-struct InvariantMeasure{R <: Real,
-                        T,
-                        A <: AbstractAttractor{R, T},
-                        V <: AbstractVector{T},
-                        G <: AbstractArray{<:AbstractSimilarity{R, T}}
-                        } <: AbstractInvariantMeasure{A}
+struct HausdorffMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
+                        } <: AbstractInvariantMeasure{N, M, T, A}
     supp::A
-    barycentre::T
-    suppmeasure::R
-    weights::V
-    symmetries::G
+    suppmeasure::T
+    weights::SVector{M, T}
 end
 
-
-InvariantMeasure(Γ::AbstractAttractor,
-                weights::AbstractVector{<:Real};
-                suppmeasure = 1.0,
-                symmetries = trivialgroup(Γ.n)
-                ) = 
-    InvariantMeasure(Γ,
-                    get_barycentre(Γ.ifs, weights),
-                    suppmeasure,
-                    weights,
-                    symmetries)
-
-InvariantMeasure(Γ::AbstractAttractor; vargs...) = HausdorffMeasure(Γ; vargs...)
-
+# ------------ finding the barycentre (could be moved to barycentre rule?) ------------
 function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
                         weights::AbstractVector{<:Real})
     M = length(sims)
@@ -63,7 +30,30 @@ function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
     return divisor \ vec_sum
 end
 
+get_barycentre(μ::AbstractInvariantMeasure) = get_barycentre(μ.supp.ifs, μ.weights)
+
 get_hausdorff_weights(Γ::AbstractAttractor) = [s.ρ^Γ.d for s in Γ.ifs]
+
+# ---------------- outer constructors ----------------------------------
+
+
+InvariantMeasure(Γ::AbstractAttractor,
+                weights::AbstractVector{<:Real};
+                suppmeasure = 1.0,
+                ) = 
+    InvariantMeasure(Γ,
+                    suppmeasure,
+                    weights)
+
+InvariantMeasure(Γ::AbstractAttractor; vargs...) = HausdorffMeasure(Γ; vargs...)
+
+# make natural conversions of attractors to Hausdorff measures
+HausdorffMeasure(Γ::AbstractAttractor{R, T}) where {R, T} =
+    HausdorffMeasure(   Γ,
+                        get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
+                        get_hausdorff_weights(Γ))
+
+# ------------------------ sub-measure ------------------------------------- #
     
 function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:AbstractInvariantMeasure
     if index == [0]
@@ -84,14 +74,6 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
     end
     return new_μ
 end
-
-# make natural conversions of attractors to Hausdorff measures
-HausdorffMeasure(Γ::AbstractAttractor{R, T}) where {R, T} =
-    HausdorffMeasure(   Γ,
-                        get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
-                        one(R),
-                        get_hausdorff_weights(Γ),
-                        Γ.symmetries)
 
 # overload the indexing function, so we can get neat vector subscripts
 Base.getindex(μ::AbstractInvariantMeasure, inds...) = get_submeasure(μ, [i for i in inds])

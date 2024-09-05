@@ -7,8 +7,8 @@ function get_boundingball_centre(ifs::AbstractArray{<:AbstractSimilarity})
     return (IdMat(ndims) - 𝐀) \ 𝐁
 end
 
-function get_boundingball_centre(ifs::AbstractArray{OneDimensionalSimilarity{R,T}}
-                                ) where {R<:Real, T<:Real}
+function get_boundingball_centre(ifs::AbstractArray{OneDimensionalSimilarity{T}}
+                                ) where {T<:Real}
     min_pt = T(Inf)
     max_pt = -T(Inf)
     # consider extremal fixed points
