@@ -37,21 +37,24 @@ get_hausdorff_weights(Γ::AbstractAttractor) = [s.ρ^Γ.d for s in Γ.ifs]
 # ---------------- outer constructors ----------------------------------
 
 
-InvariantMeasure(Γ::AbstractAttractor,
+InvariantMeasure(Γ::AbstractAttractor{N, M, T},
                 weights::AbstractVector{<:Real};
                 suppmeasure = 1.0,
-                ) = 
+                ) where {N, M, T} = 
     InvariantMeasure(Γ,
-                    suppmeasure,
-                    weights)
+                    T(suppmeasure),
+                    SVector{M}(T.(weights))
+                    )
 
 InvariantMeasure(Γ::AbstractAttractor; vargs...) = HausdorffMeasure(Γ; vargs...)
 
 # make natural conversions of attractors to Hausdorff measures
-HausdorffMeasure(Γ::AbstractAttractor{R, T}) where {R, T} =
+HausdorffMeasure(Γ::AbstractAttractor{N, M, T}; suppmeasure = one(T)
+                ) where {N, M, T} =
     HausdorffMeasure(   Γ,
-                        get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
-                        get_hausdorff_weights(Γ))
+                        T(suppmeasure),#get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
+                        SVector{M}(T.(get_hausdorff_weights(Γ)))
+                    )
 
 # ------------------------ sub-measure ------------------------------------- #
     
@@ -59,18 +62,19 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
     if index == [0]
         new_μ = μ
     else    
-        new_symmetries = μ.symmetries
-        # new_suppmeasure = μ.suppmeasure
-        for m = index[end:-1:1]
-            # new_suppmeasure *= μ.supp.ifs[m].ρ
-            new_symmetries = simcompifs(μ.supp.ifs[m], new_symmetries)
-            # new_symmetries = [simcomp(μ.supp.ifs[m], ns) for ns in new_symmetries]#simcompsymmetries(μ.supp.ifs[m], new_symmetries)
-        end
+        # new_symmetries = μ.symmetries
+        # # new_suppmeasure = μ.suppmeasure
+        # for m = index[end:-1:1]
+        #     # new_suppmeasure *= μ.supp.ifs[m].ρ
+        #     new_symmetries = simcompifs(μ.supp.ifs[m], new_symmetries)
+        #     # new_symmetries = [simcomp(μ.supp.ifs[m], ns) for ns in new_symmetries]#simcompsymmetries(μ.supp.ifs[m], new_symmetries)
+        # end
         # new_suppmeasure = new_suppmeasure^μ.supp.d
         new_supp = get_subattractor(μ.supp, index)
         new_suppmeasure = μ.suppmeasure * prod(μ.weights[index])#(new_supp.diam / μ.supp.diam) ^ μ.supp.d
-        new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
-        new_μ = M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
+        # new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
+        # new_μ = M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
+        new_μ = M(new_supp, new_suppmeasure, μ.weights)
     end
     return new_μ
 end

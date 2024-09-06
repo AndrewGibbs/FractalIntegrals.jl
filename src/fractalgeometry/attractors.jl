@@ -12,7 +12,7 @@ struct Attractor{N, M, T} <: AbstractAttractor{N, M, T}
 end
 
 struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
-    ifs::SVector{M, Similarity{N, M, T}}
+    ifs::SVector{M, Similarity{N, T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
@@ -21,7 +21,7 @@ struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
 end
 
 struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
-    ifs::SVector{M, OneDimensionalSimilarity{N, T}}
+    ifs::SVector{M, OneDimensionalSimilarity{T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
@@ -29,7 +29,7 @@ struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
 end
 
 struct OneDimensionalHomogenousAttractor{M, T} <: AbstractHomogenousAttractor{1, M, T}
-    ifs::SVector{M, OneDimensionalSimilarity{N, T}}
+    ifs::SVector{M, OneDimensionalSimilarity{T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
@@ -98,9 +98,9 @@ function get_subattractor_elements(Γ::AbstractAttractor, index::AbstractVector{
     return new_diam, new_ifs, new_symmetries
 end
 
-function get_subattractor(Γ::HomogenousAttractor, 𝐦::AbstractVector{<:Integer})
+function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:AbstractHomogenousAttractor
     new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, 𝐦)
-    return HomogenousAttractor(new_ifs,
+    return A(new_ifs,
             new_diam,
             Γ.d,
             Γ.connectedness,
@@ -113,7 +113,6 @@ function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:Abstr
     return A(new_ifs,
             new_diam,
             Γ.d,
-            Γ.n,
             Γ.connectedness,
             new_symmetries)
 end
@@ -149,18 +148,20 @@ end
 # user-friendly constructor
 function Attractor( ifs::AbstractVector{S};
                     diam = diam(ifs),
-                    d::Real = dimH(ifs), # integers welcome
-                    connectedness = IdMat(N),
+                    d::Real = dimH(ifs),
+                    connectedness = Matrix(IdMat(N)),
                     symmetries = trivialgroup(T, N)
                     ) where {N, T, S<:AbstractSimilarity{N, T}}
 
                     
-    diamT, dT, _ = promote(diam, d, T) # ensure these are of same type
+    diamT, dT = promote(T(diam), T(d)) # ensure these are of same type
+    M = length(ifs)
+    sv_ifs = SVector{M}(ifs)
     # Not type-stable. But I don't think this will be a performance-critical function in practice.
     if N == 1
         if ishomogeneous(ifs)
             Γ  = OneDimensionalHomogenousAttractor(
-                    ifs,
+                    sv_ifs,
                     diamT,
                     dT,
                     connectedness,
@@ -170,7 +171,7 @@ function Attractor( ifs::AbstractVector{S};
                     
         else
             Γ  = OneDimensionalAttractor(
-                    ifs,
+                    sv_ifs,
                     diamT,
                     dT,
                     connectedness,
@@ -180,7 +181,7 @@ function Attractor( ifs::AbstractVector{S};
     else
         if ishomogeneous(ifs)
             Γ  = HomogenousAttractor(
-                    ifs,
+                    sv_ifs,
                     diamT,
                     dT,
                     connectedness,
@@ -190,7 +191,7 @@ function Attractor( ifs::AbstractVector{S};
                     
         else
             Γ  = Attractor(
-                    ifs,
+                    sv_ifs,
                     diamT,
                     dT,
                     connectedness,
@@ -199,4 +200,15 @@ function Attractor( ifs::AbstractVector{S};
         end
     end
     return Γ
+end
+
+Attractor(args... ; kwargs...) = Attractor([args...]; kwargs...)
+
+# ------------------ determine how Similarity appears in the REPL ------------------#
+
+function Base.show(io::IO, Γ::AbstractAttractor{N, M, T}) where {N, M, T}
+    print(io, round(Γ.d, digits=2), "-dimensional ", typeof(Γ), ":")
+    for s in Γ.ifs
+        print(io,'\n', info_string(s))
+    end
 end

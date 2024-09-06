@@ -1,5 +1,5 @@
-include("selfsimilarmaps.jl")
+include("similarities.jl")
 include("invariantmaps.jl")
 include("attractors.jl")
-# include("measures.jl")
-# include("boundingball.jl")
+include("measures.jl")
+include("boundingball.jl")

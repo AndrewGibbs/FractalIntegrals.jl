@@ -48,9 +48,10 @@ DihedralGroup(n; varags...) = DihedralGroup(Float64, n; varags...)
 function trivialgroup(  T::Type,
                         n::Integer)
     if n==1
-        tg = OneDimensionalSimilarity(one(T), zero(T), one(T), zero(T))
+        tg = Similarity(one(T), zero(T))
     else
-        tg = TranslatingSimilarity(one(T), SVector{n}(zeros(T,n)), one(T), zero(T))
+        tg = Similarity(one(T), zeros(T, n))
+        # was 'TranslatingSimilarity', but this type has been removed
     end
     return [tg]
 end

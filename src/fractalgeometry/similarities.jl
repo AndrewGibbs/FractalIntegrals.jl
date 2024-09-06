@@ -3,7 +3,7 @@ abstract type AbstractSimilarity{N, T<:Number} end
 
 # ----------------- concrete similarity types -----------------------#
 
-struct Similarity{N, T}# <: VectorSimilarity{N,T}
+struct Similarity{N, T} <: AbstractSimilarity{N, T}# <: VectorSimilarity{N,T}
     ρ :: T
     δ :: SVector{N,T}
     A :: SMatrix{N,N,T}

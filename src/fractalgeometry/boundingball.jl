@@ -1,9 +1,10 @@
+# ------------------------ functions for bounding ball ------------------------
+
 function get_boundingball_centre(ifs::AbstractArray{<:AbstractSimilarity})
     M = length(ifs)
     ndims = length(ifs[1].δ)
     𝐀 = sum(ifs[m].ρA for m in 1:M)/M *IdMat(ndims)
     𝐁 = sum(ifs[m].δ for m in 1:M)/M
-    # ball centre is given by Appendix A:
     return (IdMat(ndims) - 𝐀) \ 𝐁
 end
 
@@ -24,6 +25,7 @@ end
 get_boundingball_centre(Γ::AbstractAttractor) = get_boundingball_centre(Γ.ifs)
 get_boundingball_centre(μ::AbstractInvariantMeasure) = get_boundingball_centre(μ.supp.ifs)
 
+# ---------------------- diameter of attractor given IFS ------------------------------
 function diam(ifs::AbstractArray{<:AbstractSimilarity})
     M = length(ifs)
     # uses idea of `Spatial Bounding of Self-Affine Iterated Function System Attractor Sets'
