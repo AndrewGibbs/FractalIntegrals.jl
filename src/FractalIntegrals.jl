@@ -13,6 +13,7 @@ export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
         getfractal, FractaPresets
 
 include("fractalgeometry/fractalgeometry.jl")
+include("fractalgeometry/vectorindices.jl")
 include("quadrature/quadrature.jl")
 # include("integraloperators/integraloperators.jl")
 # include("discretisation/discretisation.jl")
