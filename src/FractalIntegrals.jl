@@ -6,14 +6,14 @@ import LinearAlgebra.I as IdMat
 import SpecialFunctions: hankelh1, gamma as gammafn
 import Roots: find_zero, Bisection
 import Base.Threads: @spawn, nthreads
-export Similarity, FractaPresets
 import ChunkSplitters: chunks
 using Plots
 
-export getfractal
+export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
+        getfractal, FractaPresets
 
 include("fractalgeometry/fractalgeometry.jl")
-# include("quadrature/quadrature.jl")
+include("quadrature/quadrature.jl")
 # include("integraloperators/integraloperators.jl")
 # include("discretisation/discretisation.jl")
 

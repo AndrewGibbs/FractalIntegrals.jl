@@ -37,6 +37,9 @@ struct OneDimensionalHomogenousAttractor{M, T} <: AbstractHomogenousAttractor{1,
     ρ::T
 end
 
+# useful to consider this union later on:
+OneDimensionalAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
+
 # struct HomogenousNonRotatingAttractor{  T,
 #                                         R<:Real,
 #                                         Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
