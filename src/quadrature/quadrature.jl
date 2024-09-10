@@ -5,52 +5,52 @@ struct QuadStruct{T<:AbstractArray, R<:AbstractArray}
     weights::R
 end
 
-# putting this function here for now...
-function subdivide_indices(Γ::AbstractAttractor, h::Real, max_num_indices = Inf)
-    I = Vector{Int64}[]
-    M = length(Γ.ifs)
-    r = zeros(M)
+# # putting this function here for now...
+# function subdivide_indices(Γ::AbstractAttractor, h::Real, max_num_indices = Inf)
+#     I = Vector{Int64}[]
+#     M = length(Γ.ifs)
+#     r = zeros(M)
 
-    @assert (h>0 || max_num_indices<Inf
-            ) "either meshwidth must be positive, or max_num_indices must be finite"
+#     @assert (h>0 || max_num_indices<Inf
+#             ) "either meshwidth must be positive, or max_num_indices must be finite"
 
-    if Γ.diam >= h
-        subdiv = true
-        for m in 1:M
-            push!(I,[m])
-            r[m] = Γ.ifs[m].ρ
-        end
-    else
-        subdiv = false
-    end
+#     if Γ.diam >= h
+#         subdiv = true
+#         for m in 1:M
+#             push!(I,[m])
+#             r[m] = Γ.ifs[m].ρ
+#         end
+#     else
+#         subdiv = false
+#     end
 
-    while subdiv && (length(I)<max_num_indices)
-        subdiv = false
-        split_vecs = Int64[]
-        for j in eachindex(I)
-           if Γ.diam*prod(r[I[j]]) >= h
-                subdiv = true
-                push!(split_vecs,j)
-            end
-        end
-        if subdiv
-            new_vecs = Vector{Int64}[]
-            for j in split_vecs
-                for m in 1:M
-                    push!(new_vecs, vcat(I[j],[m]))
-                end
-            end
-            deleteat!(I,split_vecs)
-            I = vcat(I,new_vecs)
-        end
-    end
-    #quick bodge - this convention means we can keep the same type
-        # and it's (more) consistent with the paper
-    if isempty(I)
-        I = [[0]]
-    end
-    return I
-end
+#     while subdiv && (length(I)<max_num_indices)
+#         subdiv = false
+#         split_vecs = Int64[]
+#         for j in eachindex(I)
+#            if Γ.diam*prod(r[I[j]]) >= h
+#                 subdiv = true
+#                 push!(split_vecs,j)
+#             end
+#         end
+#         if subdiv
+#             new_vecs = Vector{Int64}[]
+#             for j in split_vecs
+#                 for m in 1:M
+#                     push!(new_vecs, vcat(I[j],[m]))
+#                 end
+#             end
+#             deleteat!(I,split_vecs)
+#             I = vcat(I,new_vecs)
+#         end
+#     end
+#     #quick bodge - this convention means we can keep the same type
+#         # and it's (more) consistent with the paper
+#     if isempty(I)
+#         I = [[0]]
+#     end
+#     return I
+# end
 
 # include("jacobimatrices.jl")
 include("productquadrature.jl")
