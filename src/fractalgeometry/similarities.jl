@@ -73,6 +73,22 @@ simcomp(s₁::S, s₂::S) where S<:AbstractSimilarity = S(s₁.ρ*s₂.ρ, s₁.
 # overload composition operator for syntactic sugar
 Base.:∘(s₁::AbstractSimilarity, s₂::AbstractSimilarity) = simcomp(s₁,s₂)
 
+Base.inv(s::S) where S<:AbstractSimilarity = S(inv(s.ρ), -s.ρA\s.δ, inv(s.A), inv(s.ρA))
+
+function Base.:^(s::AbstractSimilarity, p::Integer)
+    if p<0
+        s⁻¹ = inv(s)
+        sᵖ = (s⁻¹)^(-p) # call recursively (once)
+    else
+        sᵖ = s
+        # apply repeated composition
+        for _= 2:p
+            sᵖ = sᵖ ∘ s
+        end
+    end
+    return sᵖ
+end
+
 # -------------------------------- Similarities as maps --------------------------------------
 
 (s::AbstractSimilarity)(x)  = s.ρA*x + s.δ
