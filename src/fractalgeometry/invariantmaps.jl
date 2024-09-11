@@ -11,8 +11,7 @@ function get_group_operations2d(num_rotations::Integer,
     δθ = T(2π) / num_rotations
     num_reflections = length(reflections)
     
-    ivmaps = Vector{Similarity{T, SVector{2,T}, SMatrix{2,2,T,4}}
-                    }(undef, num_rotations + num_reflections)
+    ivmaps = Vector{Similarity{2,T}}(undef, num_rotations + num_reflections)
 
     counter = 0
     for θ in 0:δθ:(2π-δθ)

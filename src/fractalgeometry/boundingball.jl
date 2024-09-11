@@ -39,3 +39,7 @@ end
 
 diam(Γ::AbstractAttractor) = Γ.diam
 diam(μ::AbstractInvariantMeasure) = μ.supp.diam
+
+# ---------------------- distance from an attractor to a point ---;; ----------------#
+dist⁻(Γ::AbstractAttractor, x) = norm(x-get_boundingball_centre(Γ)) - diam(Γ)/2
+dist⁺(Γ::AbstractAttractor, x) = norm(x-get_boundingball_centre(Γ))

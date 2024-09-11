@@ -4,9 +4,11 @@ struct VectorIndex{M, T<:Integer} <: AbstractVector{T}
     ℓ::T
 end
 
-# some AbstractVector properties
+# some AbstractVector methods
 Base.length(𝐦::VectorIndex{M, T}) where {M, T} = 𝐦.ℓ
 Base.size(𝐦::VectorIndex) = (length(𝐦),)
+Base.zero(::Type{VectorIndex{M, T}}) where {M, T} = VectorIndex{M, T}(zero(T), one(T))
+Base.zero(𝐦::VectorIndex) = zero(typeof(𝐦))
 
 # Convert to vector of type T
 function Base.Vector(𝐦::VectorIndex{M, T}) where {M, T}
@@ -34,6 +36,9 @@ split(𝐦::VectorIndex{M, T}) where {M, T} =
     [VectorIndex{M, T}(𝐦_, 1) for 𝐦_ in 1:M] : 
     [VectorIndex{M, T}(𝐦_, 𝐦.ℓ+1) for 𝐦_ in 𝐦.intdex .+ ((M^𝐦.ℓ) .* (0:(M-1)))]
 
+split(Γ::AbstractAttractor{<:Any, M, <:Any}) where {M} = [Γ[m] for m=1:M]
+split(μ::AbstractInvariantMeasure{<:Any, M, <:Any, <:Any}) where {M} = [μ[m] for m=1:M]
+
 # extend current vector indexing to access subcomponents of attractors and measures
 Base.getindex(Γ::Union{AbstractAttractor, AbstractInvariantMeasure}, 𝐦::VectorIndex) = 
     getindex(Γ, Vector(𝐦))
@@ -41,41 +46,4 @@ Base.getindex(Γ::Union{AbstractAttractor, AbstractInvariantMeasure}, 𝐦::Vect
 # output of vector indices must be as one would write it, e.g. [1,4,2,1,1,3] etc
 Base.show(io::IO, 𝐦::VectorIndex{M, T}) where {M, T} = Base.show(io, Vector(𝐦))
 
-# subdivide attractor and get array of VectorIndex 
-function subdivide_indices( Γ::AbstractAttractor{N, M, T},
-                            h::Real;
-                            max_num_indices = Inf
-                            ) where {N, M, T}
-
-
-    @assert (h>0 || max_num_indices<Inf
-    ) "either meshwidth must be positive, or max_num_indices must be finite"
-
-    Lₕ = [VectorIndex{M}([zero(T)])]
-    ρs = [s.ρ for s in Γ.ifs]
-    diams = [diam(Γ)]
-
-    keep_subdividing = true
-    while keep_subdividing && length(Lₕ)<max_num_indices
-        split_vecs = Int64[]
-        keep_subdividing = false
-        for j in eachindex(Lₕ)
-            if diams[j] ≥ h
-                keep_subdividing = true
-                # append new vector index onto end of index set
-                append!(Lₕ, split(Lₕ[j]))
-                # similar for diameter logging
-                append!(diams, diams[j].*ρs)
-
-                # log current indices to delete
-                push!(split_vecs,j)
-            end
-        end
-
-        # delete vectors and radii from split components
-        deleteat!(Lₕ, split_vecs)
-        deleteat!(diams, split_vecs)
-    end
-
-    return Lₕ
-end
+include("subdivision")

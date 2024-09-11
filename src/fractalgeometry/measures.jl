@@ -80,10 +80,10 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
 end
 
 # overload the indexing function, so we can get neat vector subscripts
-Base.getindex(μ::AbstractInvariantMeasure, inds...) = get_submeasure(μ, [i for i in inds])
-Base.getindex(μ::AbstractInvariantMeasure, inds::AbstractVector{<:Integer}) = get_submeasure(μ, inds)
-Base.getindex(Γ::AbstractAttractor, inds...) = get_subattractor(Γ, [i for i in inds])
-Base.getindex(Γ::AbstractAttractor, inds::AbstractVector{<:Integer}) = get_subattractor(Γ, inds)
+Base.getindex(μ::AbstractInvariantMeasure, inds::Vararg{<:Integer}) = get_submeasure(μ, [i for i in inds])
+Base.getindex(μ::AbstractInvariantMeasure, inds::Vector{<:Integer}) = get_submeasure(μ, inds)
+Base.getindex(Γ::AbstractAttractor, inds::Vararg{<:Integer}) = get_subattractor(Γ, [i for i in inds])
+Base.getindex(Γ::AbstractAttractor, inds::Vector{<:Integer}) = get_subattractor(Γ, inds)
 
 # there will be lots of cases where we want to default to HausdorffMeasure
 
