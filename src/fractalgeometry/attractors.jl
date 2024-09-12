@@ -183,7 +183,7 @@ end
 function Attractor( ifs::AbstractVector{S};
                     diam = diam(ifs),
                     d::Real = dimH(ifs),
-                    connectedness = Matrix(IdMat(N)),
+                    connectedness = Matrix(IdMat(length(ifs))),
                     symmetries = trivialgroup(T, N)
                     ) where {N, T, S<:AbstractSimilarity{N, T}}
 
@@ -191,7 +191,7 @@ function Attractor( ifs::AbstractVector{S};
     diamT, dT = promote(T(diam), T(d)) # ensure these are of same type
     M = length(ifs)
     sv_ifs = SVector{M}(ifs)
-    connectedness = Bool.(connectedness)
+    # connectedness = Bool.(connectedness)
     # Not type-stable. But I don't think this will be a performance-critical function in practice.
     if N == 1
         if ishomogeneous(ifs)

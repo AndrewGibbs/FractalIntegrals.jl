@@ -60,6 +60,8 @@ function Plots.plot( Γ::AbstractAttractor,
                 markersize::Real = 0.0,
                 markersize_const::Real = 1e3,
                 marker_adjust_scale::Real = 1.0,
+                aspect_ratio = 1,
+                framestyle = :tight,
                 label = "",
                 kwargs...)
         
@@ -134,6 +136,8 @@ function Plots.plot( μ::AbstractInvariantMeasure,
         label = label,
         marker_z = weights,
         markerstrokewidth = 0, # no border required
+        aspect_ratio = 1,
+        framestyle = :tight,
         kwargs...)
 end
 
