@@ -27,19 +27,19 @@ function plothelper(Γ::AbstractAttractor{N, <:Any, <:Any},
     return xpts, ypts, markersize
 end
 
-function plothelper(μ::AbstractInvariantMeasure,
+function plothelper(μ::AbstractInvariantMeasure{N, <:Any, <:Any, <:Any},
                 max_num_pts,
                 markersize,
                 markersize_const,
-                marker_adjust_scale)
+                marker_adjust_scale) where N
 
 
-    @assert μ.supp.n in [1,2] "ambient dimension of support must be at most two."
+    @assert N in [1,2] "ambient dimension of support must be at most two."
 
     # get points and convert to x,y coords for plotting
     pts, weights = sketch_measure(μ; max_num_pts = max_num_pts)
     xpts = [pt[1] for pt in pts]
-    μ.supp.n == 2 ? ypts = [pt[2] for pt in pts] : ypts = zeros(length(xpts))
+    N == 2 ? ypts = [pt[2] for pt in pts] : ypts = zeros(length(xpts))
 
     # default marker size is based on def'n of Hausdorff dimension
     if markersize <= 0

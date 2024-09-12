@@ -2,7 +2,18 @@
 # abstract type AbstractInvariantMeasure{T<:Real, B, V<:AbstractVector{T}, A<:AbstractAttractor} end
 
 abstract type AbstractInvariantMeasure{N, M, T<:Real, A <:AbstractAttractor} end
- 
+
+"""
+    InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}}
+A general class of measure which can be defined supported on an attractor.
+Defined by a 'support', which is an attractor, and a vector of probability weights,
+invariant measures satisfy a 'balance' condition.
+
+# Fields
+- `supp`: The attractor on which the measure is supported
+- `suppmeasure`: The measure of the support
+- `weights`: A vector of probability weights
+"""
 struct InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
                         } <: AbstractInvariantMeasure{N, M, T, A}
     supp::A
@@ -10,6 +21,12 @@ struct InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
     weights::SVector{M, T}
 end
 
+"""
+    HausdorffMeasure{N, M, T, A <: AbstractAttractor{N, M, T}}
+A special case of `InvariantMeasure` where
+the contraction factors ρ_m and the probability weights p_m satisfy
+ρ_m^d=p_m, where d is the Hausdorff dimension of the attractor.
+"""
 struct HausdorffMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
                         } <: AbstractInvariantMeasure{N, M, T, A}
     supp::A

@@ -29,24 +29,31 @@ An iterated function system (IFS) is a set of $M$ similaritites ``\{s_m\}_{m=1}^
 \Gamma  = \bigcup_{m=1}^M s_m(\Gamma)
 ```
 
-```math
-s_m(x)=\rho_mA_mx + \delta_m,\quad x\in\mathbb{R}^n,
-```
-
 ```@docs
 Attractor
 ```
-### Plotting attractors
-In the following example, we build and plot a Cantor set from scratch.
+
+In general, an IFS attractor has a non-integer [Hausdorff dimension](https://en.wikipedia.org/wiki/Hausdorff_dimension). The Hausdorff dimension $d$ satisfies
+```math
+\sum_{m=1}^M\rho_m^d = 1.
+```
+The following example constructs a Cantor set and displays its dimension.
+
 ```@example tutorial
-using FractalIntegrals
 s₁ = Similarity(1/3,0)
 s₂ = Similarity(1/3,2/3)
 Γ = Attractor(s₁, s₂)
+print(Γ)
+```
+```@example tutorial
+println("Full Hausdorff dimension of Cantor Set:", Γ.d)
+```
+
+### Plotting attractors
+`Plots.plot` has a method for a `Attractor` type.
+```@example tutorial
 plot(Γ)
 ```
-Note that `Plots.plot` has a method for a `Attractor` type.
-
 ### Presets
 
 You can create your own attractor from scratch, as explained above. But a range of preset attractors are available.
@@ -78,6 +85,38 @@ plot!(Γ₁,markersize=1)
 plot!(Γ₃₂₃₁,markersize=1.5)
 ```
 
-## Fractal Measures
+## Measures
 
-We now consider a measure $\mu$ supported on a fractal attractor $\Gamma$. This is necessary to define integrals and integral equations on $\Gamma$.
+We now consider a measure $\mu$ supported on a fractal attractor $\Gamma$. This is necessary to define integrals and integral equations on $\Gamma$. For a attractor defined with $M$ similarities, an invariant measure $\mu$ is defined by an associated set of *probabilities* $p_1,\ldots,p_M$ satisfying $\sum_{m=1}^M p_m =1$, such that
+
+```math
+\mu(\Gamma_\mathbf{m}) = \left(\prod_{i=1}^\ell p_{m_i}\right)\mu(\Gamma).
+```
+
+```@docs
+InvariantMeasure
+```
+
+The *Hausdorff Measure* $\mathcal{H}^d$ is a special case of an *Invariant Measure*, where $p_m=\rho_m^d$ for $m=1,\ldots,M$. This ensures that the mass of the measure is, in some sense, spread evenly across $\Gamma$. A useful consequence is that if $\Gamma$ is invariant under any non-trivial rotations/reflections, then this is inherited by the Hausdorff measure.
+
+```@docs
+HausdorffMeasure
+```
+
+The Hausdorff measure is the most natural measure for any fractal, and is used by default throughout `FractalIntegrals`. Recall that from an above example, $\Gamma$ represents the Sierpinski triangle.
+
+```@example tutorial
+# no weights specified
+𝓗ᵈ = InvariantMeasure(Γ)
+print(typeof(𝓗ᵈ))
+```
+### Plotting measures
+When `plot` is used on an `InvariantMeasure`, colouring is used to represent the distribution of mass.
+
+```@example tutorial
+# create random set of probabilites
+𝐩 = rand(3)
+𝐩 = 𝐩/sum(𝐩)
+μ = InvariantMeasure(Γ, 𝐩)
+plot(μ, markersize = 1)
+```

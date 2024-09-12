@@ -1,10 +1,10 @@
 
 function sketch_measure(μ::AbstractInvariantMeasure; max_num_pts::Integer = Integer(1e5))
 
-    submeasures = [μ[m] for m in subdivide_indices(μ.supp, 0, max_num_pts)]
+    submeasures = [μ[m] for m in subdivide_indices(μ.supp, 0, max_num_indices = max_num_pts)]
 
     # return points and measures of subcomponents
-    return [γ.barycentre for γ in submeasures], [γ.suppmeasure for γ in submeasures]
+    return [get_barycentre(γ) for γ in submeasures], [γ.suppmeasure for γ in submeasures]
 end
 
 sketch_attractor(Γ::AbstractAttractor; max_num_pts::Integer = Integer(1e5))  =
