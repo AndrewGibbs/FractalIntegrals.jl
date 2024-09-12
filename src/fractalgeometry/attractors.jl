@@ -3,6 +3,52 @@
 abstract type AbstractAttractor{N, M, T} end
 abstract type AbstractHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T} end
 
+"""
+    Attractor{N, M, T} <: AbstractAttractor{N, M, T}
+An attractor of an iterated function system (IFS).
+In this context, an IFS should be interpreted as a set of similarities.
+Mathematically, an IFS attractor is the unique bounded non-empty set satisfying
+```math
+Γ = ⋃ₘ sₘ(Γ)
+```
+where sₘ are similarities, defined in the docstring `Similarity`.
+For a fuller explanation, see for e.g.
+this wikipedia article `https://en.wikipedia.org/wiki/Iterated_function_system`.
+
+# Parameters
+- `N` is the ambient dimension of the attractor
+- `M` is the number of similarities
+- `T<:Number` is the numeric type
+
+# Fields
+- `ifs::SVector{M, Similarity{N, T}}`: iterated function system
+- `diam::T`: diamter of attractor
+- `d::T`: Hausdorff dimension of attractor
+- `connectedness::Matrix{Bool}`: matrix describing connected subcomponents
+- `symmetries::Vector{Similarity{N, T}}`: maps in symmetry group
+
+Attractors can be constructed using a vector or tuple of similarities to represent the IFS;
+the diameter and Hausdorff dimension are computed automatically, 
+the connectedness matrix is taken to be the identity, corresponding to a disjoint attractor,
+and the symmetry group is assumed to be the trivial group.
+
+If the connectedness matrix is assumed to be the identity when the attractor is non-disjoint,
+this will impact accuracy of calculations of singular integrals.
+
+# Examples
+```julia
+s₁ = Similarity(1/3, 0)
+s₂ = Similarity(1/3, 2/3)
+cantor_set = Attractor(s₁, s₂)
+
+courage = Similarity(1/2, [0, 0])
+wisdom  = Similarity(1/2, [1/2, 0])
+power   = Similarity(1/2, [1/4, sqrt(3)/4])
+sierpinski_triangle = Attractor(courage, wisdom, power, connectedness = Bool(ones(3,3)))
+```
+Note how the connectedness matrix for the Sierpinski triangle is all ones,
+because the subcomponents all touch at the corners.
+"""
 struct Attractor{N, M, T} <: AbstractAttractor{N, M, T}
     ifs::SVector{M, Similarity{N, T}}
     diam::T
@@ -39,21 +85,6 @@ end
 
 # useful to consider this union later on:
 OneDimensionalAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
-
-# struct HomogenousNonRotatingAttractor{  T,
-#                                         R<:Real,
-#                                         Sifs<:AbstractArray{<:AbstractSimilarity{R, T}},
-#                                         Ssym<:AbstractArray{<:AbstractSimilarity{R, T}}
-#                                         } <: AbstractHomogenousAttractor{R, T}
-#     ifs::Sifs
-#     diam::R
-#     d::R
-#     n::Int64
-#     connectedness::Matrix{Bool}
-#     symmetries::Ssym
-#     ρ::R
-# end
-
 
 # define eltype for attractors - will be useful elsewhere
 Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
@@ -160,6 +191,7 @@ function Attractor( ifs::AbstractVector{S};
     diamT, dT = promote(T(diam), T(d)) # ensure these are of same type
     M = length(ifs)
     sv_ifs = SVector{M}(ifs)
+    connectedness = Bool.(connectedness)
     # Not type-stable. But I don't think this will be a performance-critical function in practice.
     if N == 1
         if ishomogeneous(ifs)

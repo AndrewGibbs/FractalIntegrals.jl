@@ -7,7 +7,7 @@ import SpecialFunctions: hankelh1, gamma as gammafn
 import Roots: find_zero, Bisection
 import Base.Threads: @spawn, nthreads
 import ChunkSplitters: chunks
-using Plots
+using Plots#, Documenter
 
 export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
         getfractal, FractaPresets

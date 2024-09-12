@@ -3,6 +3,45 @@ abstract type AbstractSimilarity{N, T<:Number} end
 
 # ----------------- concrete similarity types -----------------------#
 
+"""
+    Similarity{N, T} <: AbstractSimilarity{N, T}
+Constructs a similarity, which can be used to describe geometry of self-similar fractals.
+`N` is the dimension of the ambient space, and `T<:Number`.
+
+Mathematically, this captures the following map:
+
+```math
+s(x) = δ + ρAx, x ∈ ℝⁿ
+```
+
+# Fields
+- `ρ :: T`: The contraction factor.
+- `δ :: SVector{N,T}`: The translation vector.
+- `A :: SMatrix{N,N,T}` : The rotation/reflection matrix.
+- `ρA` :: SMatrix{N,N,T} : The rotation/reflection matrix multiplied by the contraction factor.
+
+# Examples
+```julia
+s₁ = Similarity(1/3, [0,0])
+s₂ = Similarity(Float32(1/3), rand(3), [-1 0; 0 1])
+```
+In the first example above, the third argument is not given, 
+so it is assumed that `A=I`.
+
+Various binary operations can be performed on Similarity:
+```julia
+s₂₁ = s₁ ∘ s₂
+s₂⁻¹ = inv(s₂)
+s₁³ = s₁^3
+```
+In each of the above examples, a Similarity is returned.
+
+Similarity can be applied as a function
+```julia
+x = rand(2)
+y = s₁(x)
+```
+"""
 struct Similarity{N, T} <: AbstractSimilarity{N, T}# <: VectorSimilarity{N,T}
     ρ :: T
     δ :: SVector{N,T}
@@ -49,26 +88,9 @@ function Similarity(ρ::T1, δ::T2, r::T3=one(T1)) where {T1<:Number, T2<:Number
     return OneDimensionalSimilarity(T(ρ), T(δ), T(r), convert(T,ρ*r))
 end
 
-# -----------------  promotions and conversions of similarities -----------------------#
-
-# function Base.convert(::Type{Similarity{N, T}}, s::TranslatingSimilarity{N, T}
-#                         ) where {N, T<:AbstractVector}
-#     A = convert(M, IdMat(length(s.δ)))
-#     return Similarity(s.ρ, s.δ, A, s.ρ*A)
-# end
-
-# Base.promote_rule(::Type{Similarity{N,T}}, ::Type{TranslatingSimilarity{N, T}}
-#                 ) where {N, T<:AbstractVector} = Similarity{N,T}
-
 # ------------------- composition of similarities -------------------------------------- #
 
 simcomp(s₁::S, s₂::S) where S<:AbstractSimilarity = S(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
-# simcomp(s₁::TranslatingSimilarity, s₂::Similarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρ*s₂.δ, s₂.A, s₂.ρA)
-# composition does not commute, so need to define the opposite case differently
-# simcomp(s₁::Similarity,s₂::TranslatingSimilarity) = Similarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A, s₁.ρA)
-# simcomp(s₁::TranslatingSimilarity,s₂::TranslatingSimilarity) = TranslatingSimilarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, one(s₁.ρ*s₂.ρ), s₁.ρ*s₂.ρ)
-# one dimensional case - commented out as I think it's covered by top case?
-# simcomp(s₁::OneDimensionalSimilarity, s₂::OneDimensionalSimilarity) = OneDimensionalSimilarity(s₁.ρ*s₂.ρ, s₁.δ+s₁.ρA*s₂.δ, s₁.A*s₂.A, s₁.ρA*s₂.ρA)
 
 # overload composition operator for syntactic sugar
 Base.:∘(s₁::AbstractSimilarity, s₂::AbstractSimilarity) = simcomp(s₁,s₂)
@@ -92,7 +114,6 @@ end
 # -------------------------------- Similarities as maps --------------------------------------
 
 (s::AbstractSimilarity)(x)  = s.ρA*x + s.δ
-# (s::TranslatingSimilarity)(x) = s.ρ*convert(typeof(s.δ),x) + s.δ
 
 # similarity acting on an iterated function system (IFS)
 function simcompifs(s::AbstractSimilarity, ifs::AbstractVector{T}) where T<:AbstractSimilarity
@@ -100,11 +121,6 @@ function simcompifs(s::AbstractSimilarity, ifs::AbstractVector{T}) where T<:Abst
     rAchain = [ifs[m].ρ*Achain[m] for m in eachindex(ifs)]
     return [T(ifs[m].ρ, (IdMat-rAchain[m])*s.δ + s.ρA*ifs[m].δ, Achain[m], rAchain[m]) for m in eachindex(ifs)]
 end
-
-# # simplified case without rotation
-# function simcompifs(s::TranslatingSimilarity, IFS::Vector{<:TranslatingSimilarity})
-#     return [TranslatingSimilarity(IFS[m].ρ, (IdMat-IFS[m].ρA)*s.δ + s.ρA*IFS[m].δ, IFS[m].A, IFS[m].ρA) for m in eachindex(IFS)]
-# end
 
 # nested composition:
 function simmulticomp(IFS::Vector{<:AbstractSimilarity}, m::AbstractVector{<:Integer})
@@ -120,7 +136,6 @@ sim_map_inv(s::Similarity, x) = s.rA/(x-s.δ)
 
 # ------------------ determine how Similarity appears in the REPL ------------------#
 
-# info_string(s::TranslatingSimilarity) = "x ↦ "*string(round.(s.ρ,digits=2))*"x + "*string(round.(s.δ,digits=2))
 info_string(s::Similarity) = "x ↦ "*string(round.(s.ρ,digits=2))*string(round.(s.A,digits=2))*"x + "*string(round.(s.δ,digits=2))
 info_string(s::OneDimensionalSimilarity) = "x ↦ "*string(round(s.ρA,digits=2))*"x + "*string(round(s.δ,digits=2))
 
@@ -131,14 +146,9 @@ fixed_point(s::AbstractSimilarity) =  (IdMat - s.ρA) \ s.δ
 
 
 # ------------------------ define identity and zero similarities ---------------------------- #
-# Base.one(::VectorSimilarity{N, T}) where {N, T} =
-#     TranslatingSimilarity{N, T}(one(T), zero(SVector{N}), one(T), one(T))
 
 Base.one(::OneDimensionalSimilarity{T}) where {T} =
     OneDimensionalSimilarity{T}(one(T), zero(T), one(T), one(T))
-
-# Base.zero(::VectorSimilarity{N, T}) where {N, T} =
-#     TranslatingSimilarity{N, T}(zero(T), zero(SVector{N}), zero(T), zero(T))
 
 Base.zero(::OneDimensionalSimilarity{T}) where {T} =
     OneDimensionalSimilarity{T}(zero(T), zero(T), zero(T), zero(T))
