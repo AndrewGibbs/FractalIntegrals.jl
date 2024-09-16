@@ -104,6 +104,11 @@ Base.getindex(Γ::AbstractAttractor, inds::Vector{<:Integer}) = get_subattractor
 
 # there will be lots of cases where we want to default to HausdorffMeasure
 
+# Some symmetries will be inhereted from attractor, when measure is Hausdorff:
+get_symmetries(::InvariantMeasure{N, <:Any, T, <:Any}) where {N, T} = trivialgroup(T, N)
+get_symmetries(Γ::HausdorffMeasure) = Γ.supp.symmetries
+
+
 # Use metaprogramming to do this
 # macro default_to_hausdorff(funcs...)
 #     quote

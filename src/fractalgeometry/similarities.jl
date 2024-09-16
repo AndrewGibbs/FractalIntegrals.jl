@@ -123,7 +123,7 @@ function simcompifs(s::AbstractSimilarity, ifs::AbstractVector{T}) where T<:Abst
 end
 
 # nested composition:
-function simmulticomp(IFS::Vector{<:AbstractSimilarity}, m::AbstractVector{<:Integer})
+function simmulticomp(IFS::AbstractVector{<:AbstractSimilarity}, m::AbstractVector{<:Integer})
     s = IFS[m[1]]
         for j in 2:length(m)
             s = simcomp(s,IFS[m[j]])

@@ -45,26 +45,6 @@ getdefault_meshwidth(sio::IntegralOperator) =
 #     return x, w
 # end
 
-getdefault_quad_premap(μ, h_mesh, h_quad, N_quad) =
-    getdefault_quad(μ, h_quad*diam(μ)/h_mesh, N_quad)
-
-
-function getdefault_quad(μ::AbstractInvariantMeasure,
-                        h_quad,
-                        N_quad)
-        if h_quad > 0
-            x, w = barycentre_quadrule(μ, h_quad)
-        elseif μ.supp.n == 1
-            if N_quad >= 1
-                x, w = gauss_quadrule(μ, N_quad)
-            else
-                x, w = gauss_quadrule(μ, QUAD_DEFAULT_GAUSS)
-            end
-        else
-            x, w = barycentre_quadrule(μ, default_barywidth(μ))
-        end
-    return QuadStruct(x, w)
-end
 
 # function getdefault_quad(sio::AbstractSingularIntegralOperator;
 #                         h_quad::Real = 0.0,

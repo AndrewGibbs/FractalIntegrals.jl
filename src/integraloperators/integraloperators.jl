@@ -1,5 +1,5 @@
 abstract type FractalOperator end
-abstract type IntegralOperator{M<:AbstractInvariantMeasure, Z<:Number} <: FractalOperator end
+abstract type IntegralOperator{M<:AbstractInvariantMeasure, Z} <: FractalOperator end
 abstract type AbstractSingularIntegralOperator{M, Z} <: IntegralOperator{M, Z} end
 
 include("kernels.jl")
@@ -16,7 +16,7 @@ struct SingularIntegralOperator{
     lipschitzpart::F2
     s::S
     singularconst::Z
-    selfadjoint::Bool
+    symmetric::Bool   
 end
 
 struct OscillatorySingularIntegralOperator{
@@ -32,7 +32,7 @@ struct OscillatorySingularIntegralOperator{
     lipschitzpart::F2
     s::S
     singularconst::Z
-    selfadjoint::Bool
+    symmetric::Bool
     wavenumber::Zk
 end
 

@@ -3,7 +3,7 @@
 function combine_quadrules(x1, w1, x2, w2)
     return repeat(x1, inner=length(w2)),
             repeat(x2, outer=length(w1)),
-            repeat(w1, inner=length(w2)).*repeat(w2,outer=length(w1))
+            repeat(w1, inner=length(w2)).*repeat(w2, outer=length(w1))
 end
 
 function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},

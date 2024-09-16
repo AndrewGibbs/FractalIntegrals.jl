@@ -128,19 +128,18 @@ function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::AbstractVector{T},
     return (μ.weights'*big_sum)/(1-denominator)
 end
 
-function getjacobimatrix( μ::AbstractInvariantMeasure{<:AbstractAttractor{T, <:Real}},
+function getjacobimatrix( μ::AbstractInvariantMeasure{1,M,T,<:AbstractAttractor},
                             N::Integer
-                            ) where {T<:Real}
+                            ) where {M, T<:Real}
 
-    @assert μ.supp.n == 1 "Attractor must be compact subset of real line"
     # initialisation
     A = zeros(T, N+1)
     r = zeros(T, N+1)
     J = zeros(T, N+1, N+1)
-    M = length(μ.supp.ifs)
+    # M = length(μ.supp.ifs)
     coeffs_one_below = [[one(T)] for _=1:M]
     coeffs_two_below = [[zero(T)] for _=1:M]
-    A[1] = μ.suppmeasure*μ.barycentre # checks out, given def'n of barycentre, should be ∫_Γ x dμ(x)
+    A[1] = μ.suppmeasure*get_barycentre(μ) # checks out, given def'n of barycentre, should be ∫_Γ x dμ(x)
 
     # iteration
     for n=1:N #we've done n=0 above

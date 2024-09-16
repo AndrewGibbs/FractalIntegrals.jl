@@ -25,31 +25,14 @@ similar_test_three(sₘ::AbstractSimilarity,
                 T_::AbstractSimilarity
                 )=isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*sₘ.A*(T.A/sₙ.ρ*inv(sₙ.A)*sₙ.δ .- T.δ), .- sₘ_.ρ*sₘ_.A*(T_.A/sₙ_.ρ*inv(sₙ_.A)*sₙ_.δ .- T_.δ), atol=100*eps())
 
-# now account for the special case of no rotation
-# similar_test_two(sₘ::TranslatingSimilarity,
-#                 sₙ::TranslatingSimilarity,
-#                 sₘ_::TranslatingSimilarity,
-#                 sₙ_::TranslatingSimilarity,
-#                 T::AbstractInvariantMap,
-#                 T_::AbstractInvariantMap
-#                 ) = true
-
-# similar_test_three(sₘ::TranslatingSimilarity,
-#                 sₙ::TranslatingSimilarity,
-#                 sₘ_::TranslatingSimilarity,
-#                 sₙ_::TranslatingSimilarity,
-#                 T::AbstractInvariantMap,
-#                 T_::AbstractInvariantMap
-#                 ) = isapprox(sₘ.δ .- sₘ_.δ .- sₘ.ρ*T.A*(sₙ.δ .- sₙ_.δ), atol=100*eps())
-
-function check_if_similar(  Γ::AbstractAttractor{R, V},
+function check_if_similar(  Γ::AbstractAttractor,
                             m::AbstractVector{<:Integer},
                             n::AbstractVector{<:Integer},
                             m_::AbstractVector{<:Integer},
                             n_::AbstractVector{<:Integer},
                             G::AbstractVector{<:AbstractSimilarity},
                             G_::AbstractVector{<:AbstractSimilarity}
-                            ) where {R, V}
+                            )
     # get shorthand for IFS
     S = Γ.ifs
     test_one_pass = false
@@ -191,9 +174,9 @@ function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
     @assert μ₁.supp == μ₂.supp "support of measures must match"
     Γ = μ₁.supp
     pw₁ = μ₁.weights
-    G₁ = μ₁.symmetries
+    G₁ = get_symmetries(μ₁)#μ₁.symmetries
     pw₂ = μ₂.weights
-    G₂ = μ₂.symmetries
+    G₂ = get_symmetries(μ₂)#μ₂.symmetries
     M = length(Γ.ifs)
     A = zeros(1,1)
     B = zeros(1,1)
