@@ -25,7 +25,6 @@ struct OscillatorySingularIntegralOperator{
         F2 <: Function,
         S <: Real,
         Z <: Number,
-        Zk <: Number
         } <: AbstractSingularIntegralOperator{M, Z}
     measure::M
     kernel::F1
@@ -33,7 +32,7 @@ struct OscillatorySingularIntegralOperator{
     s::S
     singularconst::Z
     symmetric::Bool
-    wavenumber::Zk
+    wavenumber::S
 end
 
 SingularIntegralOperator(Γ::AbstractAttractor, vargs...) = SingularIntegralOperator(HausdorffMeasure(Γ), vargs...)
