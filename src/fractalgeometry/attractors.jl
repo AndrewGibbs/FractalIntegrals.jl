@@ -87,7 +87,8 @@ end
 OneDimensionalAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
 
 # define eltype for attractors - will be useful elsewhere
-Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
+# Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
+Base.eltype(Γ::AbstractAttractor) = typeof(Γ.ifs[1].δ)
 
 # ----------- mappings of the underlying IFS to vector points --------------- 
 

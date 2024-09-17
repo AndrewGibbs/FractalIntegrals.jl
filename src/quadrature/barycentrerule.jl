@@ -1,5 +1,6 @@
-function get_bary_weights(μ::AbstractInvariantMeasure{A}, ℓmax::Integer
-                        ) where {A<:HomogenousAttractor}
+function get_bary_weights(μ::AbstractInvariantMeasure{A<:HomogenousAttractor},
+                        ℓmax::Integer
+                        )
     w = μ.suppmeasure*copy(μ.weights)
     for _ in 2:ℓmax
         w = kron(μ.weights, w)
@@ -10,16 +11,35 @@ end
 get_bary_weights(μ::HausdorffMeasure, ℓmax::Integer) = 
     fill(μ.suppmeasure * μ.supp.ρ^(ℓmax*μ.supp.d), length(μ.supp.ifs)^ℓmax)
 
-function barycentre_quadrule( μ::AbstractInvariantMeasure{A}, h::Real
-                                ) where {T, R, A<:HomogenousAttractor{R, T}}
+"""
+    x, w = barycentre_quadrule(μ::AbstractInvariantMeasure, h::Real)
+    x, w = barycentre_quadrule(Γ::AbstractAttractor, h::Real)
+
+Subdivides the support `Γ` of the measure `μ` into self-similar components,
+no bigger than diameter `h`,
+and allocates quadrature points at the barycentre of each,
+with weights corresponding to the respective measure of each subcomonent.
+
+If an attractor Γ is provided, Hausdorff measure is assumed.
+
+This is based on the method introduced in:
+"Numerical quadrature for singular integrals on fractals",
+A. Gibbs, D. P. Hewett, A. Moiola, 2022.
+"""
+function barycentre_quadrule( μ::AbstractInvariantMeasure{<:Any,
+                                                            M,
+                                                            <:Any,
+                                                            <:HomogenousAttractor}, 
+                                h::Real
+                                ) where M
 
     @assert h>0 "Quadrature parameter (second input) must be positive."
     ℓmax = max(ceil(Int64, log(h / μ.supp.diam) / log(μ.supp.ρ)), 0)
-    M = length(μ.supp.ifs)
-    N = M^ℓmax
+    # M = length(μ.supp.ifs)
+    max_num_pts = M^ℓmax
     # the above line is the only one which needs modifying for more general measures
-    x = Vector{T}(undef, N)
-    x[1] = μ.barycentre
+    x = Vector{eltype(μ)}(undef, max_num_pts)
+    x[1] = get_barycentre(μ)
     @inbounds for ℓ ∈ 1:ℓmax
         @views x[1:(M^ℓ)] .= μ.supp(x[1:(M^(ℓ-1))])
     end
@@ -103,8 +123,11 @@ function barycentre_quadrule(μ₁, μ₂, h)
     return combine_quadrules(x1, w1, x2, w2)
 end
 
-barycentre_quadrule(Γ₁::AbstractAttractor, h::Real) =
-    barycentre_quadrule(HausdorffMeasure(Γ₁), h::Real)
+@hausdorffdefault barycentre_quadrule
+# barycentre_quadrule(Γ₁::AbstractAttractor, h::Real) =
+#     barycentre_quadrule(HausdorffMeasure(Γ₁), h::Real)
 
-barycentre_quadrule(Γ₁::AbstractAttractor, Γ₂::AbstractAttractor, h::Real) =
-    barycentre_quadrule(HausdorffMeasure(Γ₁), HausdorffMeasure(Γ₂), h::Real)
+# barycentre_quadrule(Γ₁::AbstractAttractor, Γ₂::AbstractAttractor, h::Real) =
+#     barycentre_quadrule(HausdorffMeasure(Γ₁), HausdorffMeasure(Γ₂), h::Real)
+
+@tensorquad barycentre_quadrule

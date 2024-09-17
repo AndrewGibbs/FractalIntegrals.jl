@@ -46,4 +46,5 @@ Base.getindex(Γ::Union{AbstractAttractor, AbstractInvariantMeasure}, 𝐦::Vect
 # output of vector indices must be as one would write it, e.g. [1,4,2,1,1,3] etc
 Base.show(io::IO, 𝐦::VectorIndex{M, T}) where {M, T} = Base.show(io, Vector(𝐦))
 
-include("subdivision")
+# main algorhtms for partitioning mesh
+include("subdivision.jl")

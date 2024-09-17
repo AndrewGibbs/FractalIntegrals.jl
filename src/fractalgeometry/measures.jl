@@ -103,10 +103,19 @@ Base.getindex(Γ::AbstractAttractor, inds::Vararg{<:Integer}) = get_subattractor
 Base.getindex(Γ::AbstractAttractor, inds::Vector{<:Integer}) = get_subattractor(Γ, inds)
 
 # there will be lots of cases where we want to default to HausdorffMeasure
+macro hausdorffdefault(f)
+    quote
+        $(esc(f))(Γ::AbstractAttractor, args...; kwargs...) =
+            $(esc(f))(HausdorffMeasure(Γ), args...; kwargs...)
+    end
+end
+
+# It will be useful to extract the type of elements describing the geometry
+Base.eltype(μ::AbstractInvariantMeasure) = eltype(μ.supp)
 
 # Some symmetries will be inhereted from attractor, when measure is Hausdorff:
 get_symmetries(::InvariantMeasure{N, <:Any, T, <:Any}) where {N, T} = trivialgroup(T, N)
-get_symmetries(Γ::HausdorffMeasure) = Γ.supp.symmetries
+get_symmetries(μ::HausdorffMeasure) = μ.supp.symmetries
 
 
 # Use metaprogramming to do this

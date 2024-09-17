@@ -59,3 +59,34 @@ end
 
 combine_quadrules(q1::QuadStruct, q2::QuadStruct) =
     combine_quadrules(q1.nodes, q1.weights, q2.nodes, q2.weights)
+
+function tensor_product(t...)
+    # get necessary dimension sizes
+    num_output_vecs = length(t)
+    final_length = prod(length.([t...]))
+    # apply tensor product, and flatten
+    t_long = reshape(collect(Iterators.product(t...)), final_length, 1)
+    # restructure and return
+    return ([t_long[j][n] for j in 1:final_length] for n in 1:num_output_vecs)
+end
+
+function combine_quadrules(queple::QuadStruct...)# where N
+    nodes_tp = tensor_product((q.nodes for q in queple)...)
+    weights_tp = tensor_product((q.weights for q in queple)...)
+    return nodes_tp..., reduce(.*,weights_tp)
+end
+
+function tensor_product_quadrature(quad_fn::Function)
+    return function(inputs...)
+        μple = inputs[1:(end-1)]
+        param = inputs[end]
+        return (combine_quadrules((QuadStruct(quad_fn(μ, param)...) for μ in μple)...))
+    end
+end
+
+macro tensorquad(quadrule)
+    new_name = Symbol("tensor_", quadrule)
+    quote
+        $(esc(new_name))= tensor_product_quadrature($(esc(quadrule)))
+    end
+end

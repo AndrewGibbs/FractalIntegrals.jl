@@ -8,6 +8,7 @@ end
 include("jacobimatrices.jl")
 include("productquadrature.jl")
 include("barycentrerule.jl")
+include("chaos.jl")
 include("gauss.jl")
 include("senergy.jl")
 
