@@ -14,7 +14,6 @@ get_bary_weights(μ::HausdorffMeasure, ℓmax::Integer) =
 """
     x, w = barycentre_quadrule(μ::AbstractInvariantMeasure, h::Real)
     x, w = barycentre_quadrule(Γ::AbstractAttractor, h::Real)
-
 Subdivides the support `Γ` of the measure `μ` into self-similar components,
 no bigger than diameter `h`,
 and allocates quadrature points at the barycentre of each,

@@ -8,7 +8,8 @@ makedocs(
          checkdocs=:none,
          pages=[
                 "Home" => "index.md",
-                "Fractals" => "makeIFS.md"
+                "Fractals" => "makeIFS.md",
+                "Integrals" => "integrals.md"
                ],
                format = Documenter.HTML(
                 prettyurls = get(ENV, "CI", nothing) == "true"))

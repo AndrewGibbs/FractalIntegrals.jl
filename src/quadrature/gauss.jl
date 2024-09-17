@@ -2,7 +2,6 @@
 """
     x, w = gauss_quadrule(μ::AbstractInvariantMeasure, n::Integer)
     x, w = gauss_quadrule(Γ::AbstractAttractor, n::Integer)
-
 Returns `n` Gaussian weights `w ∈ ℝⁿ` and nodes `x ∈ ℝⁿ`.
 Here n is the order of the Gauss rule, i.e. number of weights and nodes.
 

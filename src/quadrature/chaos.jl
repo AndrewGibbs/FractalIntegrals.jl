@@ -2,7 +2,6 @@
 """
     x, w = chaos_quadrule(μ::AbstractInvariantMeasure, n::Int)
     x, w = chaos_quadrule(Γ::AbstractAttractor, n::Int)
-
 Randomly allocates quadrature nodes
 based on the probability weights of the invariant measure `μ`.
 Quadrature weights are uniformly `1/n`

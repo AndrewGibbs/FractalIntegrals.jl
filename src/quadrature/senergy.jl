@@ -280,21 +280,16 @@ function construct_singularity_matrix(μ₁::AbstractInvariantMeasure,
 end
 
 """
-    s_energy(Γ::SelfSimilarFractal, s::Number, quad_rule::Function; p₂::Vector{Float64} = getweights(Γ),
-     G::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension),
-     G₁::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension), G₂::Vector{AutomorphicMap}=TrivialGroup(Γ.spatial_dimension))
+    s_energy(  μ::AbstractInvariantMeasure, s::Number)
+    s_energy(  μ₁::AbstractInvariantMeasure, μ₂::AbstractInvariantMeasure, s::Number)
+Computes the s-energy of the measure μ, or possibly of two measures (with shared support) μ₁ and μ₂.
+The integrand is `|x-y|ˢ` when `s` is different from zero, and `log|x-y|` when `s=0`.
 
-
-s is the value in |x-y|⁻ˢ, unless s==0, in which case log|x-y| is used.
-p₂ is an optional set of (probability) weights describing an invariant measure of the outer integral.
-G₁ and G₂ are groups describing the symmetries of the inner and outer measures respectively.
-If G is defined, both measures are assigned this symmetry.
-Computes the s-energy of a fractal Γ, using the function quad_rule. This must be of the form:
-
-    quad_rule = (e,j,f) -> I ≈ ∫ₑ∫ⱼ f(x,y) p₁(x)p₂(y)
-
-where A and B are SelfSimilarFractal.
-If quad_rule is replaced by some h::Number, the barycentre rule is used with meshwidth h.
+# Optional Inputs
+- `h_quad`: Uses barycentre to evaluate integrals, with this parameter
+- `N_quad`: Uses gauss rule to evaluate integrals, with this parameter
+- `quadrule`: Evaluates s-energy with this 3-tuple of (x-nodes, y-nodes, weights). This quadrature rule should be designed for smooth integrals.
+- `use_strategy_two`: When true, the algorithm subdivides the fractal so all elements are a similar size. When false, each component is subdivided the same number of times, but the sizes may vary significantly.
 """
 function s_energy(  μ₁::AbstractInvariantMeasure,
                     μ₂::AbstractInvariantMeasure,
@@ -327,5 +322,6 @@ end
 s_energy(μ, s; vargs...) = s_energy(μ, μ, s; vargs...)
 
 # default to Hausdorff measure when attractor is passed as first argument
-s_energy(Γ::AbstractAttractor, s; vargs...) =
-    s_energy(HausdorffMeasure(Γ), HausdorffMeasure(Γ), s; vargs...)
+@hausdorffdefault s_energy
+# s_energy(Γ::AbstractAttractor, s; vargs...) =
+#     s_energy(HausdorffMeasure(Γ), HausdorffMeasure(Γ), s; vargs...)
