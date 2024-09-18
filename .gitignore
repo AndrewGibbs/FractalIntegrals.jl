@@ -11,3 +11,5 @@ debug/
 */.ipynb_checkpoints
 
 .vscode/
+
+docs/build/

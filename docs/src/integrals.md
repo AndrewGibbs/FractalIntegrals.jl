@@ -28,7 +28,7 @@ In recent decades, quadrature rules have been developed for fractal measures $\m
 >Contrary to classical quadrature rules, the nodes typically lie outside of $\Gamma$. Therefore, it is necessary to assume that $f$ is supported on $\mathrm{Hull}(\Gamma)$.
 
 ### Gauss Quadrature
-On standard domains, Gaussian qudarature rules are the most widely used for smooth $f$. The classical process, which involves constructing orthogaonl polynomials and a Jacobi matrix, can be generalised to fractal measures $\mu$ where 
+On standard domains, Gaussian qudarature rules are the most widely used for smooth $f$. The classical process, which involves constructing orthogaonl polynomials and a Jacobi matrix, was generalised in [Ma:96](@cite) to fractal measures $\mu$ where 
 ```math
 \mathrm{supp}(\mu) = \Gamma \subset \mathbb{R}.
 ```
@@ -38,6 +38,8 @@ FractalIntegrals.gauss_quadrule
 ```
 
 ### Barycentre rule
+
+Despite its simplicity, the Barycentre rule was introduced relatively recently in [GiHeMo:23](@cite). It can be interpreted as a generalisation of the midpoint rule to non-standard domains.
 
 The idea behind this quadrature rule is to subdivide the fractal $\Gamma = \mathrm{supp}(\mu)$ into self-similar subcomponents no wider than some parameter $h>0$. A node is allocated for each subcomponent $\Gamma_{\mathbf{m}}$; this node is chosen to be the barycentre
 
@@ -79,15 +81,15 @@ plot([x_[1] for x_ in x_bary],[x_[2] for x_ in x_bary],
     grid=false,
     legend = false,
     aspect_ratio=1,
-    ylim=(-1,1),
+    ylim=(-0.6,0.6),
     xlim=(-0.875,0.875),
-    size = (875, 1000),
+    size = (875, 875),
     background=nothing)
 ```
 
 ### Chaos game quadrature
 
-This quadrature rule takes an initial guess $x_0$ and repeatedly applies similarities $s_m$ at random to construct further points. Mathematically, this is:
+*Chaos game quadrature* [FoMeVr:98](@cite) is a non-deterministic approach, analagous to Monte Carlo rules. The algorithm takes an initial guess $x_0\in\mathbb{R}^n$ and repeatedly applies similarities $s_m$ at random to construct further points. Mathematically, this is:
 
 ```math
 \mathbb{P}(x_{j} = s_m(x_{j-1})) = p_m,\quad\text{for }m=1,\ldots,M.
@@ -115,9 +117,9 @@ plot([x_[1] for x_ in x_chaos],[x_[2] for x_ in x_chaos],
     grid=false,
     legend = false,
     aspect_ratio=1,
-    ylim=(-1,1),
+    ylim=(-0.6,0.6),
     xlim=(-0.875,0.875),
-    size = (875, 1000),
+    size = (875, 875),
     background=nothing)
 ```
 
@@ -140,3 +142,5 @@ These integrals are sometimes referred to as *s-energy*, as they may be interpre
 ```@docs
 FractalIntegrals.s_energy
 ```
+
+The algorithm, which was introduced in [GiHeMa:24](@cite), exploits self-similarity of $\Gamma$ and scaling properties of the singular integrand. It also exploits any rotational and reflective symmetry of the measure $\mu$, which typically only occurs when $\mu$ is the Hausdorff measure.

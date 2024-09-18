@@ -12,7 +12,7 @@ This package focuses on self-similar fractals, which can be described by a finit
 Each similarity is of the form:
 
 ```math
-s_m(x)=\rho_mA_mx + \delta_m,\quad x\in\mathbb{R}^n,
+s_m(x)=\rho_mA_mx + \delta_m,\quad x\in\mathbb{R}^N,
 ```
 
 where ``\rho_m\in(0,1)`` is the contraction factor, ``A_m\in\R^{N\times N}`` is a rotation matrix, and ``\delta\in\R^{N}`` is a translation vector. Here we call $N\in\mathbb{N}$ the ambient dimension.
