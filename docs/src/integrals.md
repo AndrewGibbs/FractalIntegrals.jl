@@ -130,14 +130,14 @@ plot([x_[1] for x_ in x_chaos],[x_[2] for x_ in x_chaos],
 The quadrature rules described [above](#quadrature-rules) require some smoothness of the integrand $f$ to be accurate. We now consider a class of singular integrals:
 
 ```math
-J_s[\mu] := \left\{\begin{array}{cc}
+\mathcal{E}_s[\mu] := \left\{\begin{array}{cc}
     \displaystyle\int_\Gamma\int_\Gamma~ |x-y|^{-s}~ \mathrm{d}\mu(y)\mathrm{d}\mu(x),& s\neq0\\&\\
     \displaystyle\int_\Gamma\int_\Gamma~ \log|x-y|~ \mathrm{d}\mu(y)\mathrm{d}\mu(x),& s=0
     \end{array}
     \right.
 ```
 
-These integrals are sometimes referred to as *s-energy*, as they may be interpreted as a generalisation of integrals quantifying electrostatic potential energy when $s=0,1$. These s-energy integrals also arise in integral equations posed on fractals, and form a key part of our integral equation solver.
+These integrals are sometimes referred to as *s-energy* [Fa:14; Section 4.3](@cite) or the *generalised electrostatic potential* [MaVa:07; Definition 4](@cite). They are of significant interest in their own right, but also arise in integral equations posed on fractals, thus forming a key part of our integral equation solver.
 
 ```@docs
 FractalIntegrals.s_energy
