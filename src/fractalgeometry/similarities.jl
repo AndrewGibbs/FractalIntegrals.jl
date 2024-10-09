@@ -152,3 +152,9 @@ Base.one(::OneDimensionalSimilarity{T}) where {T} =
 
 Base.zero(::OneDimensionalSimilarity{T}) where {T} =
     OneDimensionalSimilarity{T}(zero(T), zero(T), zero(T), zero(T))
+
+Base.one(::Similarity{N, T}) where {N, T} =
+    Similarity{N, T}(one(T), SVector{N, T}(zeros(T, N)), SMatrix{N, N}(ones(T, N, N)), SMatrix{N, N}(ones(T, N, N)))
+
+Base.zero(::Similarity{N, T}) where {N, T} =
+    Similarity{N, T}(zero(T), SVector{N, T}(zeros(T, N)), SMatrix{N, N}(zeros(T, N, N)), SMatrix{N, N}(zeros(T, N, N)))

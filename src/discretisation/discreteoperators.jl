@@ -17,52 +17,6 @@ getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) =
 getdefault_meshwidth(sio::IntegralOperator) =
     sio.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
 
-
-# getdefault_quadwidth(Γ::AbstractAttractor) =
-#     maximum(sₘ.ρ for sₘ in Γ.ifs)^QUAD_EXTRA_LEVELS
-
-# getdefault_quadwidth(sio::IntegralOperator) =
-#     # getdefault_meshwidth(sio) *
-#         diam(sio.measure) * maximum(sₘ.ρ for sₘ in sio.measure.supp.ifs)^QUAD_EXTRA_LEVELS
-
-# getdefault_gaussorder(::IntegralOperator) = QUAD_DEFAULT_GAUSS
-
-# function getdefault_quad(sio::AbstractSingularIntegralOperator,
-#                         h_mesh = diam(sio.measure);
-#                         h_quad::Real = 0.0,
-#                         N_quad::Integer = 0)
-#     if h_quad > 0
-#         x, w = barycentre_quadrule(sio.measure, h_quad*diam(sio.measure)/h_mesh)
-#     elseif sio.measure.supp.n == 1
-#         if N_quad >= 1
-#             x, w = gauss_quadrule(sio.measure, N_quad)
-#         else
-#             x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
-#         end
-#     else
-#         x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
-#     end
-#     return x, w
-# end
-
-
-# function getdefault_quad(sio::AbstractSingularIntegralOperator;
-#                         h_quad::Real = 0.0,
-#                         N_quad::Integer = 0)
-#     if h_quad > 0
-#         x, w = barycentre_quadrule(sio.measure, h_quad)
-#     elseif sio.measure.supp.n == 1
-#         if N_quad >= 1
-#             x, w = gauss_quadrule(sio.measure, N_quad)
-#         else
-#             x, w = gauss_quadrule(sio.measure, getdefault_gaussorder(sio))
-#         end
-#     else
-#         x, w = barycentre_quadrule(sio.measure, getdefault_quadwidth(sio))
-#     end
-#     return x, w
-# end
-
 # new style which allows us to try different quadrature rules
 function discretise(sio::AbstractSingularIntegralOperator;
     h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
@@ -91,48 +45,41 @@ function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:
 end
 
 function discretise(sio::AbstractSingularIntegralOperator{
-                        <:AbstractInvariantMeasure{
-                            <:AbstractAttractor{R, T}}, 
-                        Z},
+                        <:AbstractInvariantMeasure, Z},
                     ip::AbstractInnerProduct,
                     Vₕ::FractalBasis;
                     reps = true
-                    ) where {
-                    T, R<:Real, Z<:Number}
-N = length(Vₕ)
+                    ) where Z
+    N = length(Vₕ)
 
-# get element type of Galerkin matrix
-ElementType = promote_type(Z, eltype(T), R)
+    # initliase Galerkin matrix
+    galerkinmatrix = Array{Z}(undef, N, N)
 
-# initliase Galerkin matrix
-galerkinmatrix = Array{ElementType}(undef, N, N)
+    # get matrix detailing repeated Galerkin entries
+    reps ?  galerkinreps = get_galerkinreps(N, sio, Vₕ) :
+            galerkinreps = zeros(Int64, N, N)
 
-# get matrix detailing repeated Galerkin entries
-reps ? galerkinreps =
-    get_galerkinreps(N, sio) :
-    galerkinreps = zeros(Int64, N, N)
-
-# double loop computing inner products, avoiding repeated entries
-@sync for n in 1:N #@sync 
-    @spawn begin #@spawn 
-        for m in 1:N
-            if @inbounds galerkinreps[m, n] == 0
-                @inbounds galerkinmatrix[m, n] = sesquilinearform(ip, Vₕ[m], Vₕ[n])
+    # double loop computing inner products, avoiding repeated entries
+    @sync for n in 1:N #@sync 
+        @spawn begin #@spawn 
+            for m in 1:N
+                if @inbounds galerkinreps[m, n] == 0
+                    @inbounds galerkinmatrix[m, n] = sesquilinearform(ip, Vₕ[m], Vₕ[n])
+                end
             end
         end
     end
-end
 
-# second loop filling in repeated entries
-@sync for n in 1:N
-    @spawn begin
-        for m in 1:N
-            if @inbounds galerkinreps[m, n] != 0
-                @inbounds galerkinmatrix[m, n] = galerkinmatrix[galerkinreps[m, n]]
+    # second loop filling in repeated entries
+    @sync for n in 1:N
+        @spawn begin
+            for m in 1:N
+                if @inbounds galerkinreps[m, n] != 0
+                    @inbounds galerkinmatrix[m, n] = galerkinmatrix[galerkinreps[m, n]]
+                end
             end
         end
     end
-end
 
     return DiscreteFractalOperator(sio, ip, Vₕ, galerkinmatrix)
 end

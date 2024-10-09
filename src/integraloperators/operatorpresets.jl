@@ -56,7 +56,7 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
         zero(R), # strength of singularity, corresponding to log singularity
         Complex{R}(-1/(2π)), # scaling of singularity
         true, # self-adjoint
-        k
+        R(k)
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case        
@@ -66,7 +66,7 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
             one(R), # strength of singularity, corresponding to 1/|x-y|
             ComplexF64{R}(1/(4π)), # scaling of singularity
             true, # self-adjoint
-            k
+            R(k)
             )
     else
         error("Haven't coded single layer SIO for this many dimensions")

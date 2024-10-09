@@ -4,6 +4,7 @@
 DOFS_PER_WAVELENGTH = 20
 DOFS_FOR_NONOSCILLATORS = 5
 
+# only makes sense when indices are on homogenous attractor
 function vindex_to_scalar(M::Integer, ℓ::Integer, m::AbstractVector{<:Integer})
     n = 1
     for j=1:ℓ

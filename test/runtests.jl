@@ -95,7 +95,7 @@ end
 
             # create LHS
             Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
-            Sₖₕ =FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
+            Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
 
             # solve discrete problem
             ϕ = [Sₖₕ \ fθ[n] for n in eachindex(recipangles)]
@@ -130,7 +130,7 @@ end
     for Γname in ["cantor set", "cantor dust"]
         Γ = getfractal(Γname)
         # data depends on ambient dimension
-        Γ.n == 1 ? f = f₁ : f = f₂
+        FractalIntegrals.get_ambient_dimension(Γ) == 1 ? f = f₁ : f = f₂
         # operators, and the discretisation
         Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
         Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)

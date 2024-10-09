@@ -1,9 +1,28 @@
+function is_attractor_rotating(Γ::AbstractAttractor{N, <:Any, T}) where {N, T}
+    is_rotating = false
+    for s in Γ.ifs
+        if !(s.A ≈ Matrix{T}(IdMat(N)))
+            is_rotating = true
+            break
+        end
+    end
+    return is_rotating
+end
+
+function is_attractor_rotating(Γ::OneDimensionalAttractorUnion)
+    is_rotating = false
+    for s in Γ.ifs
+        if s.A != 1
+            is_rotating = true
+            break
+        end
+    end
+    return is_rotating
+end
 
 # the code below prevents loops in the repition indices
 function repassign!(galerkinreps, fromindex, toindex)
     if galerkinreps[toindex] != 0 # pointing to canonical entry
-    #     galerkinreps[fromindex] = toindex
-    # else
         while galerkinreps[toindex] != 0 # pointing to another repeated entry
             toindex = galerkinreps[toindex]
         end
@@ -20,7 +39,7 @@ function cleanreps!(galerkinreps)
     end
 end
 
-function selfadjointreps!(galerkinreps, N)
+function symmetricreps!(galerkinreps, N)
     for n in 1:N
         row_ind = (n-1)*N
         for m in (n+1):N
@@ -67,7 +86,6 @@ end
 
 function fractaloffdiagblocks!(galerkinreps, N, M)
     ℓ = round(Int64, log(N)/log(M))
-    # now recursively do off-diagonal blocks
     block_width = M^(ℓ-1)
     for m in 1:M
         col_range = (block_width*(m-1)+1):(block_width*m)
@@ -80,15 +98,20 @@ function fractaloffdiagblocks!(galerkinreps, N, M)
     end
 end
 
-function get_galerkinreps(N::Integer, sio::AbstractSingularIntegralOperator)
+function get_galerkinreps(N::Integer, sio::AbstractSingularIntegralOperator, Vₕ::FractalBasis)
         M = length(sio.measure.supp.ifs)
         # predetermine which entries are repeated in fractal matrix structures
         galerkinreps = zeros(Int64, N, N)
-        if sio.selfadjoint
-            selfadjointreps!(galerkinreps, N) # not 'fractal' feature - follows from self-adjointness
+        if sio.symmetric
+            symmetricreps!(galerkinreps, N) # not 'fractal' feature - follows from self-adjointness
         end
-        if isa(sio.measure.supp.ifs, AbstractVector{<:TranslatingSimilarity})
-            fractaldiagblocks!(galerkinreps, N, M)
+        if Vₕ.uniform
+            #  NEED TO BE MORE SPECIFIC HERE SO WE ONLY ADJUST DIAGONAL BLOCKS
+            if is_attractor_rotating(sio.measure.supp)
+                fractaldiagblocks!(galerkinreps, N, M)
+            else
+                fractaldiagblocks!(galerkinreps, N, M)
+            end
         end
         cleanreps!(galerkinreps)
         return galerkinreps

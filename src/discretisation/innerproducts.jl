@@ -31,7 +31,8 @@ end
 InnerProduct(  sio::AbstractSingularIntegralOperator,
                 Vₕ::FractalBasis,
                 X::AbstractArray,
-                W::AbstractArray) = InnerProduct(sio, Vₕ, QuadStruct(X,W))
+                W::AbstractArray) = InnerProduct(sio, Vₕ, QuadStruct(X, W))
+
 # outer constructor 2
 function InnerProduct(  sio::AbstractSingularIntegralOperator,
                         Vₕ::FractalBasis,
@@ -61,18 +62,21 @@ function sesquilinearform(  ip::InnerProduct,
     ρ = 0.0
 
     # first do cheap test - if elements are touching,
-    # distance of barycentres must be more than combined diameter:
-    if norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
-        (ϕ.measure.supp.diam + ψ.measure.supp.diam)
+    # THIS IS NOW QUITE INEFFICIENT AS BOUNDING BALLS ARE COMPUTED O(N^2) TIMES
+    if dist⁺(ϕ.measure.supp, ψ.measure.supp) <= 0 #norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
+        #(ϕ.measure.supp.diam + ψ.measure.supp.diam)
         # passed initial cheap test for being singular
         # assume that singularity is 'similar' to canonical singular integral
+        
+        parent_symmetries = get_symmetries(ip.sio.measure)
+
         singular_slf, ρ, similar_index = 
             check_for_similar_integrals(ip.sio.measure.supp,
                                     ip.singular_indices, 
-                                    ϕ.vindex,
-                                    ψ.vindex,
-                                    ip.sio.measure.symmetries,
-                                    ip.sio.measure.symmetries,
+                                    Vector(ϕ.vindex),
+                                    Vector(ψ.vindex),
+                                    parent_symmetries,
+                                    parent_symmetries,
                                     true
                                     )
     end

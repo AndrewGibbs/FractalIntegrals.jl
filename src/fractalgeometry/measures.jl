@@ -79,18 +79,8 @@ function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:Abstra
     if index == [0]
         new_μ = μ
     else    
-        # new_symmetries = μ.symmetries
-        # # new_suppmeasure = μ.suppmeasure
-        # for m = index[end:-1:1]
-        #     # new_suppmeasure *= μ.supp.ifs[m].ρ
-        #     new_symmetries = simcompifs(μ.supp.ifs[m], new_symmetries)
-        #     # new_symmetries = [simcomp(μ.supp.ifs[m], ns) for ns in new_symmetries]#simcompsymmetries(μ.supp.ifs[m], new_symmetries)
-        # end
-        # new_suppmeasure = new_suppmeasure^μ.supp.d
         new_supp = get_subattractor(μ.supp, index)
-        new_suppmeasure = μ.suppmeasure * prod(μ.weights[index])#(new_supp.diam / μ.supp.diam) ^ μ.supp.d
-        # new_barycentre = get_barycentre(new_supp.ifs, μ.weights)
-        # new_μ = M(new_supp, new_barycentre, new_suppmeasure, μ.weights, new_symmetries)
+        new_suppmeasure = μ.suppmeasure * prod(μ.weights[index])
         new_μ = M(new_supp, new_suppmeasure, μ.weights)
     end
     return new_μ
@@ -117,12 +107,4 @@ Base.eltype(μ::AbstractInvariantMeasure) = eltype(μ.supp)
 get_symmetries(::InvariantMeasure{N, <:Any, T, <:Any}) where {N, T} = trivialgroup(T, N)
 get_symmetries(μ::HausdorffMeasure) = μ.supp.symmetries
 
-
-# Use metaprogramming to do this
-# macro default_to_hausdorff(funcs...)
-#     quote
-#         $(Expr(:block, [:(function $func(Γ::AbstractAttractor, varargs...; kwargs...)
-#                               $func(HausdorffMeasure(Γ), varargs...; kwargs...)
-#                           end) for func in funcs]...))
-#     end
-# end
+get_ambient_dimension(::Union{AbstractAttractor{N}, AbstractInvariantMeasure{N}}) where N = N

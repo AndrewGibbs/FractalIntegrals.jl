@@ -16,10 +16,10 @@ include("fractalgeometry/fractalgeometry.jl")
 include("vectorindices/vectorindices.jl")
 include("quadrature/quadrature.jl")
 include("integraloperators/integraloperators.jl")
-# include("discretisation/discretisation.jl")
+include("discretisation/discretisation.jl")
 
 # # less 'core' routines
-# include("potentials/potentials.jl")
+include("potentials/potentials.jl")
 include("fractalpresets/fractalpresets.jl")
 include("plots/plots.jl")
 

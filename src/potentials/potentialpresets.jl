@@ -1,6 +1,6 @@
 function singlelayer_potential_helmholtz(ϕ::Projection,
                                         k::Number;
-                                        ambient_dimension::Integer = ϕ.basis.measure.supp.n,
+                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
                                         h_quad::Real = 0.0,
                                         N_quad::Integer = 0,
                                         quadrule::QuadStruct =
@@ -15,13 +15,13 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
 
     # select appropriate kernel for ambient dimension
     if ambient_dimension == 2
-        if ϕ.basis.measure.supp.n == 1
+        if get_ambient_dimension(ϕ.basis.measure) == 1
             Φ = (x,y) -> helmholtzkernel2d_screenpot(k, x, y)
         else
             Φ = (x,y) -> helmholtzkernel2d(k, x, y)
         end
     elseif ambient_dimension == 3
-        if ϕ.basis.measure.supp.n == 2
+        if get_ambient_dimension(ϕ.basis.measure) == 2
             Φ = (x,y) -> helmholtzkernel3d_screenpot(k, x, y)
         else
             Φ = (x,y) -> helmholtzkernel3d(k, x, y)
@@ -39,7 +39,7 @@ end
 
 function farfield_pattern(ϕ::Projection,
                         k::Number;
-                        ambient_dimension::Integer = ϕ.basis.measure.supp.n,
+                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
                         h_quad::Real = 0.0,
                         N_quad::Integer = 0,
                         quadrule::QuadStruct =
@@ -55,14 +55,14 @@ function farfield_pattern(ϕ::Projection,
     ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     if ambient_dimension == 2
-        if ϕ.basis.measure.supp.n == 1
+        if get_ambient_dimension(ϕ.basis.measure) == 1
             ffkernel = (θ, y) -> -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*y))
         else
             ffkernel = (θ, Y) -> 
                 -sqrt(1im/(8π*k))*cis.(-k*(cos(θ)*[y[1] for y in Y] + sin(θ)*[y[2] for y in Y]))
         end
     elseif ambient_dimension == 3
-        if ϕ.basis.measure.supp.n == 2
+        if get_ambient_dimension(ϕ.basis.measure) == 2
             ffkernel = ((θ, ψ), Y) -> 
                 -(1/(4π))*cis.(-k*(sin(θ)*cos(ψ)*[y[1] for y in Y] + sin(θ)*sin(ψ)*[y[2] for y in Y]))
         else
@@ -81,7 +81,7 @@ function farfield_pattern(ϕ::Projection,
 end
 
 function singlelayer_potential_laplace(ϕ::Projection,
-                                        ambient_dimension::Integer = ϕ.basis.measure.supp.n,
+                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
                                         h_quad::Real = 0.0,
                                         N_quad::Integer = 0,
                                         quadrule::QuadStruct =

@@ -152,6 +152,7 @@ function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:Abstr
             new_symmetries)
 end
 
+
 # -------------------- outer constructor ---------------------------------- #
 function ishomogeneous(ifs::AbstractVector{<:AbstractSimilarity})
     # check if fractal is homogeneous

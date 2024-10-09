@@ -23,7 +23,7 @@ Similarity
 
 ## Attractors
 
-An iterated function system (IFS) is a set of $M$ similaritites ``\{s_m\}_{m=1}^M``, and an *attractor* of an iterated function system $\Gamma$ satisfies
+An iterated function system (IFS) is a set of $M$ similarities ``\{s_m\}_{m=1}^M``, and an *attractor* of an iterated function system $\Gamma$ satisfies
 
 ```math
 \Gamma  = \bigcup_{m=1}^M s_m(\Gamma)
@@ -52,7 +52,7 @@ println("Full Hausdorff dimension of Cantor Set:", Γ.d)
 ### Plotting attractors
 `Plots.plot` has a method for a `Attractor` type.
 ```@example tutorial
-plot(Γ)
+plot(Γ, aspect_ratio=1)
 ```
 ### Presets
 
@@ -64,7 +64,7 @@ getfractal
 
 ```@example tutorial
 Γ = getfractal("sierpinskitriangle")
-plot(Γ)
+plot(Γ, aspect_ratio=1)
 ```
 
 ### Sub-components
@@ -81,13 +81,13 @@ This can be achieved by treating attractors as vectors.
 Γ₁ = Γ[1]
 𝐦 = [3,2,3,1]
 Γ₃₂₃₁ = Γ[𝐦]
-plot!(Γ₁,markersize=1)
-plot!(Γ₃₂₃₁,markersize=1.5)
+plot!(Γ₁,markersize=1, aspect_ratio=1)
+plot!(Γ₃₂₃₁,markersize=1.5, aspect_ratio=1)
 ```
 
 ## Measures
 
-We now consider a measure $\mu$ supported on a fractal attractor $\Gamma$. This is necessary to define integrals and integral equations on $\Gamma$. For a attractor defined with $M$ similarities, an invariant measure $\mu$ is defined by an associated set of *probabilities* $p_1,\ldots,p_M$ satisfying $\sum_{m=1}^M p_m =1$, such that
+We now consider a measure $\mu$ supported on a fractal attractor $\Gamma$. This is necessary to define integrals and integral equations on $\Gamma$. For an attractor defined with $M$ similarities, an invariant measure $\mu$ is defined by an associated set of *probabilities* $p_1,\ldots,p_M$ satisfying $\sum_{m=1}^M p_m =1$, such that
 
 ```math
 \mu(\Gamma_\mathbf{m}) = \left(\prod_{i=1}^\ell p_{m_i}\right)\mu(\Gamma).
