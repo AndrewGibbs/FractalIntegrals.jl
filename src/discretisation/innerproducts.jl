@@ -52,6 +52,32 @@ end
 innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
     conj(ψ.normalisation) * dot(conj(ip.quadrules[ψ.index].weights), f.(ip.quadrules[ψ.index].nodes))
 
+function innerproduct(ϕ::P0BasisElement{<:Any,T}, ψ::P0BasisElement{<:Any,T}) where T
+    # start with lengths of vector indices
+    ϕ_leng = length(ϕ.vindex)
+    ψ_leng = length(ψ.vindex)
+
+    # if fractal depth is the same
+    if ϕ_leng == ψ_leng
+        # check if vector indices match
+        if ϕ.vindex == ψ.vindex
+            overlap_measure = ϕ.measure.suppmeasure
+        else
+            overlap_measure = zero(T)
+        end
+    else # if depths are different, one fractal may be subset of the other
+        least_deep_basfn = [ϕ, ψ][argmin(ϕ_leng, ψ_leng)]
+        most_deep_basfn = [ϕ, ψ][argmax(ϕ_leng, ψ_leng)]
+        if most_deep_basfn.vindex[1:length(least_deep_basfn)] == least_deep_basfn
+            overlap_measure = least_deep_basfn.measure.suppmeasure
+        else
+            overlap_measure = zero(T)
+        end
+    end
+
+    return overlap_measure * ϕ.normalisation * ψ.normalisation
+end
+
 function sesquilinearform(  ip::InnerProduct,
                             ϕ::P0BasisElement,
                             ψ::P0BasisElement)
