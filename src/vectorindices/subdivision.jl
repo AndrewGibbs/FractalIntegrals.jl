@@ -39,36 +39,42 @@ end
 
 function grade_mesh( Γ::AbstractAttractor{N, M, T},
                         subdivide_if_true_fn::Function;
-                        max_num_indices = 1e6
+                        max_num_indices = 1e6,
+                        min_mesh_width_permitted = 1e-16
                         ) where {N, M, T}
 
     Lₕ = [zero(VectorIndex{M, Int64})]
     mesh = [Γ]
+    min_mesh_width = diam(Γ)
 
     keep_subdividing = true
-    while keep_subdividing && (length(Lₕ) < max_num_indices)
+    while keep_subdividing &&
+        (length(Lₕ) < max_num_indices) &&
+        min_mesh_width > min_mesh_width_permitted
         keep_subdividing = false
-        for (j, Γₘ) in enumerate(mesh)
-            if subdivide_if_true_fn(Γₘ)
-                # add new index vectors and mesh elements
-                append!(Lₕ, split(Lₕ[j]))
-                append!(mesh, split(mesh[j]))
+            for (j, Γₘ) in enumerate(mesh)
+                if subdivide_if_true_fn(Γₘ)
+                    # add new index vectors and mesh elements
+                    append!(Lₕ, split(Lₕ[j]))
+                    new_mesh_els = split(mesh[j])
+                    append!(mesh, new_mesh_els)
+                    min_mesh_width = min(min_mesh_width, minimum(diam.(new_mesh_els)))
 
-                # delete vectors and mesh els from split components
-                deleteat!(Lₕ, j)
-                deleteat!(mesh, j)
+                    # delete vectors and mesh els from split components
+                    deleteat!(Lₕ, j)
+                    deleteat!(mesh, j)
 
-                # break outer for loop and restart for loop (via while loop) 
-                # ... to avoid messing with indices after changing vector size
-                keep_subdividing = true
-                break
+                    # break outer for loop and restart for loop (via while loop) 
+                    # ... to avoid messing with indices after changing vector size
+                    keep_subdividing = true
+                    break
+                end
             end
-        end
     end
-
-    return mesh, Lₕ
+    # for third output, include a boolean vector describing which mesh elements met the condition
+    return Lₕ, .!subdivide_if_true_fn.(mesh)
 end
 
 grade_towards_points_fn(Γ::AbstractAttractor, x, C::Number) = dist⁻(Γ, x)/diam(Γ) < C
-grade_mesh_towards_point(Γ::AbstractAttractor, x; C::Number=1) = 
-    grade_mesh(Γ, γ -> grade_towards_points_fn(γ, x, C))
+grade_mesh_towards_point(Γ::AbstractAttractor, x; C::Number=1, kwargs...) = 
+    grade_mesh(Γ, γ -> grade_towards_points_fn(γ, x, C); kwargs...)

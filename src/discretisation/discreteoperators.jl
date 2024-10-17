@@ -1,17 +1,29 @@
 # split this into a barycentric-centric version and a more general version
-struct DiscreteFractalOperator{
-        FO<:FractalOperator,
-        IP<:AbstractInnerProduct,
-        B<:FractalBasis,
-        M<:AbstractMatrix
-        } <: FractalOperator
-    op :: FO
-    ip :: IP
+# struct DiscreteFractalOperator{
+#         FO<:FractalOperator,
+#         IP<:AbstractInnerProduct,
+#         B<:FractalBasis,
+#         M<:AbstractMatrix
+#         } <: FractalOperator
+#     op :: FO
+#     ip :: IP
+#     basis :: B
+#     galerkinmatrix :: M
+# end
+
+abstract type DiscreteFractalOperator end
+
+struct DiscreteGalerkinOperator{
+    K <: FractalOperator,
+    B <: QuasiUniformBasis,
+    M <: AbstractMatrix
+    } <: DiscreteFractalOperator
+    op :: K
     basis :: B
-    galerkinmatrix :: M
+    stiffness_matrix :: M
 end
 
-getdefault_meshwidth(sio::OscillatorySingularIntegralOperator) =
+getdefault_meshwidth(sio::OscillatorySeparableIntegralOperator) =
     2π / abs(DOFS_PER_WAVELENGTH*sio.wavenumber)
 
 getdefault_meshwidth(sio::IntegralOperator) =
@@ -44,12 +56,12 @@ function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:
     return count
 end
 
-function discretise(sio::AbstractSingularIntegralOperator{
+
+function discretise(sio::AbstractSeparableIntegralOperator{
                         <:AbstractInvariantMeasure, Z},
-                    ip::AbstractInnerProduct,
                     Vₕ::FractalBasis;
                     reps = true
-                    ) where Z
+                    ) where Z<:Number
     N = length(Vₕ)
 
     # initliase Galerkin matrix
@@ -59,12 +71,17 @@ function discretise(sio::AbstractSingularIntegralOperator{
     reps ?  galerkinreps = get_galerkinreps(N, sio, Vₕ) :
             galerkinreps = zeros(Int64, N, N)
 
+    # get the information and values of canonical singular integrals
+    prepared_singular_vals, singular_indices = getsingularinfo(sio.measure, sio.s, Vₕ.parent_quadrule) 
+
     # double loop computing inner products, avoiding repeated entries
-    @sync for n in 1:N #@sync 
-        @spawn begin #@spawn 
+    @sync for n in 1:N
+        @spawn begin
             for m in 1:N
                 if @inbounds galerkinreps[m, n] == 0
-                    @inbounds galerkinmatrix[m, n] = sesquilinearform(ip, Vₕ[m], Vₕ[n])
+                    @inbounds galerkinmatrix[m, n] =
+                        sesquilinearform(sio, Vₕ[m], Vₕ[n],
+                                        prepared_singular_vals, singular_indices)
                 end
             end
         end
@@ -81,5 +98,12 @@ function discretise(sio::AbstractSingularIntegralOperator{
         end
     end
 
-    return DiscreteFractalOperator(sio, ip, Vₕ, galerkinmatrix)
+    return DiscreteGalerkinOperator(sio, Vₕ, galerkinmatrix)
+end
+
+function discretise(::IdentityOperator,
+                    Vₕ::FractalBasis;
+                    # could include 'reps' option here, eventually for homogenous cases
+                    )
+    return [ϕ⋅ψ for ϕ in Vₕ, ψ in Vₕ]
 end

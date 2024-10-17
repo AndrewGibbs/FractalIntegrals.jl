@@ -14,7 +14,8 @@ function vindex_to_scalar(M::Integer, ℓ::Integer, m::AbstractVector{<:Integer}
 end
 
 include("basis.jl")
-include("innerproducts.jl")
+# include("innerproducts.jl")
+include("sesquilinearforms.jl")
 include("matrixreps.jl")
 include("discreteoperators.jl")
 include("projections.jl")

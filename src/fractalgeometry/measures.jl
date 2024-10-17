@@ -108,3 +108,8 @@ get_symmetries(::InvariantMeasure{N, <:Any, T, <:Any}) where {N, T} = trivialgro
 get_symmetries(μ::HausdorffMeasure) = μ.supp.symmetries
 
 get_ambient_dimension(::Union{AbstractAttractor{N}, AbstractInvariantMeasure{N}}) where N = N
+
+
+# a few immediate defaults
+
+@hausdorffdefault get_barycentre

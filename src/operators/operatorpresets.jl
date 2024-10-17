@@ -15,7 +15,7 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
     ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     if ambient_dimension == 2     
-        K = SingularIntegralOperator(μ, #fractal domain
+        K = SeparableIntegralOperator(μ, #fractal domain
         (x, y) -> energykernel(0, x, y), # Hankel function
         (x, y) -> zero_kernel(x, y), # kernel minus singularity
         zero(R), # strength of singularity, corresponding to log singularity
@@ -24,7 +24,7 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case        
-            K = SingularIntegralOperator(μ, #fractal domain
+            K = SeparableIntegralOperator(μ, #fractal domain
             (x, y) -> energykernel(1, x, y), # Green's function
             (x, y) -> zero_kernel(x, y), # kernel minus singularity
             one(R), # strength of singularity, corresponding to 1/|x-y|
@@ -37,8 +37,7 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
 end
 
 # Hausdorff default
-singlelayer_operator_laplace(Γ::AbstractAttractor; vargs...) = 
-    singlelayer_operator_laplace(HausdorffMeasure(Γ); vargs...)
+@hausdorffdefault singlelayer_operator_laplace
 
 function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
                                             N, <:Any, R, <:AbstractAttractor
@@ -50,7 +49,7 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
     ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     if ambient_dimension == 2     
-        K = OscillatorySingularIntegralOperator(μ, #fractal domain
+        K = OscillatorySeparableIntegralOperator(μ, #fractal domain
         (x,y) -> helmholtzkernel2d(k, x, y), # Hankel function
         (x,y) -> helmholtzkernel2d_lipschitzpart(k, x, y), # kernel minus singularity
         zero(R), # strength of singularity, corresponding to log singularity
@@ -60,7 +59,7 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case        
-            K = OscillatorySingularIntegralOperator(μ, #fractal domain
+            K = OscillatorySeparableIntegralOperator(μ, #fractal domain
             (x,y) -> helmholtzkernel3d(k,x,y), # Green's function
             (x,y) -> helmholtzkernel3d_lipschitzpart(k,x,y), # kernel minus singularity
             one(R), # strength of singularity, corresponding to 1/|x-y|
@@ -74,5 +73,4 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
 end
 
 # Hausdorff default
-singlelayer_operator_helmholtz(Γ::AbstractAttractor, k; vargs...) = 
-    singlelayer_operator_helmholtz(HausdorffMeasure(Γ), k; vargs...)
+@hausdorffdefault singlelayer_operator_helmholtz

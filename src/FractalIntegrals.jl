@@ -1,7 +1,7 @@
 module FractalIntegrals
 
 import StaticArrays: SVector, SMatrix, mul!
-import LinearAlgebra: norm, det, dot, Symmetric, kron, eigvecs, eigvals
+import LinearAlgebra: norm, det, dot, Symmetric, kron, eigvecs, eigvals, ⋅
 import LinearAlgebra.I as IdMat
 import SpecialFunctions: hankelh1, gamma as gammafn
 import Roots: find_zero, Bisection
@@ -15,7 +15,7 @@ export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
 include("fractalgeometry/fractalgeometry.jl")
 include("vectorindices/vectorindices.jl")
 include("quadrature/quadrature.jl")
-include("integraloperators/integraloperators.jl")
+include("operators/operators.jl")
 include("discretisation/discretisation.jl")
 
 # # less 'core' routines

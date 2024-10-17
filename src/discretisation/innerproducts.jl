@@ -1,15 +1,24 @@
 abstract type AbstractInnerProduct end
 
-struct InnerProduct{Q<:AbstractVector{<:QuadStruct},
+# some precomputation of singular inner products is required for separable case
+struct SeparableInnerProduct{Q<:AbstractVector{<:QuadStruct},
                     S<:AbstractVector,
                     I<:AbstractVector{<:Number},
                     K<:FractalOperator
                     } <: AbstractInnerProduct
     
-    sio :: K
+    operator :: K
     quadrules :: Q
     singular_indices :: S
     singular_integrals :: I
+end
+
+# below can be used for smooth integral operators and identity operator
+struct SimpleInnerProduct{Q<:AbstractVector{<:QuadStruct},
+                        K<:FractalOperator
+                        } <: AbstractInnerProduct
+    operator :: K
+    quadrules :: Q
 end
 
 function getsingularinfo(μ, s, q::QuadStruct)
@@ -28,13 +37,13 @@ function getsingularinfo(μ, s, q::QuadStruct)
 end
 
 # outer constructor 1
-InnerProduct(  sio::AbstractSingularIntegralOperator,
+SeparableInnerProduct(  sio::AbstractSingularIntegralOperator,
                 Vₕ::FractalBasis,
                 X::AbstractArray,
                 W::AbstractArray) = InnerProduct(sio, Vₕ, QuadStruct(X, W))
 
 # outer constructor 2
-function InnerProduct(  sio::AbstractSingularIntegralOperator,
+function SeparableInnerProduct(  sio::AbstractSingularIntegralOperator,
                         Vₕ::FractalBasis,
                         q::QuadStruct)
 
@@ -49,36 +58,11 @@ function InnerProduct(  sio::AbstractSingularIntegralOperator,
     return InnerProduct(sio, allquads, singular_indices, prepared_singular_vals)
 end
 
-innerproduct(ip::InnerProduct, f::Function, ψ::P0BasisElement) = 
+innerproduct(ip::AbstractInnerProduct, f::Function, ψ::P0BasisElement) = 
     conj(ψ.normalisation) * dot(conj(ip.quadrules[ψ.index].weights), f.(ip.quadrules[ψ.index].nodes))
 
-function innerproduct(ϕ::P0BasisElement{<:Any,T}, ψ::P0BasisElement{<:Any,T}) where T
-    # start with lengths of vector indices
-    ϕ_leng = length(ϕ.vindex)
-    ψ_leng = length(ψ.vindex)
 
-    # if fractal depth is the same
-    if ϕ_leng == ψ_leng
-        # check if vector indices match
-        if ϕ.vindex == ψ.vindex
-            overlap_measure = ϕ.measure.suppmeasure
-        else
-            overlap_measure = zero(T)
-        end
-    else # if depths are different, one fractal may be subset of the other
-        least_deep_basfn = [ϕ, ψ][argmin(ϕ_leng, ψ_leng)]
-        most_deep_basfn = [ϕ, ψ][argmax(ϕ_leng, ψ_leng)]
-        if most_deep_basfn.vindex[1:length(least_deep_basfn)] == least_deep_basfn
-            overlap_measure = least_deep_basfn.measure.suppmeasure
-        else
-            overlap_measure = zero(T)
-        end
-    end
-
-    return overlap_measure * ϕ.normalisation * ψ.normalisation
-end
-
-function sesquilinearform(  ip::InnerProduct,
+function sesquilinearform(  ip::SeparableInnerProduct,
                             ϕ::P0BasisElement,
                             ψ::P0BasisElement)
     # first determine if singular or not

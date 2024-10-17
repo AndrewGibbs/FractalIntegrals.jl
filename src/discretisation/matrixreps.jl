@@ -105,7 +105,7 @@ function get_galerkinreps(N::Integer, sio::AbstractSingularIntegralOperator, V�
         if sio.symmetric
             symmetricreps!(galerkinreps, N) # not 'fractal' feature - follows from self-adjointness
         end
-        if Vₕ.uniform
+        if isa(Vₕ, QuasiUniformBasis{<:HausdorffMeasure{<:AbstractHomogenousAttractor}})
             #  NEED TO BE MORE SPECIFIC HERE SO WE ONLY ADJUST DIAGONAL BLOCKS
             if is_attractor_rotating(sio.measure.supp)
                 fractaldiagblocks!(galerkinreps, N, M)
