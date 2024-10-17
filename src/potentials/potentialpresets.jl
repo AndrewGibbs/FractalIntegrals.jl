@@ -1,14 +1,14 @@
 function singlelayer_potential_helmholtz(ϕ::Projection,
                                         k::Number;
-                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
-                                        h_quad::Real = 0.0,
-                                        N_quad::Integer = 0,
-                                        quadrule::QuadStruct =
-                                            getdefault_quad_premap(ϕ.basis.measure,
-                                                            get_h_mesh(ϕ.basis),
-                                                            h_quad,
-                                                            N_quad
-                                                            )
+                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure)#,
+                                        # h_quad::Real = 0.0,
+                                        # N_quad::Integer = 0,
+                                        # quadrule::QuadStruct =
+                                        #     getdefault_quad_premap(ϕ.basis.measure,
+                                        #                     get_h_mesh(ϕ.basis),
+                                        #                     h_quad,
+                                        #                     N_quad
+                                        #                     )
                                         )
 
     ambient_dimension = check_ambient_dimension(ambient_dimension)
@@ -30,24 +30,24 @@ function singlelayer_potential_helmholtz(ϕ::Projection,
         error("Haven't coded single layer potential for this many dimensions")
     end
 
-    # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
+    # # map (X,W) quadrature rule to each basis element
+    # quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
-    return Potential(ϕ, Φ, quadrules_mapped)
+    return Potential(ϕ, Φ)
 end
 
 function farfield_pattern(ϕ::Projection,
                         k::Number;
-                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
-                        h_quad::Real = 0.0,
-                        N_quad::Integer = 0,
-                        quadrule::QuadStruct =
-                            getdefault_quad_premap(ϕ.basis.measure,
-                                            get_h_mesh(ϕ.basis),
-                                            h_quad,
-                                            N_quad
-                                            ),
+                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure)#,
+                        # h_quad::Real = 0.0,
+                        # N_quad::Integer = 0,
+                        # quadrule::QuadStruct =
+                        #     getdefault_quad_premap(ϕ.basis.measure,
+                        #                     get_h_mesh(ϕ.basis),
+                        #                     h_quad,
+                        #                     N_quad
+                        #                     ),
                         )
 
     # const kwave = k
@@ -73,23 +73,23 @@ function farfield_pattern(ϕ::Projection,
         @error "Haven't coded ffp for this many dimensions... does it even make sense?"
     end
 
-    # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
+    # # map (X,W) quadrature rule to each basis element
+    # quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
-    return Potential(ϕ, ffkernel, quadrules_mapped)
+    return Potential(ϕ, ffkernel)
 end
 
-function singlelayer_potential_laplace(ϕ::Projection,
-                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),
-                                        h_quad::Real = 0.0,
-                                        N_quad::Integer = 0,
-                                        quadrule::QuadStruct =
-                                            getdefault_quad_premap(ϕ.basis.measure,
-                                                            get_h_mesh(ϕ.basis),
-                                                            h_quad,
-                                                            N_quad
-                                                            ),
+function singlelayer_potential_laplace(ϕ::Projection;
+                                        ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure)#,
+                                        # h_quad::Real = 0.0,
+                                        # N_quad::Integer = 0,
+                                        # quadrule::QuadStruct =
+                                        #     getdefault_quad_premap(ϕ.basis.measure,
+                                        #                     get_h_mesh(ϕ.basis),
+                                        #                     h_quad,
+                                        #                     N_quad
+                                        #                     ),
                                         )
                                         
     ambient_dimension = check_ambient_dimension(ambient_dimension)
@@ -99,9 +99,9 @@ function singlelayer_potential_laplace(ϕ::Projection,
 
     Φ = (x,y) -> 1/((n-2)*Aₙ)*energykernel(n-2, x, y)
 
-    # map (X,W) quadrature rule to each basis element
-    quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
+    # # map (X,W) quadrature rule to each basis element
+    # quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
 
     # create and return instance of potential type
-    return Potential(ϕ, Φ, quadrules_mapped)
+    return Potential(ϕ, Φ)
 end

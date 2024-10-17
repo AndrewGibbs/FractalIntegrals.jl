@@ -1,5 +1,5 @@
-abstract type FractalOperator end
-abstract type IntegralOperator{M<:AbstractInvariantMeasure, Z} <: FractalOperator end
+abstract type FractalOperator{M <: AbstractInvariantMeasure} end
+abstract type IntegralOperator{M, Z} <: FractalOperator{M} end
 abstract type AbstractSingularIntegralOperator{M, Z} <: IntegralOperator{M, Z} end
 abstract type AbstractSeparableIntegralOperator{M, Z} <: AbstractSingularIntegralOperator{M, Z} end
 
@@ -40,4 +40,5 @@ end
 @hausdorffdefault OscillatorySeparableIntegralOperator
 
 include("operatorpresets.jl")
-include("identityoperators.jl")
+# include("identityoperators.jl")
+include("binaryoperators.jl")

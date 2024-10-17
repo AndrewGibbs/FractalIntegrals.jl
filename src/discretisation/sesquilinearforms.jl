@@ -1,4 +1,4 @@
-(φ::PreQuadP0BasisElement)(f::Function) = φ.quad.weights' * (f.(φ.quad.nodes) .* conj.(φ.(φ.quad.nodes)))
+(φ::PreQuadP0BasisElement)(f::Function) = φ.quadrule.weights' * (f.(φ.quadrule.nodes) .* conj.(φ.(φ.quadrule.nodes)))
 
 dot(φ::PreQuadP0BasisElement, f::Function) = φ(f)
 
@@ -62,10 +62,10 @@ function sesquilinearform(  sio::AbstractSeparableIntegralOperator,
 
     # get the tensor product quadrature
 
-    x, y, w = combine_quadrules(ϕ.quad.nodes,
-                ϕ.quad.weights,
-                ψ.quad.nodes,
-                ψ.quad.weights)
+    x, y, w = combine_quadrules(ϕ.quadrule.nodes,
+                ϕ.quadrule.weights,
+                ψ.quadrule.nodes,
+                ψ.quadrule.weights)
 
     if singular_slf
     scale_adjust = similar_scaler(ρ,

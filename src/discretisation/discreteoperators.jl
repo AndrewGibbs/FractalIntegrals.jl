@@ -1,16 +1,3 @@
-# split this into a barycentric-centric version and a more general version
-# struct DiscreteFractalOperator{
-#         FO<:FractalOperator,
-#         IP<:AbstractInnerProduct,
-#         B<:FractalBasis,
-#         M<:AbstractMatrix
-#         } <: FractalOperator
-#     op :: FO
-#     ip :: IP
-#     basis :: B
-#     galerkinmatrix :: M
-# end
-
 abstract type DiscreteFractalOperator end
 
 struct DiscreteGalerkinOperator{
@@ -31,16 +18,14 @@ getdefault_meshwidth(sio::IntegralOperator) =
 
 # new style which allows us to try different quadrature rules
 function discretise(sio::AbstractSingularIntegralOperator;
-    h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
-    h_quad::Real = 0.0, # quick option for Barycentre rule
-    N_quad::Integer = 0,
-    quadrule::QuadStruct =
+            h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
+            h_quad::Real = 0.0, # quick option for Barycentre rule
+            N_quad::Integer = 0,
+            quadrule::QuadStruct =
             getdefault_quad_premap(sio.measure, h_mesh, h_quad, N_quad),
             kwargs...)
     Vₕ = construct_p0basis(sio.measure, h_mesh)
-    # quadpts, quadweights = barycentre_quadrule(sio.measure, h_quad)
-    ip = InnerProduct(sio, Vₕ, quadrule)
-    return discretise(sio, ip, Vₕ; kwargs...)
+    return discretise(sio, Vₕ; kwargs...)
 end
 
 function convert_quad_to_tuple(Q::QuadStruct)
@@ -57,7 +42,7 @@ function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:
 end
 
 
-function discretise(sio::AbstractSeparableIntegralOperator{
+function get_galerkin_matrix(sio::AbstractSeparableIntegralOperator{
                         <:AbstractInvariantMeasure, Z},
                     Vₕ::FractalBasis;
                     reps = true
@@ -98,12 +83,23 @@ function discretise(sio::AbstractSeparableIntegralOperator{
         end
     end
 
-    return DiscreteGalerkinOperator(sio, Vₕ, galerkinmatrix)
+    return galerkinmatrix#DiscreteGalerkinOperator(sio, Vₕ, galerkinmatrix)
 end
 
-function discretise(::IdentityOperator,
+function get_galerkin_matrix(::IdentityOperator,
                     Vₕ::FractalBasis;
                     # could include 'reps' option here, eventually for homogenous cases
                     )
     return [ϕ⋅ψ for ϕ in Vₕ, ψ in Vₕ]
 end
+
+get_galerkin_matrix(S::ScaledOperator, Vₕ::FractalBasis) =
+    S.λ * get_galerkin_matrix(S.operator, Vₕ)
+
+get_galerkin_matrix(S::SumOperator, Vₕ::FractalBasis) =
+    get_galerkin_matrix(S.operator1, Vₕ) + get_galerkin_matrix(S.operator2, Vₕ)
+
+
+# generic discretisation function
+discretise(K::FractalOperator, Vₕ::FractalBasis; varargs...) =
+    DiscreteGalerkinOperator(K, Vₕ, get_galerkin_matrix(K, Vₕ; varargs...))

@@ -20,7 +20,7 @@ struct PreQuadP0BasisElement{A<:AbstractInvariantMeasure,
     normalisation :: T
     index :: I
     vindex :: V
-    quad :: Q
+    quadrule :: Q
 
     # # inner constructor check here that M of vindex matches measure
     # function P0BasisElement(measure::AbstractInvariantMeasure{<:Any, M1, <:Any, <:Any},
@@ -54,22 +54,30 @@ Base.getindex(Vₙ::FractalBasis, j::Integer) = Vₙ.elements[j]
 Base.length(Vₙ::FractalBasis) = length(Vₙ.elements)
 Base.size(Vₙ::FractalBasis) = size(Vₙ.elements)
 
-function construct_quasiuniform_prebary_p0basis(μ::AbstractInvariantMeasure,
-                                                h_mesh::Real,
-                                                h_quad::Real)
+
+function construct_quasiuniform_p0basis(μ::AbstractInvariantMeasure,
+                                        h_mesh::Real,
+                                        quadrule::QuadStruct)
     Lₕ = subdivide_indices(μ.supp, h_mesh)
-    h_quad_mod = diam(μ) * h_quad / h_mesh
-    quad_nodes, quad_weights = barycentre_quadrule(μ, h_quad_mod)
     return QuasiUniformBasis(μ,
-                [PreQuadP0BasisElement(μ[𝐦], # sub-measure
+                            [PreQuadP0BasisElement(
+                                μ[𝐦], # sub-measure
                                 1.0, # normalisation
                                 n, # scalar index
                                 𝐦, # vector index
-                                QuadStruct(mapquadrule(μ, 𝐦, quad_nodes, quad_weights)...)#QuadStruct(barycentre_quadrule(μ[𝐦], h_quad)...)
-                                ) for (n, 𝐦) in enumerate(Lₕ)],
-                QuadStruct(quad_nodes, quad_weights)
-                )
+                                QuadStruct(mapquadrule(μ, 𝐦, quadrule.nodes, quadrule.weights)...)
+                                ) for (n, 𝐦) in enumerate(Lₕ)
+                            ],
+                            quadrule
+                            )
 end
+
+construct_quasiuniform_prebary_p0basis(μ::AbstractInvariantMeasure,
+                                                h_mesh::Real,
+                                                h_quad::Real) =
+    construct_quasiuniform_p0basis( μ,
+                                    h_mesh,
+                                    QuadStruct(barycentre_quadrule(μ, diam(μ) * h_quad / h_mesh)...))
 
 # default to Hausdorff measure if an attractor is passed as first arg
 @hausdorffdefault construct_quasiuniform_prebary_p0basis

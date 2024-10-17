@@ -1,27 +1,38 @@
+# struct Potential{P<:Projection,
+#                 F<:Function,
+#                 Q<:AbstractArray{<:QuadStruct}}
+#     density::P # measure, support etc contained in here
+#     kernel::F
+#     quadrules::Q
+# end
+
 struct Potential{P<:Projection,
-                F<:Function,
-                Q<:AbstractArray{<:QuadStruct}}
+                F<:Function}
     density::P # measure, support etc contained in here
     kernel::F
-    quadrules::Q
 end
 
 # µ─        ~Aya, 29/5/2024
 
 function (pot::Potential)(x)
-    val = zero(eltype(x))
+    # val = zero(eltype(x))
     # @inbounds @simd for n in 1:length(pot.density.basis)
     #     @fastmath val += (pot.density.coeffs[n] * (
     #             transpose(pot.quadrules[n].weights) *
     #             (pot.kernel.(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
     #             ))
-    for n in 1:length(pot.density.basis)
-        val += (pot.density.coeffs[n] * (
-                transpose(pot.quadrules[n].weights) *
-                (pot.kernel(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
-                ))
-    end
-    return val
+    # for n in 1:length(pot.density.basis)
+    #     val += (pot.density.coeffs[n] * (
+    #             transpose(pot.quadrules[n].weights) *
+    #             (pot.kernel(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
+    #             ))
+    # end
+
+    # define the single-variable version of the kernel
+    # embed(y) = (length(x) == get_ambient_dimension(pot.density.basis.measure)) ? y : [y..., 0]
+    Φₓ(y) = pot.kernel(x, y)
+    # now take dot product of coeffs and inner products
+    return [ϕₕ(Φₓ) for ϕₕ in pot.density.basis] ⋅ pot.density.coeffs
 end
 
 # function parapot(pot::Potential, x::AbstractArray{T}) where T<:Number
