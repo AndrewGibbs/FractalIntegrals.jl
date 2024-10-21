@@ -1,4 +1,4 @@
-struct IdentityOperator{M<:AbstractInvariantMeasure} <:FractalOperator{M}
+struct IdentityOperator{M<:AbstractInvariantMeasure} <:FractalOperator#{M}
     measure :: M
 end
 
@@ -9,7 +9,7 @@ end
 struct ScaledOperator{M<:AbstractInvariantMeasure,
                     K<:FractalOperator,
                     T<:Number
-                    } <: FractalOperator{M}
+                    } <: FractalOperator#{M}
     measure :: M
     operator :: K
     λ :: T
@@ -27,7 +27,7 @@ Base.:*(op::FractalOperator, λ::Number) = λ*op
 struct SumOperator{M<:AbstractInvariantMeasure,
                 K<:FractalOperator,
                 T<:FractalOperator
-                } <: FractalOperator{M}
+                } <: FractalOperator#{M}
     measure :: M
     operator1 :: K
     operator2 :: T
@@ -37,3 +37,15 @@ function Base.:+(op1::FractalOperator, op2::FractalOperator)
     @assert op1.measure == op2.measure "measures of summed operators must match"
     SumOperator(op1.measure, op1, op2)
 end
+
+# ------------------------------------------------------------------------ #
+
+struct BlockOperator{M<:Tuple, B<:Matrix} <: FractalOperator
+    measures :: M
+    operators :: B
+    symmetric :: Bool
+end
+
+Base.getindex(BlockOperator, args...) = getindex(BlockOperator.operators, args...)
+
+#                      ,,,,,,,,,,,,,,,,,,,,,,,,,,,,............................................;[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])

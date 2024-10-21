@@ -99,7 +99,30 @@ get_galerkin_matrix(S::ScaledOperator, Vₕ::FractalBasis) =
 get_galerkin_matrix(S::SumOperator, Vₕ::FractalBasis) =
     get_galerkin_matrix(S.operator1, Vₕ) + get_galerkin_matrix(S.operator2, Vₕ)
 
-
 # generic discretisation function
 discretise(K::FractalOperator, Vₕ::FractalBasis; varargs...) =
     DiscreteGalerkinOperator(K, Vₕ, get_galerkin_matrix(K, Vₕ; varargs...))
+
+get_galerkin_matrix(op::SmoothIntegralOperator, dom_basis, codom_basis) =
+    [sesquilinearform(op, ϕ,  ψ) for ϕ in dom_basis, ψ in codom_basis]
+
+function get_galerkin_matrix(K::BlockOperator, Vₕ::Tuple{Vararg{FractalBasis}}; varargs...)
+    num_bases = length(Vₕ)
+    # need to exploit symmetry if possible:
+    # need to check we're not computing the transpose block
+    block_form = [get_galerkin_matrix(K[m,n], Vₕ[m], Vₕ[n]; varargs...) for m=1:num_bases, n=1:num_bases]
+    full_width = sum(length.(Vₕ))
+    # need to intelligently initialise matrix based on types of block matrices
+    full_matrix = ComplexF64[](undef, full_width, full_width)
+    row_loc_start_index = 1
+    col_loc_start_index = 1
+    for m in 1:block_form, n in 1:block_form
+        loc_num_rows, loc_num_cols = size(block_form[m,n])
+        row_inds = row_loc_start_index:(row_loc_start_index+loc_num_rows)
+        col_inds = col_loc_start_index:(col_loc_start_index+loc_num_cols)
+        full_matrix[row_inds, col_inds] .= block_form[m, n]
+        row_loc_start_index = row_inds[end]+1
+        col_loc_start_index = col_inds[end]+1
+    end
+    return full_matrix
+end

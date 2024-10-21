@@ -6,6 +6,8 @@ function check_ambient_dimension(ambient_dimension)
     return ambient_dimension
 end
 
+## --------------------- single layer opeartor Helmholtz -------------------- ##
+
 function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
                                         N, <:Any, R, <:AbstractAttractor
                                         };
@@ -36,8 +38,61 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
     end
 end
 
-# Hausdorff default
+function dom2codom_singlelayer_operator_laplace(μ₁::M1,
+                                                μ₂::M2;
+                                                ambient_dimension = max(get_ambient_dimension.(μ₁, μ₂)...),
+                                                varargs...) where {M1<:AbstractInvariantMeasure, M2<:AbstractInvariantMeasure}
+    T = eltype(eltype(μ₁))
+    if μ₁ == μ₂
+        singlelayer_operator_laplace(μ₁; varargs...)
+    elseif ambient_dimension == 2     
+        Φ = (x, y) -> energykernel(0, x, y)
+        K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
+                            μ₁,
+                            μ₂, #domain -> codomain
+                            Φ, # Hankel function
+                            false
+                        )
+    elseif ambient_dimension == 3
+        #3D Helmholtz case  
+        Φ = (x, y) -> energykernel(1, x, y)
+        K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
+                            μ₁,
+                            μ₂, #domain -> codomain
+                            Φ, # Hankel function
+                            false
+                        )
+    else
+        error("Haven't coded single layer SIO for this many dimensions")
+    end
+end
+
+function singlelayer_operator_laplace(μple::Tuple{Vararg{AbstractInvariantMeasure}};
+                                    ambient_dimension = max.(get_ambient_dimension.(μple)...),
+                                    varargs...)
+
+    # first make sure all supports have the same ambient dimension
+    μple = embed_into_same_dimension(μple)
+                        
+    # (note that this may be less than the ambient dimension specified above)
+
+    # now define the block of operators
+    op_block =
+        [dom2codom_singlelayer_operator_laplace(μ₁, μ₂;
+                                                ambient_dimension = ambient_dimension,
+                                                varargs...)
+                                                for μ₂ in μple, μ₁ in μple
+        ]
+    return BlockOperator(μple, op_block, true)
+end
+
+# Hausdorff defaults
 @hausdorffdefault singlelayer_operator_laplace
+singlelayer_operator_laplace(Γ_tuple::Tuple{Vararg{AbstractAttractor}}; varargs...) =
+    singlelayer_operator_laplace(HausdorffMeasure.(Γ_tuple); varargs...)
+
+
+## --------------------- single layer opeartor Helmholtz -------------------- ##
 
 function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
                                             N, <:Any, R, <:AbstractAttractor
@@ -72,5 +127,83 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
     end
 end
 
-# Hausdorff default
+
+# function singlelayer_operator_laplace(  μ₁::AbstractInvariantMeasure,
+#     μ₂::AbstractInvariantMeasure;
+#     Varargs...)
+#     if μ₁ == μ₂
+#         singlelayer_operator_laplace(μ₁; varargs...)
+#     elseif ambient_dimension == 2     
+#         K = SmoothOperator(μ₁,
+#         μ₂, #domain -> codomain
+#         (x, y) -> energykernel(0, x, y), # Hankel function
+#         false
+#         )
+#     elseif ambient_dimension == 3
+#         #3D Helmholtz case  
+#         K = SmoothOperator(μ₁,
+#         μ₂, #domain -> codomain
+#         (x, y) -> energykernel(1, x, y), # Hankel function
+#         false
+#         )
+#     else
+#         error("Haven't coded single layer SIO for this many dimensions")
+#     end
+# end
+
+
+function dom2codom_singlelayer_operator_helmholtz(  μ₁::M1,
+                                                    μ₂::M2,
+                                                    k::Number;
+            ambient_dimension = max(get_ambient_dimension.(μ₁, μ₂)...),
+            varargs...) where {M1<:AbstractInvariantMeasure, M2<:AbstractInvariantMeasure}
+    T = eltype(eltype(μ₁))
+    if μ₁ == μ₂
+        singlelayer_operator_helmholtz(μ₁, k; varargs...)
+    elseif ambient_dimension == 2     
+        Φ = (x, y) -> helmholtzkernel2d(k, x, y)
+        K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
+        μ₁,
+        μ₂, #domain -> codomain
+        Φ, # Hankel function
+        false
+        )
+    elseif ambient_dimension == 3
+        #3D Helmholtz case  
+        Φ = (x, y) -> helmholtzkernel3d(k, x, y)
+        K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
+        μ₁,
+        μ₂, #domain -> codomain
+        Φ, # Hankel function
+        false
+        )
+    else
+        error("Haven't coded single layer SIO for this many dimensions")
+    end
+end
+
+function singlelayer_operator_helmholtz(μple::Tuple{Vararg{AbstractInvariantMeasure}},
+                                        k::Number;
+                                        ambient_dimension = max.(get_ambient_dimension.(μple)...),
+                                        varargs...)
+
+    # first make sure all supports have the same ambient dimension
+    μple = embed_into_same_dimension(μple)
+
+    # (note that this may be less than the ambient dimension specified above)
+
+    # now define the block of operators
+    op_block =
+    [dom2codom_singlelayer_operator_helmholtz(μ₁, μ₂, k;
+        ambient_dimension = ambient_dimension,
+        varargs...)
+        for μ₂ in μple, μ₁ in μple
+    ]
+    return BlockOperator(μple, op_block, true)
+end
+
+
+# Hausdorff defaults
 @hausdorffdefault singlelayer_operator_helmholtz
+singlelayer_operator_helmholtz(Γ_tuple::Tuple{Vararg{AbstractAttractor}}, k::Number; varargs...) =
+    singlelayer_operator_helmholtz(HausdorffMeasure.(Γ_tuple), k; varargs...)

@@ -32,40 +32,50 @@ end
 
 # machinery for Galerkin matrix construction 
 
+function sesquilinearform(  op::SmoothIntegralOperator,
+                            ϕ::PreQuadP0BasisElement,
+                            ψ::PreQuadP0BasisElement)
+    x, y, w = combine_quadrules(ϕ.quadrule.nodes,
+                                ϕ.quadrule.weights,
+                                ψ.quadrule.nodes,
+                                ψ.quadrule.weights)
+    return dot(conj(w), op.kernel(x,y))
+end
+
 function sesquilinearform(  sio::AbstractSeparableIntegralOperator,
                             ϕ::PreQuadP0BasisElement,
                             ψ::PreQuadP0BasisElement,
-                            singular_integrals,
-                            singular_indices)
+                            singular_integrals::Vector{<:Number},
+                            singular_indices::Vector{<:Tuple{Vector{<:Integer}}})
 
     singular_slf = false
     similar_index = 0
     ρ = 0.0
 
-    if dist⁺(ϕ.measure.supp, ψ.measure.supp) <= 0 #norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
-    #(ϕ.measure.supp.diam + ψ.measure.supp.diam)
-    # passed initial cheap test for being singular
-    # assume that singularity is 'similar' to canonical singular integral
+    if dist⁻(ϕ.measure.supp, ψ.measure.supp) <= 0 #norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
+        #(ϕ.measure.supp.diam + ψ.measure.supp.diam)
+        # passed initial cheap test for being singular
+        # assume that singularity is 'similar' to canonical singular integral
 
-    parent_symmetries = get_symmetries(sio.measure)
+        parent_symmetries = get_symmetries(sio.measure)
 
-    singular_slf, ρ, similar_index = 
-    check_for_similar_integrals(sio.measure.supp,
-                    singular_indices, 
-                    Vector(ϕ.vindex),
-                    Vector(ψ.vindex),
-                    parent_symmetries,
-                    parent_symmetries,
-                    true
-                    )
+        singular_slf, ρ, similar_index = 
+        check_for_similar_integrals(sio.measure.supp,
+                        singular_indices, 
+                        Vector(ϕ.vindex),
+                        Vector(ψ.vindex),
+                        parent_symmetries,
+                        parent_symmetries,
+                        true
+                        )
     end
 
-    # get the tensor product quadrature
+        # get the tensor product quadrature
 
-    x, y, w = combine_quadrules(ϕ.quadrule.nodes,
-                ϕ.quadrule.weights,
-                ψ.quadrule.nodes,
-                ψ.quadrule.weights)
+        x, y, w = combine_quadrules(ϕ.quadrule.nodes,
+                    ϕ.quadrule.weights,
+                    ψ.quadrule.nodes,
+                    ψ.quadrule.weights)
 
     if singular_slf
     scale_adjust = similar_scaler(ρ,
@@ -79,15 +89,15 @@ function sesquilinearform(  sio::AbstractSeparableIntegralOperator,
     I = sio.singularconst * singular_integrals[similar_index] * scale_adjust +
     dot(conj(w), sio.lipschitzpart(x,y))
 
-    # account for additive log terms, if required
-    if sio.s == 0
-    pϕ = compose_weights(ϕ.measure.weights, ϕ.vindex)
-    pψ = compose_weights(ψ.measure.weights, ψ.vindex)
-    I += sio.singularconst * sio.measure.suppmeasure^2 * log(1/ρ) * pϕ * pψ
-    end
+        # account for additive log terms, if required
+        if sio.s == 0
+            pϕ = compose_weights(ϕ.measure.weights, ϕ.vindex)
+            pψ = compose_weights(ψ.measure.weights, ψ.vindex)
+            I += sio.singularconst * sio.measure.suppmeasure^2 * log(1/ρ) * pϕ * pψ
+        end
     else
     # compute value of smooth integral
-    I = dot(conj(w), sio.kernel(x,y))
+        I = dot(conj(w), sio.kernel(x,y))
     end
 
     # normalise output
