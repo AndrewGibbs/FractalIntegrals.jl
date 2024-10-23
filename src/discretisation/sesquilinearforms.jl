@@ -46,7 +46,7 @@ function sesquilinearform(  sio::AbstractSeparableIntegralOperator,
                             ϕ::PreQuadP0BasisElement,
                             ψ::PreQuadP0BasisElement,
                             singular_integrals::Vector{<:Number},
-                            singular_indices::Vector{<:Tuple{Vector{<:Integer}}})
+                            singular_indices::Vector{<:Tuple{Vector{<:Integer}, Vector{<:Integer}}})
 
     singular_slf = false
     similar_index = 0

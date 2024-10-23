@@ -1,5 +1,4 @@
-abstract type FractalOperator end#{M <: AbstractInvariantMeasure} end
-
+abstract type FractalOperator{M <: Measure} end
 include("kernels.jl")
 include("integraloperators.jl")
 

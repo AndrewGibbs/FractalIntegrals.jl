@@ -18,9 +18,9 @@ function combine_quadrules(x1::AbstractArray{<:Union{SVector,Number}},
     W1 = Vector{eltype(w1)}(undef, N)
     W2 = Vector{eltype(w2)}(undef, N)
 
-    @simd for n1 in 1:N1
-        X1[((n1-1)*N2+1):(n1*N2)] .= x1
-        W1[((n1-1)*N2+1):(n1*N2)] .= w1
+    @simd for n2 in 1:N2
+        X1[((n2-1)*N1+1):(n2*N1)] .= x1
+        W1[((n2-1)*N1+1):(n2*N1)] .= w1
     end
 
     @simd for n2 in 1:N2

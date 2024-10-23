@@ -1,4 +1,4 @@
-struct IdentityOperator{M<:AbstractInvariantMeasure} <:FractalOperator#{M}
+struct IdentityOperator{M<:AbstractInvariantMeasure} <:FractalOperator{M}
     measure :: M
 end
 
@@ -9,7 +9,7 @@ end
 struct ScaledOperator{M<:AbstractInvariantMeasure,
                     K<:FractalOperator,
                     T<:Number
-                    } <: FractalOperator#{M}
+                    } <: FractalOperator{M}
     measure :: M
     operator :: K
     λ :: T
@@ -27,7 +27,7 @@ Base.:*(op::FractalOperator, λ::Number) = λ*op
 struct SumOperator{M<:AbstractInvariantMeasure,
                 K<:FractalOperator,
                 T<:FractalOperator
-                } <: FractalOperator#{M}
+                } <: FractalOperator{M}
     measure :: M
     operator1 :: K
     operator2 :: T
@@ -40,7 +40,7 @@ end
 
 # ------------------------------------------------------------------------ #
 
-struct BlockOperator{M<:Tuple, B<:Matrix} <: FractalOperator
+struct BlockOperator{M<:MeasureUnion, B<:Matrix} <: FractalOperator{M}
     measures :: M
     operators :: B
     symmetric :: Bool

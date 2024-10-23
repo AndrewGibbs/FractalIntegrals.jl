@@ -1,3 +1,5 @@
+# ------------------ basis element ----------------------------------#
+
 abstract type FractalBasisElement end
 abstract type AbstractP0BasisElement <: FractalBasisElement end
 
@@ -38,12 +40,14 @@ end
 
 (ϕₙ::AbstractP0BasisElement)(::Any) = ϕₙ.normalisation
 
-abstract type FractalBasis{M<:AbstractInvariantMeasure} <: AbstractVector{M} end
+# ------------------ basis -------------------------------------- #
+abstract type FractalBasis{M <: Measure} <: AbstractVector{M} end
+abstract type InvariantMeasureBasis{M<:AbstractInvariantMeasure} <: FractalBasis{M} end
 
 struct QuasiUniformBasis{ M <: AbstractInvariantMeasure,
                 E <: FractalBasisElement,
                 Q <: QuadStruct
-                } <: FractalBasis{M}
+                } <: InvariantMeasureBasis{M}
     measure :: M
     elements :: Vector{E}
     parent_quadrule :: Q
@@ -89,3 +93,33 @@ mapquadrule_to_elements(Vₕ::FractalBasis, q::QuadStruct) =
     [QuadStruct(mapquadrule(Vₕ.measure, ϕₙ.vindex, q.nodes, q.weights)...) for ϕₙ in Vₕ]
 
 get_h_mesh(Vₕ::FractalBasis) = maximum(ϕₙ.measure.supp.diam for ϕₙ in Vₕ)
+
+# --------------------- define union of bases -------------------------------- #
+struct UnionBasis{  M<:MeasureUnion,
+                    B<:Tuple{Vararg{FractalBasis}}} <: FractalBasis{M}
+    measures :: M
+    bases :: B
+    basis_lengths :: Vector{Int64}
+end
+
+Base.:∪(a::InvariantMeasureBasis, b::InvariantMeasureBasis) =
+    UnionBasis(∪(a.measure, b.measure), (a, b), length.([a, b]))
+
+function Base.getindex(b::UnionBasis, n::Integer)
+    @assert n>0 "basis index must be greater than zero"
+    cum_lens = vcat([0], cumsum([length.(b.bases)...]))
+    # initialise as final basis entry
+    basis_index = cum_lens[end] + length(b.bases[end])
+    el_index = 0
+    for m in 1:(length(cum_lens)-1)
+        if cum_lens[m] < n ≤ cum_lens[m+1]
+            basis_index = m
+            el_index = n - cum_lens[m]
+            break
+        end
+    end
+    return b.bases[basis_index][el_index]
+end
+
+Base.length(b::UnionBasis) = sum(length.(b.bases))
+Base.size(b::UnionBasis) = (length(b), )

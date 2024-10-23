@@ -11,7 +11,7 @@ function (η::AbstractSimilarity)(Γ::A) where A<:AbstractAttractor
 end
 
 function (η::AbstractSimilarity)(Γ::A) where A<:AbstractHomogenousAttractor
-    @assert eltype(Γ.ifs) == typeof(η) "Composition similarities must be of same type."
+    # @assert eltype(Γ.ifs) == typeof(η) "Composition similarities must be of same type."
     return A(
             [η ∘ s ∘ η^(-1) for s in Γ.ifs], # new IFS
             η.ρ * Γ.diam, # diameter scaled down
@@ -82,14 +82,18 @@ embed(s::AbstractSimilarity, n::Integer) = Similarity(s.ρ,
 
 # embedding
 function embed(Γ::AbstractAttractor, n::Integer)
-    @assert n ≥ get_ambient_dimension(Γ) "2nd arg must be greater than ambeint fractal dimension"
-    return Attractor(
-            [embed(s, n) for s in Γ.ifs], # new IFS
-            diam = Γ.diam, # diameter scaled down
-            d = Γ.d, # dimension unchanged
-            connectedness = Γ.connectedness, # connectedness is unchanged
-            symmetries = [embed(s, n) for s in Γ.symmetries], # symmetries
-            )
+    @assert n ≥ get_ambient_dimension(Γ) "2nd arg must be greater at least ambeint fractal dimension"
+    if (typeof(Γ) <: OneDimensionalAttractorUnion) && (n == 1)
+        return Γ
+    else
+        return Attractor(
+                [embed(s, n) for s in Γ.ifs], # new IFS
+                diam = Γ.diam, # diameter scaled down
+                d = Γ.d, # dimension unchanged
+                connectedness = Γ.connectedness, # connectedness is unchanged
+                symmetries = [embed(s, n) for s in Γ.symmetries], # symmetries
+                )
+    end
 end
 
 # the types on the left and right aren't the same here!
@@ -97,7 +101,8 @@ embed(μ::InvariantMeasure, n::Integer) = InvariantMeasure(embed(μ.supp,n), μ.
 embed(μ::HausdorffMeasure, n::Integer) = HausdorffMeasure(embed(μ.supp,n), μ.suppmeasure, μ.weights)
 
 
-function embed_into_same_dimension(μple::Tuple{Vararg{AbstractInvariantMeasure}})
+function embed_into_same_dimension(
+    μple::Union{Tuple{Vararg{AbstractInvariantMeasure}}, Tuple{Vararg{AbstractAttractor}}})
     amb_dims = get_ambient_dimension.(μple)
     if fill(amb_dims[1]) == amb_dims
         return μple

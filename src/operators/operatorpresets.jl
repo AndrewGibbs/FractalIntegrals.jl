@@ -83,7 +83,7 @@ function singlelayer_operator_laplace(μple::Tuple{Vararg{AbstractInvariantMeasu
                                                 varargs...)
                                                 for μ₂ in μple, μ₁ in μple
         ]
-    return BlockOperator(μple, op_block, true)
+    return BlockOperator(∪(μple...), op_block, true)
 end
 
 # Hausdorff defaults
@@ -199,7 +199,7 @@ function singlelayer_operator_helmholtz(μple::Tuple{Vararg{AbstractInvariantMea
         varargs...)
         for μ₂ in μple, μ₁ in μple
     ]
-    return BlockOperator(μple, op_block, true)
+    return BlockOperator(∪(μple...), op_block, true)
 end
 
 

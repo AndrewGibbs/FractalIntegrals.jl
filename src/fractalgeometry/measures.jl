@@ -1,7 +1,7 @@
 # ---------------------- Measures ---------------------------------------------------------#
 # abstract type AbstractInvariantMeasure{T<:Real, B, V<:AbstractVector{T}, A<:AbstractAttractor} end
-
-abstract type AbstractInvariantMeasure{N, M, T<:Real, A <:AbstractAttractor} end
+abstract type Measure end
+abstract type AbstractInvariantMeasure{N, M, T<:Real, A <:AbstractAttractor} <: Measure end
 
 """
     InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}}

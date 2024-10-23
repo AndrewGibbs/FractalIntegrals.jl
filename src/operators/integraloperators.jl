@@ -1,5 +1,5 @@
-abstract type IntegralOperator{Z<:Number} <: FractalOperator end#{M} end
-abstract type AbstractSingularIntegralOperator{M <: AbstractInvariantMeasure, Z} <: IntegralOperator{Z} end
+abstract type IntegralOperator{M<:Measure, Z<:Number} <: FractalOperator{M} end
+abstract type AbstractSingularIntegralOperator{M <: AbstractInvariantMeasure, Z} <: IntegralOperator{M, Z} end
 abstract type AbstractSeparableIntegralOperator{M, Z} <: AbstractSingularIntegralOperator{M, Z} end
 
 struct SeparableIntegralOperator{
@@ -22,7 +22,7 @@ struct SmoothIntegralOperator{
         Mcodom <: AbstractInvariantMeasure,
         F <: Function,
         Z <: Number
-        } <: IntegralOperator{Z}
+        } <: IntegralOperator{Mdom, Z}
     measure :: Mdom
     measure_codom :: Mcodom
     kernel :: F

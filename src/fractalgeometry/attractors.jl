@@ -1,6 +1,6 @@
 # ------------------ definitions of different attractor types -----------------------#
-
-abstract type AbstractAttractor{N, M, T} end
+abstract type Fractal end
+abstract type AbstractAttractor{N, M, T} <: Fractal end
 abstract type AbstractHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T} end
 
 """
