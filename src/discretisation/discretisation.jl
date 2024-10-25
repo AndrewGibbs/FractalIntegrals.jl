@@ -28,7 +28,7 @@ getdefault_meshwidth(sio::IntegralOperator) =
     sio.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
 
 # new style which allows us to try different quadrature rules
-function discretise(sio::AbstractSingularIntegralOperator;
+function discretise(sio::FractalOperator;
             h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
             h_quad::Real = 0.0, # quick option for Barycentre rule
             N_quad::Integer = 0,
@@ -43,6 +43,8 @@ function discretise(sio::AbstractSingularIntegralOperator;
         discretise_galerkin(sio, Vₕ; kwargs...)
     elseif method == :collocation
         discretise_collocation(sio, Vₕ, h_quad; kwargs...)
+    else
+        error("method not recognised")
     end
 end
 

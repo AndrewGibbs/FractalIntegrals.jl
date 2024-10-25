@@ -207,3 +207,6 @@ end
 @hausdorffdefault singlelayer_operator_helmholtz
 singlelayer_operator_helmholtz(Γ_tuple::Tuple{Vararg{AbstractAttractor}}, k::Number; varargs...) =
     singlelayer_operator_helmholtz(HausdorffMeasure.(Γ_tuple), k; varargs...)
+
+# create alias for SLO
+newton_operator_helmholtz = singlelayer_operator_helmholtz

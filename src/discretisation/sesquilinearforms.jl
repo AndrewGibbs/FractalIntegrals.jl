@@ -16,9 +16,9 @@ function dot(ϕ::AbstractP0BasisElement, ψ::AbstractP0BasisElement)
             overlap_measure = zero(ϕ.measure.suppmeasure)
         end
     else # if depths are different, one fractal may be subset of the other
-        least_deep_basfn = [ϕ, ψ][argmin(ϕ_leng, ψ_leng)]
-        most_deep_basfn = [ϕ, ψ][argmax(ϕ_leng, ψ_leng)]
-        if most_deep_basfn.vindex[1:length(least_deep_basfn)] == least_deep_basfn
+        least_deep_basfn = [ϕ, ψ][argmin([ϕ_leng, ψ_leng])]
+        most_deep_basfn = [ϕ, ψ][argmax([ϕ_leng, ψ_leng])]
+        if most_deep_basfn.vindex[1:length(least_deep_basfn.vindex)] == least_deep_basfn
             overlap_measure = least_deep_basfn.measure.suppmeasure
         else
             overlap_measure = zero(ϕ.measure.suppmeasure)

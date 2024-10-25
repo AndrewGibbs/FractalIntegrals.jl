@@ -27,7 +27,7 @@ get_collocation_points(Vₕ::FractalBasis) =
 
 # this is basically a graded quadrature routine. Should be generalised and kept elsewhere.
 function compute_col_entry(op::IntegralOperator, ϕ::FractalBasisElement, x::ColPt, h_quad::Real)
-    𝓖ₕ, condish_satisfied = grade_mesh_towards_point(ϕ.measure.supp, x.node, h=h_quad, min_mesh_width_permitted = 1e-6)
+    𝓖ₕ, condish_satisfied = grade_mesh_towards_point(ϕ.measure.supp, x.node, h=h_quad, min_mesh_width_permitted = 1e-2)
     graded_mesh = [ϕ.measure[𝐤] for 𝐤 in 𝓖ₕ]
     Φₓ(y) = op.kernel(x.node, y)
 
@@ -36,7 +36,8 @@ function compute_col_entry(op::IntegralOperator, ϕ::FractalBasisElement, x::Col
     inner_quad_weights = [γ.suppmeasure for γ in graded_mesh][condish_satisfied]
     
     # now apply quadrature rule to kernel and return value
-    return conj(inner_quad_weights)' ⋅ Φₓ.(inner_quad_nodes)
+    # return conj(inner_quad_weights)' ⋅ Φₓ.(inner_quad_nodes)
+    return conj(inner_quad_weights)' ⋅ op.kernel(x.node, inner_quad_nodes)
 
 end
 
