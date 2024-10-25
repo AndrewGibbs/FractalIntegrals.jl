@@ -15,7 +15,7 @@ end
 # µ─        ~Aya, 29/5/2024
 
 function (pot::Potential)(x)
-    # val = zero(eltype(x))
+    val = zero(eltype(x))
     # @inbounds @simd for n in 1:length(pot.density.basis)
     #     @fastmath val += (pot.density.coeffs[n] * (
     #             transpose(pot.quadrules[n].weights) *
@@ -27,12 +27,20 @@ function (pot::Potential)(x)
     #             (pot.kernel(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
     #             ))
     # end
+    for n in 1:length(pot.density.basis)
+        val += (pot.density.coeffs[n] * (
+                transpose(pot.density.basis[n].quadrule.weights) *
+                (pot.kernel(x, pot.density.basis[n].quadrule.nodes) .*
+                    pot.density.basis[n].(pot.density.basis[n].quadrule.weights))
+                ))
+    end
 
     # define the single-variable version of the kernel
     # embed(y) = (length(x) == get_ambient_dimension(pot.density.basis.measure)) ? y : [y..., 0]
-    Φₓ(y) = pot.kernel(x, y)
-    # now take dot product of coeffs and inner products
-    return [ϕₕ(Φₓ) for ϕₕ in pot.density.basis] ⋅ pot.density.coeffs
+    # Φₓ(y) = pot.kernel(x, y)
+    # # now take dot product of coeffs and inner products
+    # return conj.([ϕₕ(Φₓ) for ϕₕ in pot.density.basis]) ⋅ pot.density.coeffs
+    return val
 end
 
 # function parapot(pot::Potential, x::AbstractArray{T}) where T<:Number

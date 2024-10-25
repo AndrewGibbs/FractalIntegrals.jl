@@ -105,7 +105,7 @@ end
 
             # construct ffps and evaluate to fill matrix
             for n in eachindex(recipangles)
-                ffp = FractalIntegrals.farfield_pattern(ϕ[n], k, h_quad = 0.01)
+                ffp = FractalIntegrals.farfield_pattern(ϕ[n], k)
                 recip_matrix[n, :] .= ffp.(recipangles)
             end
             @testset "$Γname, wavenumber $k" begin

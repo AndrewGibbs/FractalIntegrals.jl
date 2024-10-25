@@ -37,10 +37,13 @@ function subdivide_indices( Γ::AbstractAttractor{N, M, T},
     return Lₕ
 end
 
+# more efficient way to write the below function is to store radii,
+# rather than compute the diameter
 function grade_mesh( Γ::AbstractAttractor{N, M, T},
                         subdivide_if_true_fn::Function;
                         max_num_indices = 1e6,
-                        min_mesh_width_permitted = 1e-16
+                        min_mesh_width_permitted = 1e-16,
+                        h::Real = Real(Inf),
                         ) where {N, M, T}
 
     Lₕ = [zero(VectorIndex{M, Int64})]
@@ -53,7 +56,7 @@ function grade_mesh( Γ::AbstractAttractor{N, M, T},
         min_mesh_width > min_mesh_width_permitted
         keep_subdividing = false
             for (j, Γₘ) in enumerate(mesh)
-                if subdivide_if_true_fn(Γₘ)
+                if subdivide_if_true_fn(Γₘ) || diam(Γₘ) > h
                     # add new index vectors and mesh elements
                     append!(Lₕ, split(Lₕ[j]))
                     new_mesh_els = split(mesh[j])

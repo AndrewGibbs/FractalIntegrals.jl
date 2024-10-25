@@ -1,3 +1,12 @@
+struct DiscreteGalerkinOperator{
+    K <: FractalOperator,
+    B <: FractalBasis,
+    M <: AbstractMatrix
+    } <: DiscreteFractalOperator
+    op :: K
+    basis :: B
+    stiffness_matrix :: M
+end
 
 function count_common_entries(m::AbstractVector{<:Integer}, n::AbstractVector{<:Integer})
     count = 0
@@ -66,7 +75,7 @@ get_galerkin_matrix(S::SumOperator, Vₕ::FractalBasis) =
     get_galerkin_matrix(S.operator1, Vₕ) + get_galerkin_matrix(S.operator2, Vₕ)
 
 # generic discretisation function
-discretise(K::FractalOperator, Vₕ::FractalBasis; varargs...) =
+discretise_galerkin(K::FractalOperator, Vₕ::FractalBasis; varargs...) =
     DiscreteGalerkinOperator(K, Vₕ, get_galerkin_matrix(K, Vₕ; varargs...))
 
 get_galerkin_matrix(op::SmoothIntegralOperator, dom_basis, codom_basis) =
@@ -97,4 +106,11 @@ function get_galerkin_matrix(K::BlockOperator, Vₕ::Tuple{Vararg{FractalBasis}}
         col_loc_start_index = col_inds[end] + 1
     end
     return full_matrix
+end
+
+function Base.:\(op::DiscreteGalerkinOperator, f::Function)
+    fₕ = project(   op.basis, # basis
+                    f)
+    coeffs = op.stiffness_matrix \ fₕ.coeffs
+    return Projection(op.basis, coeffs)
 end

@@ -18,7 +18,7 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
 
     if ambient_dimension == 2     
         K = SeparableIntegralOperator(μ, #fractal domain
-        (x, y) -> energykernel(0, x, y), # Hankel function
+        (x, y) -> -energykernel(0, x, y)/(2π), # log function
         (x, y) -> zero_kernel(x, y), # kernel minus singularity
         zero(R), # strength of singularity, corresponding to log singularity
         R(-1/(2π)), # scaling of singularity
@@ -27,7 +27,7 @@ function singlelayer_operator_laplace(μ::AbstractInvariantMeasure{
     elseif ambient_dimension == 3
         #3D Helmholtz case        
             K = SeparableIntegralOperator(μ, #fractal domain
-            (x, y) -> energykernel(1, x, y), # Green's function
+            (x, y) -> energykernel(1, x, y)/(4π), # Green's function
             (x, y) -> zero_kernel(x, y), # kernel minus singularity
             one(R), # strength of singularity, corresponding to 1/|x-y|
             R(1/(4π)), # scaling of singularity
@@ -46,7 +46,7 @@ function dom2codom_singlelayer_operator_laplace(μ₁::M1,
     if μ₁ == μ₂
         singlelayer_operator_laplace(μ₁; varargs...)
     elseif ambient_dimension == 2     
-        Φ = (x, y) -> energykernel(0, x, y)
+        Φ = (x, y) -> -energykernel(0, x, y)/(2π)
         K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
                             μ₁,
                             μ₂, #domain -> codomain
@@ -55,7 +55,7 @@ function dom2codom_singlelayer_operator_laplace(μ₁::M1,
                         )
     elseif ambient_dimension == 3
         #3D Helmholtz case  
-        Φ = (x, y) -> energykernel(1, x, y)
+        Φ = (x, y) -> energykernel(1, x, y)/(4π)
         K = SmoothIntegralOperator{M1, M2, typeof(Φ), T}(
                             μ₁,
                             μ₂, #domain -> codomain

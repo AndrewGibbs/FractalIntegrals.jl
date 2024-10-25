@@ -77,3 +77,8 @@ function mapquadrule(μ₁::AbstractInvariantMeasure,
 
     return X, Y, prod(μ₁.weights[m]).*prod(μ₂.weights[m_]).*W
 end
+
+function convert_quad_to_tuple(Q::QuadStruct)
+    (; nodes, weights) = Q
+    return (nodes, weights)
+end

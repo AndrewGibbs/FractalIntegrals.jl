@@ -38,6 +38,9 @@ function vecdist( x::AbstractVector{T},
     return abs.(r)
 end
 
+# for completeness
+vecdist(x::Real, y::Real) = abs(x-y)
+
 # likely won't use the following function, but it will be emulated inside quadrature routine
 radkernel(  x::AbstractVector,
                 y::AbstractVector,
