@@ -40,6 +40,8 @@ end
 
 # for completeness
 vecdist(x::Real, y::Real) = abs(x-y)
+vecdist(x::Real, y::AbstractVector{<:Real}) = abs.(x .-y)
+vecdist(x::AbstractVector{<:Real}, y::Real) = vecdist(y, x)
 
 # likely won't use the following function, but it will be emulated inside quadrature routine
 radkernel(  x::AbstractVector,

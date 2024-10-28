@@ -143,3 +143,31 @@ end
         end
     end
 end
+
+@testset "Collocation for Laplace Dirichlet BIE on screen in ℝ²" begin
+    include("laplace_R2screen_col.jl")
+    # construct [0,1]×{0} screen, as IFS attractor
+    Γ = getfractal("cantor set", ρ=1/2)
+    S = FractalIntegrals.singlelayer_operator_laplace(Γ)
+
+    for ℓ in 1:4
+        h_mesh = 1/2^ℓ
+        h_mesh_os = h_mesh/2
+        h_quad = h_mesh/2
+        disc_op_col = discretise(S,
+                                h_mesh = h_mesh,
+                                h_quad = h_quad,
+                                h_col = h_mesh_os;
+                                method = :collocation)
+
+        col_matrix_exact = get_exact_laplace_screen_col_matrix(
+                            disc_op_col.basis,
+                            disc_op_col.collocation_points)
+
+        mat_err = norm(col_matrix_exact-disc_op_col.collocation_matrix)/norm(col_matrix_exact)
+        thresh = max(5e2 * h_mesh * h_quad^2, 0.1)
+        @testset "ℓ=$ℓ" begin
+            @test mat_err < thresh
+        end
+    end
+end

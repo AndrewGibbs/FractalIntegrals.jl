@@ -26,25 +26,35 @@ get_collocation_points(Vₕ::FractalBasis) =
 
 
 # this is basically a graded quadrature routine. Should be generalised and kept elsewhere.
-function compute_col_entry(op::IntegralOperator, ϕ::FractalBasisElement, x::ColPt, h_quad::Real)
-    𝓖ₕ, condish_satisfied = grade_mesh_towards_point(ϕ.measure.supp, x.node, h=h_quad, min_mesh_width_permitted = 1e-2)
-    graded_mesh = [ϕ.measure[𝐤] for 𝐤 in 𝓖ₕ]
-    Φₓ(y) = op.kernel(x.node, y)
+function compute_col_entry(op::IntegralOperator, ϕ::FractalBasisElement, x::ColPt, h_quad::Real;
+                            min_mesh_width_permitted = 1e-2)
+    𝓖ₕ, condish_satisfied = grade_mesh_towards_point(ϕ.measure.supp,
+                                                    x.node,
+                                                    h=h_quad,
+                                                    min_mesh_width_permitted = min_mesh_width_permitted)
 
-    # get nodes (barycentres) and weights (measures) of elements.
-    inner_quad_nodes = [get_barycentre(γ) for γ in graded_mesh][condish_satisfied]
-    inner_quad_weights = [γ.suppmeasure for γ in graded_mesh][condish_satisfied]
-    
-    # now apply quadrature rule to kernel and return value
-    # return conj(inner_quad_weights)' ⋅ Φₓ.(inner_quad_nodes)
-    return conj(inner_quad_weights)' ⋅ op.kernel(x.node, inner_quad_nodes)
+    if dist⁻(ϕ.measure.supp, x.node) < 0 # node is close to support of basis element
+        graded_mesh = [ϕ.measure[𝐤] for 𝐤 in 𝓖ₕ]
+        Φₓ(y) = op.kernel(x.node, y)
+
+        # get nodes (barycentres) and weights (measures) of elements.
+        inner_quad_nodes = [get_barycentre(γ) for γ in graded_mesh][condish_satisfied]
+        inner_quad_weights = [γ.suppmeasure for γ in graded_mesh][condish_satisfied]
+        
+        # now apply quadrature rule to kernel and return value
+        # return conj(inner_quad_weights)' ⋅ Φₓ.(inner_quad_nodes)
+        return conj(inner_quad_weights)' ⋅ (op.kernel(x.node, inner_quad_nodes) .* ϕ(inner_quad_nodes))
+    else
+        return conj(ϕ.quadrule.weights)' ⋅ (op.kernel(x.node, ϕ.quadrule.nodes) .* ϕ(ϕ.quadrule.nodes))
+    end
 
 end
 
 function get_collocation_matrix(op::FractalOperator,
                                 basis::FractalBasis,
                                 h_col::Real,
-                                h_quad::Real)
+                                h_quad::Real;
+                                varargs...)
 
     num_basis_els = length(basis)
     h_col < Inf ? oversample = true : oversample = false
@@ -60,9 +70,9 @@ function get_collocation_matrix(op::FractalOperator,
 
     col_matrix = Matrix{ComplexF64}(undef, num_col_pts, num_basis_els)
 
-    for m in 1:num_col_pts
-        for n in 1:num_basis_els
-            col_matrix[m,n] = compute_col_entry(op, basis[n], col_pts[m], h_quad)
+    @sync for m in 1:num_col_pts
+        @spawn for n in 1:num_basis_els
+            @inbounds col_matrix[m, n] = compute_col_entry(op, basis[n], col_pts[m], h_quad; varargs...)
         end
     end
 
@@ -71,8 +81,10 @@ end
 
 # generic discretisation function
 function discretise_collocation(K::FractalOperator, Vₕ::FractalBasis, h_quad;
-                                h_col=Inf)
-    return DiscreteCollocationOperator(K, Vₕ, get_collocation_matrix(K, Vₕ, h_col, h_quad)...)
+                                h_col=Inf, kwargs...)
+    return DiscreteCollocationOperator( K,
+                                        Vₕ,
+                                        get_collocation_matrix(K, Vₕ, h_col, h_quad; kwargs...)...)
 end
 
 # truncated SVD algorithm
