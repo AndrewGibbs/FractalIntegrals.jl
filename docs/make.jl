@@ -11,8 +11,9 @@ makedocs(
          checkdocs=:none,
          pages=[
                 "Home" => "index.md",
-                "Fractals" => "makeIFS.md",
+                "Fractals" => "geometry.md",
                 "Integrals" => "integrals.md",
+                "Integral Equations" => "integralequations.md",
                 "References" => "refs.md"
                ],
         format = Documenter.HTML(

@@ -1,3 +1,4 @@
 # FractalIntegrals [![Build Status](https://github.com/AndrewGibbs/FractalIntegrals.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/AndrewGibbs/FractalIntegrals.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://andrewgibbs.github.io/FractalIntegrals/dev/)
 
 The rewrite of [IFSintegrals](https://github.com/AndrewGibbs/IFSintegrals).

@@ -6,12 +6,14 @@ Plots.reset_defaults()
 
 # Integrals on fractals
 
-In [the previous section](makeIFS.md) we saw how to define a fractal measure $\mu$ supported on some fractal attractor $\Gamma$. Equipped with this measure, we can define the integral
+In [the previous section](geometry.md) we saw how to define a fractal measure $\mu$ supported on some fractal attractor $\Gamma$. Equipped with this measure, we can define the integral
 
-```math
+```math #label
 I_\mu[f] := \int_\Gamma~ f(x)~ \mathrm{d}\mu(x),
 ```
 for some function $f$.
+
+eq [#yourmathlabel]
 
 ## Quadrature rules
 
@@ -24,8 +26,9 @@ for non-fractal domains and measures which are sufficiently simple, a range of q
 
 In recent decades, quadrature rules have been developed for fractal measures $\mu$. These have been implemented in `FractalIntegrals`.
 
->[!NOTE]
->Contrary to classical quadrature rules, the nodes typically lie outside of $\Gamma$. Therefore, it is necessary to assume that $f$ is supported on $\mathrm{Hull}(\Gamma)$.
+!!!note
+
+    Contrary to classical quadrature rules, the nodes typically lie outside of $\Gamma$. Therefore, it is necessary to assume that $f$ is supported on $\mathrm{Hull}(\Gamma)$.
 
 ### Gauss Quadrature
 On standard domains, Gaussian qudarature rules are the most widely used for smooth $f$. The classical process, which involves constructing orthogaonl polynomials and a Jacobi matrix, was generalised in [Ma:96](@cite) to fractal measures $\mu$ where 

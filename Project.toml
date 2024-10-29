@@ -4,6 +4,7 @@ authors = ["Andrew Gibbs"]
 version = "0.0.1-DEV"
 
 [deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 ChunkSplitters = "ae650224-84b6-46f8-82ea-d812ca08434e"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

@@ -33,6 +33,16 @@ An iterated function system (IFS) is a set of $M$ similarities ``\{s_m\}_{m=1}^M
 Attractor
 ```
 
+```
+Fractal
+├── AbstractAttractor
+│   ├── Attractor
+    ├── OneDimensionalAttractor
+├── AbstractHomogenousAttractor
+    ├── HomogenousAttractor
+│   ├── OneDimensionalHomogenousAttractor
+```
+
 In general, an IFS attractor has a non-integer [Hausdorff dimension](https://en.wikipedia.org/wiki/Hausdorff_dimension). The Hausdorff dimension $d$ satisfies
 ```math
 \sum_{m=1}^M\rho_m^d = 1.
@@ -103,6 +113,14 @@ The *Hausdorff Measure* $\mathcal{H}^d$ is a special case of an *Invariant Measu
 HausdorffMeasure
 ```
 
+!!! note
+
+    Precise values of the Hausdorff measure of many well-known fractals remains an open problem. Many Cantor-like sets with $d\leq1$ are known to have a Hausdorff measure of one. However, if $\Gamma$ is the Sierpinski triangle, the best estimate is (to four digits) [HuWe:04](@cite)
+    ```math
+    0.5631 \leq \mathcal{H}^d(\Gamma) \leq 0.8179.
+    ```
+    Therefore, our definition of the Hausdorff measure is slightly generalised to $\mu = C\mathcal{H}^d$ for some constant $C$. If the field `suppmeasure` is not provided when defining the measure, this defaults to one, equivalent $\mu$ is scaled so that $\mu(\Gamma) = 1$. As will be discussed in [the next section](integralequations.md), for many applications, this choice is insignificant.
+
 The Hausdorff measure is the most natural measure for any fractal, and is used by default throughout `FractalIntegrals`. Recall that from an above example, $\Gamma$ represents the Sierpinski triangle.
 
 ```@example tutorial
@@ -110,6 +128,17 @@ The Hausdorff measure is the most natural measure for any fractal, and is used b
 𝓗ᵈ = InvariantMeasure(Γ)
 print(typeof(𝓗ᵈ))
 ```
+
+### Sub-measures
+
+A *sub-measure* is analogous to the definition of [sub-attractor](#sub-components), and can be easily constructed using vector indices.
+
+For some measure $\mu:\Gamma\to [0,\infty)$, it is the restriction $\mu_{\mathbf{m}}:=\mu|_{\Gamma_{\mathbf{m}}}$. It is mentioned in the above section that the field `suppmeasure` is difficult to estimate, but here it is computed automatically from $\mu$, via the identity
+
+```math
+\mu_\mathbf{m}(\Gamma_{\mathbf{m}}) = \mu(s_{\mathbf{m}}(\Gamma)).
+```
+
 ### Plotting measures
 When `plot` is used on an `InvariantMeasure`, colouring is used to represent the distribution of mass.
 
@@ -119,4 +148,12 @@ When `plot` is used on an `InvariantMeasure`, colouring is used to represent the
 𝐩 = 𝐩/sum(𝐩)
 μ = InvariantMeasure(Γ, 𝐩)
 plot(μ, markersize = 1)
+```
+
+```
+Measure
+├── AbstractInvariantMeasure
+│   ├── InvariantMeasure
+│   ├── HausdorffMeasure
+├── MeasureUnion
 ```
