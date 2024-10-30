@@ -1,7 +1,7 @@
 name = "FractalIntegrals"
 uuid = "1214b007-556e-4c4e-8d39-042f176f8b35"
 authors = ["Andrew Gibbs"]
-version = "0.0.1-DEV"
+version = "0.0.1"
 
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
