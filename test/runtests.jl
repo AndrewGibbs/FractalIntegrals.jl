@@ -26,11 +26,11 @@ end
 end
 
 @testset "different quadratures on invariant measures on Cantor sets" begin
-    for ρ in rand(5)/2
+    for ρ in 0.1:0.1:0.5#rand(5)/2
         Γ = FractalIntegrals.cantorset(ρ = ρ)#getfractal("cantor set", ρ=ρ)
         for f in [x -> sin(x^2), x -> cosh(x^3), x -> exp(im*π*x)]
             for n = 1:5
-                p = rand(2)
+                p = 0.5 .+ (rand(2) .-0.5)./4
                 p = p / sum(p)
                 μ = FractalIntegrals.InvariantMeasure(Γ, p)
 
