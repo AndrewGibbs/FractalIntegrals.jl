@@ -43,4 +43,21 @@ As mentioned in [](geometry.md#measures), for many attractors $\Gamma$, we do no
 
 In the case of first kind integral equations, the solution to the *related* problem $\tilde v=v\cdot \mathcal{H}^d(\Gamma)$. If the *related* potential operator $\tilde{\mathcal{V}}$ is defined analogously with respect to $\tilde\mu$, then $\mathcal{V}v = \tilde{\mathcal{V}} \tilde v$; in other words, the solution of the underlying PDE is unaffected by our scaling of the measure, thus **we do not need to know** $\mathcal{H}^d(\Gamma)$.
 
-In the case of second kind integral equations, we are not so fortunate: $\tilde v \neq v\cdot \mathcal{H}^d(\Gamma)$. Therefore, when posing a second-kind integral equation, for meaningful results, it is essential that the `suppmeasure` parameter, mathematically defined as $\mu(\Gamma)$, is known and included in the definition of the measure.
+In the case of second kind integral equations, we are not so fortunate: $\tilde v \neq v\cdot \mathcal{H}^d(\Gamma)$. Therefore, when posing a second-kind integral equation, for meaningful results, it is essential that the `suppmeasure` parameter, mathematically defined as $\mu(\Gamma)$, is known and included in the definition of the measure. We note that for the case when $\Gamma$ is open in $\mathbb{R}^N$ with a fractal boundary, for example the Koch Snowflake, the $N$-dimensional Lebesgue measure is usually known.
+
+## Fractal Operators
+
+The type hierarchy for `FractalOpeartor` is as follows:
+```
+FractalOpeartor
+├── IntegralOperator
+    ├── AbstractSingularIntegralOperator
+        ├── SingularIntegralOperator
+        ├── SeparableIntegralOperator
+    ├── SmoothIntegralOperator
+├── IdentityOperator
+├── ScaledOperator
+├── SumOperator
+├── BlockOperatorx
+
+```

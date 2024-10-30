@@ -29,6 +29,16 @@ struct SmoothIntegralOperator{
     symmetric :: Bool  
 end
 
+struct SingularIntegralOperator{
+            M <: AbstractInvariantMeasure,
+            F <: Function,
+            Z <: Number
+        } <: AbstractSingularIntegralOperator{M, Z}
+    measure :: M
+    kernel :: F
+    symmetric :: Bool  
+end
+
 # ultimately, should bin off the below type, its too messy
 struct OscillatorySeparableIntegralOperator{
         M <: AbstractInvariantMeasure,

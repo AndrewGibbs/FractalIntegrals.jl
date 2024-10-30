@@ -66,7 +66,7 @@ function construct_quasiuniform_p0basis(μ::AbstractInvariantMeasure,
     return QuasiUniformBasis(μ,
                             [PreQuadP0BasisElement(
                                 μ[𝐦], # sub-measure
-                                1.0, # normalisation
+                                1.0/sqrt(μ[𝐦].suppmeasure), # normalisation
                                 n, # scalar index
                                 𝐦, # vector index
                                 QuadStruct(mapquadrule(μ, 𝐦, quadrule.nodes, quadrule.weights)...)
