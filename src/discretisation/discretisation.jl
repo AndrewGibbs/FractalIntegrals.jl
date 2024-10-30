@@ -54,7 +54,7 @@ struct Projection{B<:FractalBasis, V<:AbstractVector}
     coeffs::V
 end
 
-# project(Vₕ::FractalBasis, f::Function) = Projection(Vₕ, [ϕₕ(f) for ϕₕ ∈ Vₕ])
+project(Vₕ::FractalBasis, f::Function) = Projection(Vₕ, [ϕₕ(f) for ϕₕ ∈ Vₕ])
 
 # (p::Projection)(x) = sum(p.basis[n](x)*p.coeffs[n] for n=1:length(p.basis))
 
