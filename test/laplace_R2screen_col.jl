@@ -30,7 +30,7 @@ function get_exact_laplace_screen_col_matrix(basis, collocation_points)
             # get integration interval [a, b]
             a = get_barycentre(ϕ.measure) - diam(ϕ.measure)/2
             b = get_barycentre(ϕ.measure) + diam(ϕ.measure)/2
-            col_mat_exact[m,n] = laplace_collocation_integral(a,b,x.node)
+            col_mat_exact[m,n] = laplace_collocation_integral(a,b,x.node) * ϕ.normalisation
         end
     end
     return col_mat_exact

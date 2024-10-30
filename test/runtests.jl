@@ -154,7 +154,7 @@ end
         h_mesh = 1/2^ℓ
         h_mesh_os = h_mesh/2
         h_quad = h_mesh/2
-        disc_op_col = discretise(S,
+        disc_op_col = FractalIntegrals.discretise(S,
                                 h_mesh = h_mesh,
                                 h_quad = h_quad,
                                 h_col = h_mesh_os;
