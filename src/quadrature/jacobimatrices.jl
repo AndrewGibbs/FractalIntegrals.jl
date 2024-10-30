@@ -105,7 +105,7 @@ function get_next_modified_coeffs_from_coeffs(  Γⁿ⁻¹::AbstractVector{T},
      
      rₙ² = (μ.weights'*(B+C)) / (1-(μ.weights'*D_nominator))
      
-     return sqrt(rₙ²)
+     return sqrt(max(rₙ²,zero(T)))
  end
 
  function get_Aₙ(coeffs_this_level::Vector{Vector{T}},
