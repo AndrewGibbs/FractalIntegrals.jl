@@ -158,7 +158,8 @@ end
                                 h_mesh = h_mesh,
                                 h_quad = h_quad,
                                 h_col = h_mesh_os;
-                                method = :collocation)
+                                method = :collocation,
+                                min_mesh_width_permitted=1e-6)
 
         col_matrix_exact = get_exact_laplace_screen_col_matrix(
                             disc_op_col.basis,
