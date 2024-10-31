@@ -33,7 +33,7 @@ function compute_col_entry(op::IntegralOperator, ϕ::FractalBasisElement, x::Col
                                                     h=h_quad,
                                                     min_mesh_width_permitted = min_mesh_width_permitted)
 
-    if dist⁻(ϕ.measure.supp, x.node) < 0 # node is close to support of basis element
+    if dist⁻(ϕ.measure.supp, x.node) <= 0 # node is close to support of basis element
         graded_mesh = [ϕ.measure[𝐤] for 𝐤 in 𝓖ₕ]
         Φₓ(y) = op.kernel(x.node, y)
 

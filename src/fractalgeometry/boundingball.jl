@@ -46,4 +46,4 @@ dist⁻(Γ::AbstractAttractor, x) = max(norm(x - get_boundingball_centre(Γ)) - 
 
 # -------------------- distance from one attractor to another ------------------ #
 dist⁺(Γ::AbstractAttractor, γ::AbstractAttractor) = norm(get_boundingball_centre(γ) - get_boundingball_centre(Γ))
-dist⁻(Γ::AbstractAttractor, γ::AbstractAttractor) = dist⁺(Γ, γ) - diam(Γ)/2 - diam(γ)/2
+dist⁻(Γ::AbstractAttractor, γ::AbstractAttractor) = max(dist⁺(Γ, γ) - diam(Γ)/2 - diam(γ)/2, 0.0)
