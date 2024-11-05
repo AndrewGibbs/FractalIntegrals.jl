@@ -13,7 +13,7 @@ function ∪(poly1::Polygon, poly2::Polygon, pres = 8)
     @assert result "Clipper unification failed"
     @assert length(polys) == 1 "Clipper union has returned two disjoint polygons"
     # poly_float = tofloat.(polys[1], mag, pres)
-    return Polygon(SVector{2}([tofloat(node, mag, pres)...]) for node in polys[1])
+    return Polygon([SVector{2}([tofloat(node, mag, pres)...]) for node in polys[1]])
 end
 
 # could generalise below fn to hull of fixed points for homogenous attractors
@@ -23,13 +23,16 @@ function get_bounding_square(Γ::AbstractAttractor,
                             )
     centre = get_boundingball_centre(Γ)
     hsl = diam(Γ) # half side length
-    return Polygon([centre .+ r*[-hsl[1], -hsl[2]],
-                    centre .+ r*[-hsl[1], hsl[2]],
-                    centre .+ r*[hsl[1], hsl[2]],
-                    centre .+ r*[hsl[1], -hsl[2]]])
+    return Polygon(SVector{2}.([centre .+ r*[-hsl, -hsl],
+                            centre .+ r*[-hsl, hsl],
+                            centre .+ r*[hsl, hsl],
+                            centre .+ r*[hsl, -hsl]])
+                            )
 end
 
-function polygon_approx(Γ::AbstractAttractor,
+(s::Similarity)(p::Polygon) = Polygon(s.(p.nodes))
+
+function polygon_approx(Γ::AbstractAttractor;
                         levels = 2 #prefractal levels required
                         )
     union_poly = get_bounding_square(Γ)
@@ -43,7 +46,7 @@ function polygon_approx(Γ::AbstractAttractor,
         union_poly = mapped_polys[1]
 
         # unify with all other mapped polygons
-        for poly in union_poly[2:end]
+        for poly in mapped_polys[2:end]
             union_poly = union_poly ∪ poly # take union of union with next polygon
         end
     end
@@ -51,4 +54,4 @@ function polygon_approx(Γ::AbstractAttractor,
     return union_poly
 end
 
-Shape(p::Polygon) = Shape([x[1] for x in p.nodes], [x[2] for x in p.nodes])
+Plots.Shape(p::Polygon) = Shape([x[1] for x in p.nodes], [x[2] for x in p.nodes])
