@@ -34,6 +34,13 @@ struct HausdorffMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
     weights::SVector{M, T}
 end
 
+struct LebesgueMeasure{N, M, T, A <: OpenAttractorUnion{N, M, T}
+                        } <: AbstractInvariantMeasure{N, M, T, A}
+    supp::A
+    suppmeasure::T
+    weights::SVector{M, T}
+end
+
 # ------------ finding the barycentre (could be moved to barycentre rule?) ------------
 function get_barycentre(sims::AbstractVector{<:AbstractSimilarity},
                         weights::AbstractVector{<:Real})
@@ -72,6 +79,17 @@ HausdorffMeasure(Γ::AbstractAttractor{N, M, T}; suppmeasure = one(T)
                         T(suppmeasure),#get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
                         SVector{M}(T.(get_hausdorff_weights(Γ)))
                     )
+
+                    
+# for now, the below function is identical to HausdorffMeasure above,
+# but I have hope that someday we can approximate the 'suppmeasure' parameter
+# rather than default to one.
+LebesgueMeasure(Γ::AbstractAttractor{N, M, T}; suppmeasure = one(T)
+            ) where {N, M, T} =
+    LebesgueMeasure(   Γ,
+                    T(suppmeasure),#get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
+                    SVector{M}(T.(get_hausdorff_weights(Γ)))
+                )
 
 # ------------------------ sub-measure ------------------------------------- #
     

@@ -57,6 +57,25 @@ struct Attractor{N, M, T} <: AbstractAttractor{N, M, T}
     symmetries::Vector{Similarity{N, T}}
 end
 
+struct OpenAttractor{N, M, T} <: AbstractAttractor{N, M, T}
+    ifs::SVector{M, Similarity{N, T}}
+    diam::T
+    d::Int64
+    connectedness::Matrix{Bool}
+    symmetries::Vector{Similarity{N, T}}
+
+    # Inner constructor to enforce d == N
+    function OpenAttractor(ifs::SVector{M, Similarity{N, T}}, diam::T,
+        d::T, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}
+        ) where {N, M, T}
+        if d != N
+            throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
+        else
+            new{N, M, T}(ifs, diam, d, connectedness, symmetries)
+        end
+    end
+end
+
 struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
     ifs::SVector{M, Similarity{N, T}}
     diam::T
@@ -64,6 +83,26 @@ struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
     connectedness::Matrix{Bool}
     symmetries::Vector{Similarity{N, T}}
     ρ::T
+end
+
+struct OpenHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T}
+    ifs::SVector{M, Similarity{N, T}}
+    diam::T
+    d::Int64
+    connectedness::Matrix{Bool}
+    symmetries::Vector{Similarity{N, T}}
+    ρ::T
+
+    # Inner constructor to enforce d == N
+    function OpenHomogenousAttractor{N, M, T}(ifs::SVector{M, Similarity{N, T}}, diam::T,
+        d::T, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}, ρ::T
+        ) where {N, M, T}
+        if d != N
+            throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
+        else
+            new{N, M, T}(ifs, diam, d, connectedness, symmetries)
+        end
+    end
 end
 
 struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
@@ -83,8 +122,17 @@ struct OneDimensionalHomogenousAttractor{M, T} <: AbstractHomogenousAttractor{1,
     ρ::T
 end
 
+# # useful to consider this union later on:
+# OneDimensionalAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
+
+# # open attractors also need a union
+# OpenAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
+
 # useful to consider this union later on:
-OneDimensionalAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
+OneDimensionalAttractorUnion{M, T} = Union{OneDimensionalAttractor{M, T}, OneDimensionalHomogenousAttractor{M, T}}
+
+# open attractors also need a union
+OpenAttractorUnion{N, M, T} = Union{OpenAttractor{N, M, T}, OpenHomogenousAttractor{N, M, T}}
 
 # define eltype for attractors - will be useful elsewhere
 # Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
@@ -208,6 +256,26 @@ function Attractor( ifs::AbstractVector{S};
                     
         else
             Γ  = OneDimensionalAttractor(
+                    sv_ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries
+                    )
+        end
+    elseif N == d
+        if ishomogeneous(ifs)
+            Γ  = HomogenousOpenAttractor(
+                    sv_ifs,
+                    diamT,
+                    dT,
+                    connectedness,
+                    symmetries,
+                    ifs[1].ρ
+                    )
+                    
+        else
+            Γ  = OpenAttractor(
                     sv_ifs,
                     diamT,
                     dT,
