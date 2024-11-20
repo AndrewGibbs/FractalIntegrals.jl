@@ -2,6 +2,7 @@
 # abstract type AbstractInvariantMeasure{T<:Real, B, V<:AbstractVector{T}, A<:AbstractAttractor} end
 abstract type Measure end
 abstract type AbstractInvariantMeasure{N, M, T<:Real, A <:AbstractAttractor} <: Measure end
+abstract type AbstractHausdorffMeasure{N, M, T, A} <: AbstractInvariantMeasure{N, M, T, A} end
 
 """
     InvariantMeasure{N, M, T, A <: AbstractAttractor{N, M, T}}
@@ -28,7 +29,14 @@ the contraction factors ρ_m and the probability weights p_m satisfy
 ρ_m^d=p_m, where d is the Hausdorff dimension of the attractor.
 """
 struct HausdorffMeasure{N, M, T, A <: AbstractAttractor{N, M, T}
-                        } <: AbstractInvariantMeasure{N, M, T, A}
+                        } <: AbstractHausdorffMeasure{N, M, T, A}
+    supp::A
+    suppmeasure::T
+    weights::SVector{M, T}
+end
+
+struct LebesgueMeasure{N, M, T, A <: OpenAttractorUnion{N, M, T}
+                        } <: AbstractHausdorffMeasure{N, M, T, A}
     supp::A
     suppmeasure::T
     weights::SVector{M, T}
@@ -73,6 +81,17 @@ HausdorffMeasure(Γ::AbstractAttractor{N, M, T}; suppmeasure = one(T)
                         SVector{M}(T.(get_hausdorff_weights(Γ)))
                     )
 
+                    
+# for now, the below function is identical to HausdorffMeasure above,
+# but I have hope that someday we can approximate the 'suppmeasure' parameter
+# rather than default to one.
+LebesgueMeasure(Γ::AbstractAttractor{N, M, T}; suppmeasure = one(T)
+            ) where {N, M, T} =
+    LebesgueMeasure(   Γ,
+                    T(suppmeasure),#get_barycentre(Γ.ifs, get_hausdorff_weights(Γ)),
+                    SVector{M}(T.(get_hausdorff_weights(Γ)))
+                )
+
 # ------------------------ sub-measure ------------------------------------- #
     
 function get_submeasure(μ::M, index::AbstractVector{<:Integer}) where M<:AbstractInvariantMeasure
@@ -105,7 +124,7 @@ Base.eltype(μ::AbstractInvariantMeasure) = eltype(μ.supp)
 
 # Some symmetries will be inhereted from attractor, when measure is Hausdorff:
 get_symmetries(::InvariantMeasure{N, <:Any, T, <:Any}) where {N, T} = trivialgroup(T, N)
-get_symmetries(μ::HausdorffMeasure) = μ.supp.symmetries
+get_symmetries(μ::AbstractHausdorffMeasure) = μ.supp.symmetries
 
 get_ambient_dimension(::Union{AbstractAttractor{N}, AbstractInvariantMeasure{N}}) where N = N
 
