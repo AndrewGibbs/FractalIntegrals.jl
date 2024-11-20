@@ -229,6 +229,9 @@ function dimH(ifs::AbstractVector{<:AbstractSimilarity})
     return d
 end
 
+# for completeness
+dimH(Γ::AbstractAttractor) = Γ.d
+
 # user-friendly constructor
 function Attractor( ifs::AbstractVector{S};
                     diam = diam(ifs),

@@ -2,9 +2,6 @@ struct Polygon{T}
     nodes::Vector{SVector{2, T}}
 end
 
-# define Similarity map applied to polygon
-(s::Similarty{N,M,T})(p::Polygon{T}) = Polygon(s.(p.nodes))
-
 function ∪(poly1::Polygon, poly2::Polygon, pres = 8)
     mag = 1 # need to adjust this later
     path1 = [IntPoint(node[1], node[2], mag, pres) for node in poly1.nodes]
@@ -22,7 +19,7 @@ end
 # could generalise below fn to hull of fixed points for homogenous attractors
 # also, this should be for a subtype of attractors only, open sets, or something
 function get_bounding_square(Γ::AbstractAttractor,
-                            r = 1 + 1e-4*rand() # random stretch
+                            r = 0.6 + 1e-1*rand() # random stretch
                             )
     centre = get_boundingball_centre(Γ)
     hsl = diam(Γ) # half side length
@@ -33,6 +30,7 @@ function get_bounding_square(Γ::AbstractAttractor,
                             )
 end
 
+# define Similarity map applied to polygon
 (s::Similarity)(p::Polygon) = Polygon(s.(p.nodes))
 
 function polygon_approx(Γ::AbstractAttractor;
