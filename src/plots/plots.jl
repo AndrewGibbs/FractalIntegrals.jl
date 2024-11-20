@@ -3,6 +3,7 @@ MIN_MARKER_SIZE = 0.1
 MAX_PLOT_PTS =  Integer(1e3)
 
 include("sketch.jl")
+include("openplots.jl")
 
 function plothelper(Γ::AbstractAttractor{N, <:Any, <:Any},
                     max_num_pts,

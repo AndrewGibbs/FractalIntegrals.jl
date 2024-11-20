@@ -2,6 +2,9 @@ struct Polygon{T}
     nodes::Vector{SVector{2, T}}
 end
 
+# define Similarity map applied to polygon
+(s::Similarty{N,M,T})(p::Polygon{T}) = Polygon(s.(p.nodes))
+
 function ∪(poly1::Polygon, poly2::Polygon, pres = 8)
     mag = 1 # need to adjust this later
     path1 = [IntPoint(node[1], node[2], mag, pres) for node in poly1.nodes]
@@ -53,5 +56,3 @@ function polygon_approx(Γ::AbstractAttractor;
 
     return union_poly
 end
-
-Plots.Shape(p::Polygon) = Shape([x[1] for x in p.nodes], [x[2] for x in p.nodes])
