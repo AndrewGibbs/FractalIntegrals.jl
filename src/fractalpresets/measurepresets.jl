@@ -4,8 +4,8 @@ function getmeasure(T::Type, fractalname::Union{Symbol, String};
     knownmeasures = Dict(:cantorset => T(1),
                         :kochsnowflake => T(2)*T(sqrt(3))/T(5),
                         :heighwaydragon => T(1/2))
-                        
-    Γ = getfractal(fractalname; kwargs)
+
+    Γ = getfractal(T, fractalname; kwargs...)
 
     if isa(Γ, OpenAttractorUnion)
         measuretype = "Lebesgue"
@@ -16,7 +16,7 @@ function getmeasure(T::Type, fractalname::Union{Symbol, String};
     # get default 
     if suppmeasure == Nothing
         if haskey(knownmeasures, fractalname)
-            suppmeasure = knownmeasures(fractalname)
+            suppmeasure = knownmeasures[fractalname]
         else
             fractalnamestring = String(fractalname)
             @warn "The $measuretype measure of $fractalnamestring is not known. 

@@ -65,15 +65,15 @@ struct OpenAttractor{N, M, T} <: AbstractAttractor{N, M, T}
     symmetries::Vector{Similarity{N, T}}
 
     # Inner constructor to enforce d == N
-    function OpenAttractor(ifs::SVector{M, Similarity{N, T}}, diam::T,
-        d::T, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}
-        ) where {N, M, T}
-        if d != N
-            throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
-        else
-            new{N, M, T}(ifs, diam, d, connectedness, symmetries)
-        end
-    end
+    # function OpenAttractor{N, M, T}(ifs::SVector{M, Similarity{N, T}}, diam::T,
+    #     d, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}
+    #     ) where {N, M, T}
+    #     if d != N || !isa(d, Integer)
+    #         throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
+    #     else
+    #         new{N, M, T}(ifs, diam, Int64(d), connectedness, symmetries)
+    #     end
+    # end
 end
 
 struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
@@ -85,7 +85,7 @@ struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
     ρ::T
 end
 
-struct OpenHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T}
+struct OpenHomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
     ifs::SVector{M, Similarity{N, T}}
     diam::T
     d::Int64
@@ -94,15 +94,15 @@ struct OpenHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T}
     ρ::T
 
     # Inner constructor to enforce d == N
-    function OpenHomogenousAttractor{N, M, T}(ifs::SVector{M, Similarity{N, T}}, diam::T,
-        d::T, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}, ρ::T
-        ) where {N, M, T}
-        if d != N
-            throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
-        else
-            new{N, M, T}(ifs, diam, d, connectedness, symmetries)
-        end
-    end
+    # function OpenHomogenousAttractor{N, M, T}(ifs::SVector{M, Similarity{N, T}}, diam::T,
+    #     d, connectedness::Matrix{Bool}, symmetries::Vector{Similarity{N, T}}, ρ::T
+    #     ) where {N, M, T}
+    #     if d != N || !isa(d, Integer)
+    #         throw(ArgumentError("The field `d` must be an integer equal to parameter `N` (d=$d, N=$N)"))
+    #     else
+    #         new{N, M, T}(ifs, diam, Int64(d), connectedness, symmetries, ρ)
+    #     end
+    # end
 end
 
 struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
@@ -263,12 +263,12 @@ function Attractor( ifs::AbstractVector{S};
                     symmetries
                     )
         end
-    elseif N == d
+    elseif N == d && isa(d, Integer)
         if ishomogeneous(ifs)
-            Γ  = HomogenousOpenAttractor(
+            Γ  = OpenHomogenousAttractor(
                     sv_ifs,
                     diamT,
-                    dT,
+                    d,
                     connectedness,
                     symmetries,
                     ifs[1].ρ
@@ -278,7 +278,7 @@ function Attractor( ifs::AbstractVector{S};
             Γ  = OpenAttractor(
                     sv_ifs,
                     diamT,
-                    dT,
+                    d,
                     connectedness,
                     symmetries
                     )

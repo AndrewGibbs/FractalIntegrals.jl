@@ -10,7 +10,7 @@ using Plots#, Documenter
 using Clipper
 
 export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
-        getfractal, FractaPresets
+        getfractal, getmeasure, FractaPresets
 
 include("fractalgeometry/fractalgeometry.jl")
 include("vectorindices/vectorindices.jl")
