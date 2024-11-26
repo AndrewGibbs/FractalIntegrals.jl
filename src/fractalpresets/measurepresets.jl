@@ -26,9 +26,9 @@ function getmeasure(T::Type, fractalname::Union{Symbol, String};
     end
 
     if measuretype == "Lebesgue"
-        return LebesgueMeasure(Γ)
+        return LebesgueMeasure(Γ, suppmeasure = suppmeasure)
     else
-        return HausdorffMeasure(Γ)
+        return HausdorffMeasure(Γ, suppmeasure = suppmeasure)
     end
 end
 
