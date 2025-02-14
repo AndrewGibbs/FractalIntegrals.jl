@@ -1,7 +1,7 @@
 # ------------------ definitions of different attractor types -----------------------#
 abstract type Fractal end
-abstract type AbstractAttractor{N, M, T} <: Fractal end
-abstract type AbstractHomogenousAttractor{N, M, T} <: AbstractAttractor{N, M, T} end
+abstract type AbstractAttractor{N,M,T} <: Fractal end
+abstract type AbstractHomogenousAttractor{N,M,T} <: AbstractAttractor{N,M,T} end
 
 """
     Attractor{N, M, T} <: AbstractAttractor{N, M, T}
@@ -49,20 +49,20 @@ sierpinski_triangle = Attractor(courage, wisdom, power, connectedness = Bool(one
 Note how the connectedness matrix for the Sierpinski triangle is all ones,
 because the subcomponents all touch at the corners.
 """
-struct Attractor{N, M, T} <: AbstractAttractor{N, M, T}
-    ifs::SVector{M, Similarity{N, T}}
+struct Attractor{N,M,T} <: AbstractAttractor{N,M,T}
+    ifs::SVector{M,Similarity{N,T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
-    symmetries::Vector{Similarity{N, T}}
+    symmetries::Vector{Similarity{N,T}}
 end
 
-struct OpenAttractor{N, M, T} <: AbstractAttractor{N, M, T}
-    ifs::SVector{M, Similarity{N, T}}
+struct OpenAttractor{N,M,T} <: AbstractAttractor{N,M,T}
+    ifs::SVector{M,Similarity{N,T}}
     diam::T
     d::Int64
     connectedness::Matrix{Bool}
-    symmetries::Vector{Similarity{N, T}}
+    symmetries::Vector{Similarity{N,T}}
 
     # Inner constructor to enforce d == N
     # function OpenAttractor{N, M, T}(ifs::SVector{M, Similarity{N, T}}, diam::T,
@@ -76,21 +76,21 @@ struct OpenAttractor{N, M, T} <: AbstractAttractor{N, M, T}
     # end
 end
 
-struct HomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
-    ifs::SVector{M, Similarity{N, T}}
+struct HomogenousAttractor{N,M,T} <: AbstractHomogenousAttractor{N,M,T}
+    ifs::SVector{M,Similarity{N,T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
-    symmetries::Vector{Similarity{N, T}}
+    symmetries::Vector{Similarity{N,T}}
     ρ::T
 end
 
-struct OpenHomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
-    ifs::SVector{M, Similarity{N, T}}
+struct OpenHomogenousAttractor{N,M,T} <: AbstractHomogenousAttractor{N,M,T}
+    ifs::SVector{M,Similarity{N,T}}
     diam::T
     d::Int64
     connectedness::Matrix{Bool}
-    symmetries::Vector{Similarity{N, T}}
+    symmetries::Vector{Similarity{N,T}}
     ρ::T
 
     # Inner constructor to enforce d == N
@@ -105,16 +105,16 @@ struct OpenHomogenousAttractor{N, M, T} <: AbstractHomogenousAttractor{N, M, T}
     # end
 end
 
-struct OneDimensionalAttractor{M, T} <: AbstractAttractor{1, M, T}
-    ifs::SVector{M, OneDimensionalSimilarity{T}}
+struct OneDimensionalAttractor{M,T} <: AbstractAttractor{1,M,T}
+    ifs::SVector{M,OneDimensionalSimilarity{T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
     symmetries::Vector{OneDimensionalSimilarity{T}}
 end
 
-struct OneDimensionalHomogenousAttractor{M, T} <: AbstractHomogenousAttractor{1, M, T}
-    ifs::SVector{M, OneDimensionalSimilarity{T}}
+struct OneDimensionalHomogenousAttractor{M,T} <: AbstractHomogenousAttractor{1,M,T}
+    ifs::SVector{M,OneDimensionalSimilarity{T}}
     diam::T
     d::T
     connectedness::Matrix{Bool}
@@ -129,10 +129,11 @@ end
 # OpenAttractorUnion = Union{OneDimensionalAttractor, OneDimensionalHomogenousAttractor}
 
 # useful to consider this union later on:
-OneDimensionalAttractorUnion{M, T} = Union{OneDimensionalAttractor{M, T}, OneDimensionalHomogenousAttractor{M, T}}
+OneDimensionalAttractorUnion{M,T} =
+    Union{OneDimensionalAttractor{M,T},OneDimensionalHomogenousAttractor{M,T}}
 
 # open attractors also need a union
-OpenAttractorUnion{N, M, T} = Union{OpenAttractor{N, M, T}, OpenHomogenousAttractor{N, M, T}}
+OpenAttractorUnion{N,M,T} = Union{OpenAttractor{N,M,T},OpenHomogenousAttractor{N,M,T}}
 
 # define eltype for attractors - will be useful elsewhere
 # Base.eltype(::AbstractAttractor{N, M, T}) where {N, M, T} = T
@@ -140,23 +141,24 @@ Base.eltype(Γ::AbstractAttractor) = typeof(Γ.ifs[1].δ)
 
 # ----------- mappings of the underlying IFS to vector points --------------- 
 
-function ifs_map!(  Sx::AbstractVector{<:T},
-                    S::AbstractVector{<:AbstractSimilarity},
-                    x::AbstractVector{<:T}) where T
+function ifs_map!(
+    Sx::AbstractVector{<:T},
+    S::AbstractVector{<:AbstractSimilarity},
+    x::AbstractVector{<:T},
+) where {T}
     # M = length(S)
     N = length(x)
     # y = zeros(T, M*N)
     for m in eachindex(S)
-        Sx[((m-1)*N+1) : (m*N)] .= S[m].(x)
+        Sx[((m-1)*N+1):(m*N)] .= S[m].(x)
     end
 end
 
-function ifs_map(   S::AbstractVector{<:AbstractSimilarity},
-                    x::AbstractVector{T}) where T
+function ifs_map(S::AbstractVector{<:AbstractSimilarity}, x::AbstractVector{T}) where {T}
     N = length(x)
-    Sx = zeros(T, length(S)*N)
+    Sx = zeros(T, length(S) * N)
     for m in eachindex(S)
-        @inbounds Sx[((m-1)*N+1) : (m*N)] .= S[m].(x)
+        @inbounds Sx[((m-1)*N+1):(m*N)] .= S[m].(x)
     end
     return Sx
 end
@@ -171,7 +173,7 @@ function get_subattractor_elements(Γ::AbstractAttractor, index::AbstractVector{
     new_ifs = Γ.ifs
     new_symmetries = Γ.symmetries
 
-    for 𝐦 = index[end:-1:1]
+    for 𝐦 in index[end:-1:1]
         new_diam *= Γ.ifs[𝐦].ρ
         new_ifs = simcompifs(Γ.ifs[𝐦], new_ifs)
         new_symmetries = simcompifs(Γ.ifs[𝐦], new_symmetries)
@@ -181,32 +183,25 @@ function get_subattractor_elements(Γ::AbstractAttractor, index::AbstractVector{
     return new_diam, new_ifs, new_symmetries
 end
 
-function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:AbstractHomogenousAttractor
+function get_subattractor(
+    Γ::A,
+    𝐦::AbstractVector{<:Integer},
+) where {A<:AbstractHomogenousAttractor}
     new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, 𝐦)
-    return A(new_ifs,
-            new_diam,
-            Γ.d,
-            Γ.connectedness,
-            new_symmetries,
-            Γ.ρ)
+    return A(new_ifs, new_diam, Γ.d, Γ.connectedness, new_symmetries, Γ.ρ)
 end
 
-function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where A<:AbstractAttractor
+function get_subattractor(Γ::A, 𝐦::AbstractVector{<:Integer}) where {A<:AbstractAttractor}
     new_diam, new_ifs, new_symmetries = get_subattractor_elements(Γ, 𝐦)
-    return A(new_ifs,
-            new_diam,
-            Γ.d,
-            Γ.connectedness,
-            new_symmetries)
+    return A(new_ifs, new_diam, Γ.d, Γ.connectedness, new_symmetries)
 end
-
 
 # -------------------- outer constructor ---------------------------------- #
 function ishomogeneous(ifs::AbstractVector{<:AbstractSimilarity})
     # check if fractal is homogeneous
     homogeneous = true
-    for j in 1:(length(ifs)-1)
-        if  !(ifs[j].ρ ≈ ifs[j+1].ρ)
+    for j = 1:(length(ifs)-1)
+        if !(ifs[j].ρ ≈ ifs[j+1].ρ)
             homogeneous = false
             break
         end
@@ -219,12 +214,12 @@ function dimH(ifs::AbstractVector{<:AbstractSimilarity})
     r = [s.ρ for s in ifs]
 
     if ishomogeneous(ifs)
-        d = log(1/length(r))/log(r[1])
+        d = log(1 / length(r)) / log(r[1])
     else
         # approximate Hausdorff dimension by approximating zero of following:
-        f(d) = sum(r.^d) - 1
+        f(d) = sum(r .^ d) - 1
         # over range (0,n]
-        d = find_zero(f, (0, n*(1+10*eps(ifs[1].ρ))), Bisection())
+        d = find_zero(f, (0, n * (1 + 10 * eps(ifs[1].ρ))), Bisection())
     end
     return d
 end
@@ -233,14 +228,13 @@ end
 dimH(Γ::AbstractAttractor) = Γ.d
 
 # user-friendly constructor
-function Attractor( ifs::AbstractVector{S};
-                    diam = diam(ifs),
-                    d::Real = dimH(ifs),
-                    connectedness = Matrix(IdMat(length(ifs))),
-                    symmetries = trivialgroup(T, N)
-                    ) where {N, T, S<:AbstractSimilarity{N, T}}
-
-                    
+function Attractor(
+    ifs::AbstractVector{S};
+    diam = diam(ifs),
+    d::Real = dimH(ifs),
+    connectedness = Matrix(IdMat(length(ifs))),
+    symmetries = trivialgroup(T, N),
+) where {N,T,S<:AbstractSimilarity{N,T}}
     diamT, dT = promote(T(diam), T(d)) # ensure these are of same type
     M = length(ifs)
     sv_ifs = SVector{M}(ifs)
@@ -248,75 +242,50 @@ function Attractor( ifs::AbstractVector{S};
     # Not type-stable. But I don't think this will be a performance-critical function in practice.
     if N == 1
         if ishomogeneous(ifs)
-            Γ  = OneDimensionalHomogenousAttractor(
-                    sv_ifs,
-                    diamT,
-                    dT,
-                    connectedness,
-                    symmetries,
-                    ifs[1].ρ
-                    )
-                    
+            Γ = OneDimensionalHomogenousAttractor(
+                sv_ifs,
+                diamT,
+                dT,
+                connectedness,
+                symmetries,
+                ifs[1].ρ,
+            )
+
         else
-            Γ  = OneDimensionalAttractor(
-                    sv_ifs,
-                    diamT,
-                    dT,
-                    connectedness,
-                    symmetries
-                    )
+            Γ = OneDimensionalAttractor(sv_ifs, diamT, dT, connectedness, symmetries)
         end
     elseif N == d && isa(d, Integer)
         if ishomogeneous(ifs)
-            Γ  = OpenHomogenousAttractor(
-                    sv_ifs,
-                    diamT,
-                    d,
-                    connectedness,
-                    symmetries,
-                    ifs[1].ρ
-                    )
-                    
+            Γ = OpenHomogenousAttractor(
+                sv_ifs,
+                diamT,
+                d,
+                connectedness,
+                symmetries,
+                ifs[1].ρ,
+            )
+
         else
-            Γ  = OpenAttractor(
-                    sv_ifs,
-                    diamT,
-                    d,
-                    connectedness,
-                    symmetries
-                    )
+            Γ = OpenAttractor(sv_ifs, diamT, d, connectedness, symmetries)
         end
     else
         if ishomogeneous(ifs)
-            Γ  = HomogenousAttractor(
-                    sv_ifs,
-                    diamT,
-                    dT,
-                    connectedness,
-                    symmetries,
-                    ifs[1].ρ
-                    )
-                    
+            Γ = HomogenousAttractor(sv_ifs, diamT, dT, connectedness, symmetries, ifs[1].ρ)
+
         else
-            Γ  = Attractor(
-                    sv_ifs,
-                    diamT,
-                    dT,
-                    connectedness,
-                    symmetries
-                    )
+            Γ = Attractor(sv_ifs, diamT, dT, connectedness, symmetries)
         end
     end
     return Γ
 end
 
-Attractor(args... ; kwargs...) = Attractor([args...]; kwargs...)
+Attractor(args...; kwargs...) = Attractor([args...]; kwargs...)
 
 # ------------------ determine how Similarity appears in the REPL ------------------#
 
-function Base.show(io::IO, Γ::AbstractAttractor{N, M, T}) where {N, M, T}
-    print(io, round(Γ.d, digits=2), "-dimensional ", typeof(Γ), ":")
+function Base.show(io::IO, Γ::AbstractAttractor{N,M,T}) where {N,M,T}
+    print(io, round(Γ.d; digits = 2), "-dimensional ", typeof(Γ), ":")
     for s in Γ.ifs
-        print(io,'\n', info_string(s))
+        print(io, '\n', info_string(s))
     end
 end

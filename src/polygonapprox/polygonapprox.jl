@@ -1,5 +1,5 @@
 struct Polygon{T}
-    nodes::Vector{SVector{2, T}}
+    nodes::Vector{SVector{2,T}}
 end
 
 function ∪(poly1::Polygon, poly2::Polygon, pres = 8)
@@ -18,27 +18,28 @@ end
 
 # could generalise below fn to hull of fixed points for homogenous attractors
 # also, this should be for a subtype of attractors only, open sets, or something
-function get_bounding_square(Γ::AbstractAttractor,
-                            r = 0.6 + 1e-1*rand() # random stretch
-                            )
+function get_bounding_square(Γ::AbstractAttractor, r = 0.6 + 1e-1 * rand())
     centre = get_boundingball_centre(Γ)
     hsl = diam(Γ) # half side length
-    return Polygon(SVector{2}.([centre .+ r*[-hsl, -hsl],
-                            centre .+ r*[-hsl, hsl],
-                            centre .+ r*[hsl, hsl],
-                            centre .+ r*[hsl, -hsl]])
-                            )
+    return Polygon(
+        SVector{
+            2,
+        }.([
+            centre .+ r * [-hsl, -hsl],
+            centre .+ r * [-hsl, hsl],
+            centre .+ r * [hsl, hsl],
+            centre .+ r * [hsl, -hsl],
+        ]),
+    )
 end
 
 # define Similarity map applied to polygon
 (s::Similarity)(p::Polygon) = Polygon(s.(p.nodes))
 
-function polygon_approx(Γ::AbstractAttractor;
-                        levels = 2 #prefractal levels required
-                        )
+function polygon_approx(Γ::AbstractAttractor; levels = 2)
     union_poly = get_bounding_square(Γ)
 
-    for j in 1:levels
+    for j = 1:levels
 
         # apply each ifs map to 
         mapped_polys = [s(union_poly) for s in Γ.ifs]
