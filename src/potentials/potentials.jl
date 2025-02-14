@@ -6,8 +6,7 @@
 #     quadrules::Q
 # end
 
-struct Potential{P<:Projection,
-                F<:Function}
+struct Potential{P<:Projection,F<:Function}
     density::P # measure, support etc contained in here
     kernel::F
 end
@@ -27,12 +26,15 @@ function (pot::Potential)(x)
     #             (pot.kernel(x, pot.quadrules[n].nodes) .* pot.density.basis[n].(pot.quadrules[n].nodes))
     #             ))
     # end
-    for n in 1:length(pot.density.basis)
-        val += (pot.density.coeffs[n] * (
-                transpose(pot.density.basis[n].quadrule.weights) *
-                (pot.kernel(x, pot.density.basis[n].quadrule.nodes) .*
-                    pot.density.basis[n].(pot.density.basis[n].quadrule.weights))
-                ))
+    for n = 1:length(pot.density.basis)
+        val += (
+            pot.density.coeffs[n] * (
+                transpose(pot.density.basis[n].quadrule.weights) * (
+                    pot.kernel(x, pot.density.basis[n].quadrule.nodes) .*
+                    pot.density.basis[n].(pot.density.basis[n].quadrule.weights)
+                )
+            )
+        )
     end
 
     # define the single-variable version of the kernel

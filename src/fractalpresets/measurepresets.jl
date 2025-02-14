@@ -1,9 +1,14 @@
-function getmeasure(T::Type, fractalname::Union{Symbol, String};
-                    suppmeasure = Nothing, kwargs...)
-
-    knownmeasures = Dict(:cantorset => T(1),
-                        :kochsnowflake => T(2)*T(sqrt(3))/T(5),
-                        :heighwaydragon => T(1/2))
+function getmeasure(
+    T::Type,
+    fractalname::Union{Symbol,String};
+    suppmeasure = Nothing,
+    kwargs...,
+)
+    knownmeasures = Dict(
+        :cantorset => T(1),
+        :kochsnowflake => T(2) * T(sqrt(3)) / T(5),
+        :heighwaydragon => T(1 / 2),
+    )
 
     Γ = getfractal(T, fractalname; kwargs...)
 
@@ -26,15 +31,16 @@ function getmeasure(T::Type, fractalname::Union{Symbol, String};
     end
 
     if measuretype == "Lebesgue"
-        return LebesgueMeasure(Γ, suppmeasure = suppmeasure)
+        return LebesgueMeasure(Γ; suppmeasure = suppmeasure)
     else
-        return HausdorffMeasure(Γ, suppmeasure = suppmeasure)
+        return HausdorffMeasure(Γ; suppmeasure = suppmeasure)
     end
 end
 
 # Option to pass String instead of Symbol. Converts to lowercase and removes spaces from string.
-getmeasure(T::Type, fractalname::String; vargs...) =
-getmeasure(T::Type, Symbol(lowercase(replace(fractalname, " " => ""))); vargs...)
+function getmeasure(T::Type, fractalname::String; vargs...)
+    return getmeasure(T::Type, Symbol(lowercase(replace(fractalname, " " => ""))); vargs...)
+end
 
 # define default type
 getmeasure(fractalname; vargs...) = getmeasure(Float64, fractalname; vargs...)

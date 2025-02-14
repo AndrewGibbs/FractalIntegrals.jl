@@ -7,8 +7,8 @@ DOFS_FOR_NONOSCILLATORS = 5
 # only makes sense when indices are on homogenous attractor
 function vindex_to_scalar(M::Integer, ℓ::Integer, m::AbstractVector{<:Integer})
     n = 1
-    for j=1:ℓ
-        n += M^(ℓ-j) * (m[j]-1)
+    for j = 1:ℓ
+        n += M^(ℓ - j) * (m[j] - 1)
     end
     return n
 end
@@ -21,24 +21,25 @@ include("matrixreps.jl")
 include("galerkin.jl")
 include("collocation.jl")
 
-getdefault_meshwidth(sio::OscillatorySeparableIntegralOperator) =
-    2π / abs(DOFS_PER_WAVELENGTH*sio.wavenumber)
+function getdefault_meshwidth(sio::OscillatorySeparableIntegralOperator)
+    return 2π / abs(DOFS_PER_WAVELENGTH * sio.wavenumber)
+end
 
-getdefault_meshwidth(sio::IntegralOperator) =
-    sio.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
+function getdefault_meshwidth(sio::IntegralOperator)
+    return sio.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
+end
 
 # new style which allows us to try different quadrature rules
-function discretise(sio::FractalOperator;
-            h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
-            h_quad::Real = 0.0, # quick option for Barycentre rule
-            N_quad::Integer = 0,
-            quadrule::QuadStruct =
-            getdefault_quad_premap(sio.measure, h_mesh, h_quad, N_quad),
-            method::Symbol=:galerkin,
-            kwargs...)
-    Vₕ = construct_quasiuniform_p0basis(sio.measure,
-                                        h_mesh,
-                                        quadrule)
+function discretise(
+    sio::FractalOperator;
+    h_mesh::Real = getdefault_meshwidth(sio),#sio.measure.supp.diam/5,
+    h_quad::Real = 0.0, # quick option for Barycentre rule
+    N_quad::Integer = 0,
+    quadrule::QuadStruct = getdefault_quad_premap(sio.measure, h_mesh, h_quad, N_quad),
+    method::Symbol = :galerkin,
+    kwargs...,
+)
+    Vₕ = construct_quasiuniform_p0basis(sio.measure, h_mesh, quadrule)
     if method == :galerkin
         discretise_galerkin(sio, Vₕ; kwargs...)
     elseif method == :collocation
@@ -48,13 +49,12 @@ function discretise(sio::FractalOperator;
     end
 end
 
-
-struct Projection{B<:FractalBasis, V<:AbstractVector}
+struct Projection{B<:FractalBasis,V<:AbstractVector}
     basis::B
     coeffs::V
 end
 
-project(Vₕ::FractalBasis, f::Function) = Projection(Vₕ, [ϕₕ(f) for ϕₕ ∈ Vₕ])
+project(Vₕ::FractalBasis, f::Function) = Projection(Vₕ, [ϕₕ(f) for ϕₕ in Vₕ])
 
 # (p::Projection)(x) = sum(p.basis[n](x)*p.coeffs[n] for n=1:length(p.basis))
 

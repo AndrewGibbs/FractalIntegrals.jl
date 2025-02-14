@@ -1,19 +1,17 @@
 # subdivide attractor and get array of VectorIndex 
-function subdivide_indices( Γ::AbstractAttractor{N, M, T},
-                            h::Real;
-                            max_num_indices = Inf
-                            ) where {N, M, T}
+function subdivide_indices(
+    Γ::AbstractAttractor{N,M,T},
+    h::Real;
+    max_num_indices = Inf,
+) where {N,M,T}
+    @assert (h > 0 || max_num_indices < Inf) "either meshwidth must be positive, or max_num_indices must be finite"
 
-
-    @assert (h>0 || max_num_indices<Inf
-    ) "either meshwidth must be positive, or max_num_indices must be finite"
-
-    Lₕ = [zero(VectorIndex{M, Int64})]#[VectorIndex{M}([0])]
+    Lₕ = [zero(VectorIndex{M,Int64})]#[VectorIndex{M}([0])]
     ρs = [s.ρ for s in Γ.ifs]
     diams = [diam(Γ)]
 
     keep_subdividing = true
-    while keep_subdividing && length(Lₕ)<max_num_indices
+    while keep_subdividing && length(Lₕ) < max_num_indices
         split_vecs = Int64[]
         keep_subdividing = false
         for j in eachindex(Lₕ)
@@ -22,10 +20,10 @@ function subdivide_indices( Γ::AbstractAttractor{N, M, T},
                 # append new vector index onto end of index set
                 append!(Lₕ, split(Lₕ[j]))
                 # similar for diameter logging
-                append!(diams, diams[j].*ρs)
+                append!(diams, diams[j] .* ρs)
 
                 # log current indices to delete
-                push!(split_vecs,j)
+                push!(split_vecs, j)
             end
         end
 
@@ -39,45 +37,46 @@ end
 
 # more efficient way to write the below function is to store radii,
 # rather than compute the diameter
-function grade_mesh( Γ::AbstractAttractor{N, M, T},
-                        subdivide_if_true_fn::Function;
-                        max_num_indices = 1e6,
-                        min_mesh_width_permitted = 1e-16,
-                        h::Real = Real(Inf),
-                        ) where {N, M, T}
-
-    Lₕ = [zero(VectorIndex{M, Int64})]
+function grade_mesh(
+    Γ::AbstractAttractor{N,M,T},
+    subdivide_if_true_fn::Function;
+    max_num_indices = 1e6,
+    min_mesh_width_permitted = 1e-16,
+    h::Real = Real(Inf),
+) where {N,M,T}
+    Lₕ = [zero(VectorIndex{M,Int64})]
     mesh = [Γ]
     min_mesh_width = diam(Γ)
 
     keep_subdividing = true
     while keep_subdividing &&
-        (length(Lₕ) < max_num_indices) &&
-        min_mesh_width > min_mesh_width_permitted
+              (length(Lₕ) < max_num_indices) &&
+              min_mesh_width > min_mesh_width_permitted
         keep_subdividing = false
-            for (j, Γₘ) in enumerate(mesh)
-                if subdivide_if_true_fn(Γₘ) || diam(Γₘ) > h
-                    # add new index vectors and mesh elements
-                    append!(Lₕ, split(Lₕ[j]))
-                    new_mesh_els = split(mesh[j])
-                    append!(mesh, new_mesh_els)
-                    min_mesh_width = min(min_mesh_width, minimum(diam.(new_mesh_els)))
+        for (j, Γₘ) in enumerate(mesh)
+            if subdivide_if_true_fn(Γₘ) || diam(Γₘ) > h
+                # add new index vectors and mesh elements
+                append!(Lₕ, split(Lₕ[j]))
+                new_mesh_els = split(mesh[j])
+                append!(mesh, new_mesh_els)
+                min_mesh_width = min(min_mesh_width, minimum(diam.(new_mesh_els)))
 
-                    # delete vectors and mesh els from split components
-                    deleteat!(Lₕ, j)
-                    deleteat!(mesh, j)
+                # delete vectors and mesh els from split components
+                deleteat!(Lₕ, j)
+                deleteat!(mesh, j)
 
-                    # break outer for loop and restart for loop (via while loop) 
-                    # ... to avoid messing with indices after changing vector size
-                    keep_subdividing = true
-                    break
-                end
+                # break outer for loop and restart for loop (via while loop) 
+                # ... to avoid messing with indices after changing vector size
+                keep_subdividing = true
+                break
             end
+        end
     end
     # for third output, include a boolean vector describing which mesh elements met the condition
     return Lₕ, .!subdivide_if_true_fn.(mesh)
 end
 
-grade_towards_points_fn(Γ::AbstractAttractor, x, C::Number) = dist⁻(Γ, x)/diam(Γ) < C
-grade_mesh_towards_point(Γ::AbstractAttractor, x; C::Number=1, kwargs...) = 
-    grade_mesh(Γ, γ -> grade_towards_points_fn(γ, x, C); kwargs...)
+grade_towards_points_fn(Γ::AbstractAttractor, x, C::Number) = dist⁻(Γ, x) / diam(Γ) < C
+function grade_mesh_towards_point(Γ::AbstractAttractor, x; C::Number = 1, kwargs...)
+    return grade_mesh(Γ, γ -> grade_towards_points_fn(γ, x, C); kwargs...)
+end

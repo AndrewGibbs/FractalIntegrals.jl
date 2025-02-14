@@ -15,22 +15,22 @@ end
 
 # Approximate ∫₀¹∫₀¹ Φₛ(x,y) dx dy using s-energy on cantor set with ρ=1/2.
 @testset "singular line segment" begin
-    Γ = FractalIntegrals.cantorset(ρ = 1/2)
+    Γ = FractalIntegrals.cantorset(; ρ = 1 / 2)
     for s in rand(5)
-        I = 2/((1 - s)*(2 - s))
+        I = 2 / ((1 - s) * (2 - s))
         @testset "s=$s" begin
-            @test FractalIntegrals.s_energy(Γ, s, N_quad = 10) ≈ I
-            @test FractalIntegrals.s_energy(Γ, s, h_quad = 0.001) ≈ I rtol=1e-4
+            @test FractalIntegrals.s_energy(Γ, s; N_quad = 10) ≈ I
+            @test FractalIntegrals.s_energy(Γ, s; h_quad = 0.001) ≈ I rtol = 1e-4
         end
     end
 end
 
 @testset "different quadratures on invariant measures on Cantor sets" begin
-    for ρ in 0.1:0.1:0.5#rand(5)/2
-        Γ = FractalIntegrals.cantorset(ρ = ρ)#getfractal("cantor set", ρ=ρ)
-        for f in [x -> sin(x^2), x -> cosh(x^3), x -> exp(im*π*x)]
+    for ρ = 0.1:0.1:0.5#rand(5)/2
+        Γ = FractalIntegrals.cantorset(; ρ = ρ)#getfractal("cantor set", ρ=ρ)
+        for f in [x -> sin(x^2), x -> cosh(x^3), x -> exp(im * π * x)]
             for n = 1:5
-                p = 0.5 .+ (rand(2) .-0.5)./4
+                p = 0.5 .+ (rand(2) .- 0.5) ./ 4
                 p = p / sum(p)
                 μ = FractalIntegrals.InvariantMeasure(Γ, p)
 
@@ -42,7 +42,7 @@ end
                 x, w = FractalIntegrals.gauss_quadrule(μ, 15)
                 I₂ = w' * f.(x)
                 @testset "ρ=$ρ, n=$n" begin # would be nice to mention function here
-                    @test I₁ ≈ I₂ rtol=1e-4
+                    @test I₁ ≈ I₂ rtol = 1e-4
                 end
             end
         end
@@ -55,16 +55,16 @@ end
     k = 30.0
     d = [0.5000, -0.8660]
     Γ = getfractal("cantorset")
-    
+
     # integral operator
-    Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k, ambient_dimension = 2)
+    Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k; ambient_dimension = 2)
 
     # RHS
-    f(x) = exp(im*k*d[1]*x)
+    f(x) = exp(im * k * d[1] * x)
 
     # points to test the ffp
-    h_θ = 2π/300
-    θ = 0:h_θ:2π
+    h_θ = 2π / 300
+    θ = 0:h_θ:(2π)
     pf_data = matread("Lebesgue_FF_vals.mat")
     pf_vals = pf_data["FF_vals"]
 
@@ -72,12 +72,12 @@ end
     C = 0.3
 
     # test for a range of meshwidths
-    for h in 2.0 .^((-6:-1:-12))
-        Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = h)
-        ϕₕ = Sₖₕ\f
-        ffp = FractalIntegrals.farfield_pattern(ϕₕ, k, ambient_dimension = 2)
+    for h in 2.0 .^ ((-6:-1:-12))
+        Sₖₕ = FractalIntegrals.discretise(Sₖ; h_mesh = h)
+        ϕₕ = Sₖₕ \ f
+        ffp = FractalIntegrals.farfield_pattern(ϕₕ, k; ambient_dimension = 2)
         @testset "h=$h" begin
-            @test norm(ffp.(θ) - pf_vals, Inf) / norm(pf_vals, Inf) < C*h^(Γ.d)
+            @test norm(ffp.(θ) - pf_vals, Inf) / norm(pf_vals, Inf) < C * h^(Γ.d)
         end
     end
 end
@@ -91,11 +91,11 @@ end
             recipangles = rand(N)
 
             # create RHS data for each incident angle
-            fθ = [x -> exp(-im*k*(x[1]*cos(θ)+x[2]*sin(θ))) for θ in recipangles]
+            fθ = [x -> exp(-im * k * (x[1] * cos(θ) + x[2] * sin(θ))) for θ in recipangles]
 
             # create LHS
             Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
-            Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
+            Sₖₕ = FractalIntegrals.discretise(Sₖ; h_mesh = 0.05, h_quad = 0.01)
 
             # solve discrete problem
             ϕ = [Sₖₕ \ fθ[n] for n in eachindex(recipangles)]
@@ -119,13 +119,13 @@ end
 # in an appropriate sense, as r:=|x| → ∞
 # The scaling of the far-field pattern has been chosen specifically to ensure this.
 @testset "Near- and far-field Comparison" begin
-    θ = 0:0.01:2π
-    d = [1, 1]/sqrt(2)
+    θ = 0:0.01:(2π)
+    d = [1, 1] / sqrt(2)
     r = 150 # some big number, to approximate the limit r → ∞
-    x = [r*[cos(θ_), sin(θ_)] for θ_ in θ]
+    x = [r * [cos(θ_), sin(θ_)] for θ_ in θ]
     k = 5
-    f₁(x) = exp(im*k*d[1]*x)
-    f₂(x) = exp(im*k*(d[1]*x[1]+d[2]*x[2]))
+    f₁(x) = exp(im * k * d[1] * x)
+    f₂(x) = exp(im * k * (d[1] * x[1] + d[2] * x[2]))
 
     for Γname in ["cantor set", "cantor dust"]
         Γ = getfractal(Γname)
@@ -133,13 +133,13 @@ end
         FractalIntegrals.get_ambient_dimension(Γ) == 1 ? f = f₁ : f = f₂
         # operators, and the discretisation
         Sₖ = FractalIntegrals.singlelayer_operator_helmholtz(Γ, k)
-        Sₖₕ = FractalIntegrals.discretise(Sₖ, h_mesh = 0.05, h_quad = 0.01)
-        ϕ = Sₖₕ \ f 
+        Sₖₕ = FractalIntegrals.discretise(Sₖ; h_mesh = 0.05, h_quad = 0.01)
+        ϕ = Sₖₕ \ f
         # get near- and far-field operators
         ffp = FractalIntegrals.farfield_pattern(ϕ, k)
         slp = FractalIntegrals.singlelayer_potential_helmholtz(ϕ, k)
         @testset "$Γname" begin
-            @test (exp(im*k*r)/sqrt(r)) * ffp.(θ) ≈ -slp.(x) rtol = 1e-2
+            @test (exp(im * k * r) / sqrt(r)) * ffp.(θ) ≈ -slp.(x) rtol = 1e-2
         end
     end
 end
@@ -147,25 +147,29 @@ end
 @testset "Collocation for Laplace Dirichlet BIE on screen in ℝ²" begin
     include("laplace_R2screen_col.jl")
     # construct [0,1]×{0} screen, as IFS attractor
-    Γ = getfractal("cantor set", ρ=1/2)
+    Γ = getfractal("cantor set"; ρ = 1 / 2)
     S = FractalIntegrals.singlelayer_operator_laplace(Γ)
 
-    for ℓ in 1:4
-        h_mesh = 1/2^ℓ
-        h_mesh_os = h_mesh/2
-        h_quad = h_mesh/2
-        disc_op_col = FractalIntegrals.discretise(S,
-                                h_mesh = h_mesh,
-                                h_quad = h_quad,
-                                h_col = h_mesh_os;
-                                method = :collocation,
-                                min_mesh_width_permitted=1e-6)
+    for ℓ = 1:4
+        h_mesh = 1 / 2^ℓ
+        h_mesh_os = h_mesh / 2
+        h_quad = h_mesh / 2
+        disc_op_col = FractalIntegrals.discretise(
+            S;
+            h_mesh = h_mesh,
+            h_quad = h_quad,
+            h_col = h_mesh_os,
+            method = :collocation,
+            min_mesh_width_permitted = 1e-6,
+        )
 
         col_matrix_exact = get_exact_laplace_screen_col_matrix(
-                            disc_op_col.basis,
-                            disc_op_col.collocation_points)
+            disc_op_col.basis,
+            disc_op_col.collocation_points,
+        )
 
-        mat_err = norm(col_matrix_exact-disc_op_col.collocation_matrix)/norm(col_matrix_exact)
+        mat_err =
+            norm(col_matrix_exact - disc_op_col.collocation_matrix) / norm(col_matrix_exact)
         thresh = max(5e2 * h_mesh * h_quad^2, 0.1)
         @testset "ℓ=$ℓ" begin
             @test mat_err < thresh
