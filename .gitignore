@@ -13,3 +13,4 @@ debug/
 .vscode/
 
 docs/build/
+docs/Manifest.toml
