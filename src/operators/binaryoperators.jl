@@ -1,3 +1,31 @@
+"""
+    IdentityOperator{M} <: FractalOperator{M}
+
+Represents the identity operator ``\\mathcal{I}`` in an integral equation on a fractal
+measure support ``\\Gamma``, defined by
+
+```math
+\\mathcal{I}\\,\\phi\\,(x) = \\phi(x), \\quad x \\in \\Gamma.
+```
+
+This is typically used as part of a second-kind integral equation of the form
+
+```math
+(\\lambda\\,\\mathcal{I} + \\mathcal{K})\\,v = f, \\quad \\text{on } \\Gamma,
+```
+
+where ``\\lambda \\in \\mathbb{C}`` and ``\\mathcal{K}`` is an `IntegralOperator`.
+
+# Fields
+- `measure :: M`: The invariant measure ``\\mu`` supported on ``\\Gamma``.
+
+# Examples
+```julia
+Γ = getfractal("cantorset")
+μ = HausdorffMeasure(Γ)
+I = IdentityOperator(μ)
+```
+"""
 struct IdentityOperator{M<:AbstractInvariantMeasure} <:FractalOperator{M}
     measure :: M
 end

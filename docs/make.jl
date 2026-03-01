@@ -6,6 +6,7 @@ using DocumenterCitations
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
 
 makedocs(
+        draft=true,  # add this to avoid computation of stuff
          sitename = "FractalIntegrals.jl",
          modules  = [FractalIntegrals],
          checkdocs=:none,

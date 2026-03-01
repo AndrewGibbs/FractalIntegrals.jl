@@ -39,11 +39,39 @@ There are two key classes of integral equations, and this distinction is particu
 * **1st kind**: When $\lambda=0$, equivalently, the identity term is removed.
 * **2nd kind**: When $\lambda\neq0$.
 
-As mentioned in [](geometry.md#measures), for many attractors $\Gamma$, we do not know $\mathcal{H}^d(\Gamma)$. In this case, we cannot work with $\mu=\mathcal{H}^d$ directly, instead we must work with $\tilde\mu(x) = \mathcal{H}^d(x)/\mathcal{H}^d(\Gamma)$. Hence, if the integral equation is defined with respect to Hausdorff measure, we can (usually) only solve a *related* integral equation with respect to $\tilde\mu$.
+As mentioned in (geometry.md#measures), for many attractors $\Gamma$, we do not know $\mathcal{H}^d(\Gamma)$. In this case, we cannot work with $\mu=\mathcal{H}^d$ directly, instead we must work with $\tilde\mu(x) = \mathcal{H}^d(x)/\mathcal{H}^d(\Gamma)$. Hence, if the integral equation is defined with respect to Hausdorff measure, we can (usually) only solve a *related* integral equation with respect to $\tilde\mu$.
 
 In the case of first kind integral equations, the solution to the *related* problem $\tilde v=v\cdot \mathcal{H}^d(\Gamma)$. If the *related* potential operator $\tilde{\mathcal{V}}$ is defined analogously with respect to $\tilde\mu$, then $\mathcal{V}v = \tilde{\mathcal{V}} \tilde v$; in other words, the solution of the underlying PDE is unaffected by our scaling of the measure, thus **we do not need to know** $\mathcal{H}^d(\Gamma)$.
 
 In the case of second kind integral equations, we are not so fortunate: $\tilde v \neq v\cdot \mathcal{H}^d(\Gamma)$. Therefore, when posing a second-kind integral equation, for meaningful results, it is essential that the `suppmeasure` parameter, mathematically defined as $\mu(\Gamma)$, is known and included in the definition of the measure. We note that for the case when $\Gamma$ is open in $\mathbb{R}^N$ with a fractal boundary, for example the Koch Snowflake, the $N$-dimensional Lebesgue measure is usually known.
+
+## Seperable integral operatorss
+Even when the domain is smooth, approximating singular integrals arising in integral equation discretisations can cause headaches.
+
+On fractal domains, there is a significantly smaller family of kernels $K$ for which integral equations can solved. This close-knit family of kernels can be described as follows:
+
+
+```math
+K(x,y) = K_\mathrm{smooth}(x,y) + c\cdot K_s(x,y) 
+```
+
+where $K_\mathrm{smooth}\in C^{2}(\mathbb{R}^n)$ and
+
+```math
+K_s(x,y) := \left\{\begin{array}{cc} \log|x-y|,& s=0,\\
+                |x-y|^s,& s>0, \end{array}\right.,
+```
+
+for some $s\geq0$. Because our approximation to the unknown $\phi$ is piecewise constant, we can write
+
+```math
+\int_{\Gamma_\mathbf{m}}\int_{\Gamma_\mathbf{m}} K(x,y) ~ \phi(y) ~ \mathrm{d}\mu(x) \mathrm{d}\mu(y)
+=
+\phi|_{\Gamma_\mathbf{m}}\left[\int_{\Gamma_\mathbf{m}}\int_{\Gamma_\mathbf{m}} K_\mathrm{smooth}(x,y) ~ \mathrm{d}\mu(x) \mathrm{d}\mu(y)
++ c\cdot\mathcal{E}[\mu|_{\Gamma_\mathbf{m}}]\right].
+```
+
+The first integral is evaluated by [standard fractal quadrature rules](integrals.md#quadrature-rules). The second integral is evaluated by [the singular algorithm](integrals.md#singular-integrals).
 
 ## Fractal Operators
 
@@ -58,6 +86,33 @@ FractalOpeartor
 ├── IdentityOperator
 ├── ScaledOperator
 ├── SumOperator
-├── BlockOperatorx
+├── BlockOperator
 
+```
+
+We will now explore each of these in a little more detail.
+
+```@docs
+FractalIntegrals.IdentityOperator
+```
+
+```@docs
+FractalIntegrals.SingularIntegralOperator
+```
+
+```@docs
+FractalIntegrals.SeparableIntegralOperator
+```
+
+## Operator presets
+
+The following preset constructors build the most common integral operators used in
+acoustic scattering problems.
+
+```@docs
+singlelayer_operator_laplace
+```
+
+```@docs
+singlelayer_operator_helmholtz
 ```
