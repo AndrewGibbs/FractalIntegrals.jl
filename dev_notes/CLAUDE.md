@@ -81,7 +81,7 @@ FractalOperator{M}
 - `@hausdorffdefault f` adds a method taking an attractor, which wraps it in `HausdorffMeasure`. `@tensorquad f` creates `tensor_f`.
 - Kernels are vectorised: `kernel(x, y)` takes arrays of points. `energykernel(s, r)` is `r^-s`, or `log(r)` for `s = 0`.
 - The field `diam` is an exact preset value or, when computed, the diameter of a bounding ball (an upper bound).
-- Measures have the parameter order `{N, M, T, A}`. Writing `HausdorffMeasure{<:SomeAttractor}` constrains **N**, not `A`, and silently matches nothing. Two existing issues below come from this: one is `get_bary_weights`, the other switched off fractal block reuse.
+- Measures have the parameter order `{N, M, T, A}`. Writing `HausdorffMeasure{<:SomeAttractor}` constrains **N**, not `A`, and silently matches nothing. This mistake has already caused two bugs, including the block reuse issue below.
 
 ## Commands
 
@@ -90,7 +90,7 @@ julia --project=. -t auto -e 'using Pkg; Pkg.test()'     # test suite (test/runt
 julia --project=docs/ docs/make.jl                       # docs; needs docs env set up, see .github/workflows/docs.yml
 ```
 
-All existing tests passed on 2026-11-03 (Julia 1.12.1, on a scratch copy), despite the known issues below, so a passing suite does not show those areas work. Local Julia is 1.12.1. `Project.toml` allows 1.7–1.12 and CI runs 1.7.2, latest stable and nightly on Linux, macOS and Windows.
+Regression tests for fixed bugs are in `test/regression_tests.jl`. Many code paths are still untested, so a passing suite does not show an area works. Local Julia is 1.12.1. `Project.toml` allows 1.7–1.12 and CI runs 1.7.2, latest stable and nightly on Linux, macOS and Windows.
 
 ## Files only Andrew has
 
@@ -98,11 +98,7 @@ These are gitignored, so they are not in the GitHub repo: `todo.odt` (the origin
 
 ## Known issues (found 2026-11-03)
 
-`dev_notes/bugs/bugs.ipynb` demonstrates each one by running the code. Check an issue is still present before relying on it.
-
-**Awaiting Andrew's approval to fix:** see the table in section 5 of the notebook.
-
-**Not simple fixes:**
+The simple bugs are fixed: see `dev_notes/changes_to_existing_code.md`, and `dev_notes/bugs/bugs.ipynb` for what they did. These two remain:
 
 - **Fractal block reuse** (`discretisation/matrixreps.jl:108`): a wrong type parameter means `fractaldiagblocks!` never runs. Correcting only the type is **wrong**: it gives an 8% matrix error on the Koch curve, which has rotating maps. It is correct to rounding on the non-rotating Cantor set and dust. On Sierpinski and Vicsek the difference is about 1e-6, in line with the rounding issue below. Proposed for `dev-speedup`, non-rotating attractors only.
 - **Bounding balls** (`fractalgeometry/boundingball.jl`): the ball of radius `diam/2` does not always contain the attractor (Sierpinski reaches 1.15× the radius, Koch curve about 1.02× at its endpoints), and for touching pieces `dist⁻ <= 0` is decided by rounding. Measured on Sierpinski, the effect is small: about 1e-7 in Galerkin far fields, and at most about 0.07% in collocation solutions. Left unchanged for now, but needs solving before H-matrices rely on these balls.
