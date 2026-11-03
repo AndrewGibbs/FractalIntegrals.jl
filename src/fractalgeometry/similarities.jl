@@ -132,7 +132,7 @@ function simmulticomp(IFS::AbstractVector{<:AbstractSimilarity}, m::AbstractVect
 end
 
 # ------------------------------------------- inverse map --------------------------#
-sim_map_inv(s::Similarity, x) = s.rA/(x-s.δ)
+sim_map_inv(s::Similarity, x) = s.ρA\(x-s.δ)
 
 # ------------------ determine how Similarity appears in the REPL ------------------#
 

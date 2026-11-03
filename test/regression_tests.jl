@@ -101,3 +101,12 @@ end
     @test dot(inside, a) ≈ expected
     @test dot(a, outside) == 0
 end
+
+@testset "small definition errors" begin
+    Γ = getfractal("cantordust")
+    μ = HausdorffMeasure(Γ)
+    @test length(Base.:∪(μ ∪ μ, μ)) == 3
+    s = Similarity(1/3, [0.2, 0.1], [0.0 -1.0; 1.0 0.0])
+    @test F.sim_map_inv(s, s([0.3, 0.7])) ≈ [0.3, 0.7]
+    @test all(n -> isdefined(F, n), names(F))
+end

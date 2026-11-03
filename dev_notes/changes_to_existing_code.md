@@ -19,3 +19,5 @@ Tests are in `test/regression_tests.jl`.
 - **Single-element mesh.** `quadrature/quadrature.jl`: `mapquadrule` returns early for index `[0]`, which reached `ifs[0]`. This was the bug in the to-do list.
 
 - **Nested inner product.** `discretisation/sesquilinearforms.jl`: compared an index to a basis element, so was always false. It also used the larger element's measure, but the overlap is the smaller element.
+
+- **Small definition errors.** `fractalgeometry/unions.jl`: `.attractors` → `.measures`. `fractalgeometry/similarities.jl`: `sim_map_inv` used a field that doesn't exist, and divided on the wrong side. `FractalIntegrals.jl`: removed the export of `FractaPresets`, which doesn't exist.

@@ -19,6 +19,6 @@ end
 
 # Base.:∪(μ₁::AbstractInvariantMeasure, μ₂::AbstractInvariantMeasure) = MeasureUnion((μ₁, μ₂))
 Base.:∪(μs::AbstractInvariantMeasure...) = MeasureUnion(embed_into_same_dimension(tuple(μs...)))
-Base.:∪(μnion::MeasureUnion, μs::AbstractInvariantMeasure...) = ∪(μnion.attractors..., μs...)
+Base.:∪(μnion::MeasureUnion, μs::AbstractInvariantMeasure...) = ∪(μnion.measures..., μs...)
 Base.getindex(μnion::MeasureUnion, m::Integer) = μnion.measures[m]
 Base.length(μ::MeasureUnion) = length(μ.measures)
