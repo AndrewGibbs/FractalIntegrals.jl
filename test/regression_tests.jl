@@ -337,10 +337,7 @@ end
         Sₕ₆₄ =
             F.discretise(F.singlelayer_operator_laplace(Γ₆₄), h_mesh = 0.2, h_quad = 0.05)
         @test eltype(Sₕ.stiffness_matrix) == T
-        # Touching pieces of the triangle are found by rounding (see the bounding ball issue
-        # in dev_notes/CLAUDE.md), so its Galerkin matrix depends on the type at about 3e-6.
-        @test Float64.(Sₕ.stiffness_matrix) ≈ Sₕ₆₄.stiffness_matrix rtol =
-            (name == "sierpinskitriangle" ? 1e-4 : rtol)
+        @test Float64.(Sₕ.stiffness_matrix) ≈ Sₕ₆₄.stiffness_matrix rtol = rtol
     end
 
     @testset "precision is really kept" begin
@@ -367,5 +364,56 @@ end
                 method = :collocation,
             ).collocation_matrix,
         ) == ComplexF32
+    end
+end
+
+@testset "connectivity decides the integration method" begin
+    @testset "connected_by_matrix" begin
+        Γ = getfractal("cantorset")
+        @test F.connected_by_matrix(Γ, [0], [1, 2])
+        @test F.connected_by_matrix(Γ, [1, 2], [1, 2])
+        @test F.connected_by_matrix(Γ, [1], [1, 2]) # nested
+        @test !F.connected_by_matrix(Γ, [1], [2])
+        @test !F.connected_by_matrix(Γ, [1, 1], [1, 2])
+        @test F.connected_by_matrix(getfractal("cantorset", ρ = 1 / 2), [1, 2], [2, 1])
+    end
+
+    # Pairs of elements go to the singular method exactly when they really touch
+    @testset "$name, depth $ℓ" for (name, ℓ) in (
+        ("cantorset", 3),
+        ("cantordust", 2),
+        ("sierpinskitriangle", 3),
+        ("sierpinskicarpet", 2),
+        ("vicsek", 2),
+        ("kochcurve", 2),
+    )
+        Γ = getfractal(name)
+        μ = HausdorffMeasure(Γ)
+        M = length(Γ.ifs)
+        _, _, S, _, _ = F.construct_singularity_matrix(μ, μ, 0.0)
+        G = F.get_symmetries(μ)
+        𝐦s = [collect(𝐦) for 𝐦 in vec(collect(Iterators.product(ntuple(_ -> 1:M, ℓ)...)))]
+        # nodes of a rule which is fine compared with the size of an element
+        ρ = Γ.ifs[1].ρ^ℓ
+        h = 0.08 * ρ * Γ.diam
+        nodes = [F.barycentre_quadrule(μ[𝐦], h)[1] for 𝐦 in 𝐦s]
+        touches(a, b) = minimum(norm(x - y) for x in nodes[a], y in nodes[b]) < 2.5 * h
+        method_is_singular(a, b) =
+            F.connected_by_matrix(Γ, 𝐦s[a], 𝐦s[b]) &&
+            F.check_for_similar_integrals(Γ, S, 𝐦s[a], 𝐦s[b], G, G, true)[1]
+        mistakes = [
+            (𝐦s[a], 𝐦s[b]) for a in eachindex(𝐦s), b in eachindex(𝐦s) if
+            touches(a, b) != method_is_singular(a, b)
+        ]
+        @test isempty(mistakes)
+    end
+
+    @testset "the same method in every precision" begin
+        A(T) = F.discretise(
+            F.singlelayer_operator_laplace(getfractal(T, "sierpinskitriangle")),
+            h_mesh = T(1 // 5),
+            h_quad = T(1 // 20),
+        ).stiffness_matrix
+        @test Float64.(A(BigFloat)) ≈ A(Float64) rtol = 1e-13
     end
 end

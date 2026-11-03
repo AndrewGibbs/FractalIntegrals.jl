@@ -195,6 +195,25 @@ function check_for_ℓ_singular_integrals(
     return is_singular
 end
 
+# can Γ_𝐦 and Γ_𝐧 touch? Removing a common start of 𝐦 and 𝐧 maps both by a similarity,
+# after which the connectedness matrix decides, looking only as deep as it goes.
+function connected_by_matrix(
+    Γ::AbstractAttractor,
+    𝐦::Vector{<:Integer},
+    𝐧::Vector{<:Integer},
+)
+    (𝐦 == [0] || 𝐧 == [0]) && return true
+    ℓ_depth = Int64(round(log(size(Γ.connectedness)[1]) / log(length(Γ.ifs))))
+    j = 1
+    while j ≤ min(length(𝐦), length(𝐧)) && 𝐦[j] == 𝐧[j]
+        j += 1
+    end
+    (j > length(𝐦) || j > length(𝐧)) && return true # one is inside the other
+    𝐦ᵣ = 𝐦[j:min(end, j+ℓ_depth-1)]
+    𝐧ᵣ = 𝐧[j:min(end, j+ℓ_depth-1)]
+    return check_for_ℓ_singular_integrals(Γ, 𝐦ᵣ, 𝐧ᵣ) == 1
+end
+
 function compose_weights(pw::AbstractVector{<:Real}, m::AbstractVector{<:Integer})
     m != [0] ? pₘ = prod(pw[m]) : pₘ = one(eltype(pw))
     return pₘ

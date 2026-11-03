@@ -60,10 +60,9 @@ function sesquilinearform(
     similar_index = 0
     ρ = 0.0
 
-    if dist⁻(ϕ.measure.supp, ψ.measure.supp) <= 0 #norm(ϕ.measure.barycentre - ψ.measure.barycentre) <
-        #(ϕ.measure.supp.diam + ψ.measure.supp.diam)
-        # passed initial cheap test for being singular
-        # assume that singularity is 'similar' to canonical singular integral
+    if connected_by_matrix(sio.measure.supp, Vector(ϕ.vindex), Vector(ψ.vindex))
+        # passed initial cheap test for being singular. It's singular if it's
+        # similar to a canonical singular integral, which came from the connectedness matrix
 
         parent_symmetries = get_symmetries(sio.measure)
 
