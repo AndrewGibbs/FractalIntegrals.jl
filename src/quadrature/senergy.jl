@@ -195,8 +195,9 @@ function check_for_ℓ_singular_integrals(
     return is_singular
 end
 
-# can Γ_𝐦 and Γ_𝐧 touch? Removing a common start of 𝐦 and 𝐧 maps both by a similarity,
-# after which the connectedness matrix decides, looking only as deep as it goes.
+# can the matrix rule out Γ_𝐦 and Γ_𝐧 touching? Removing a common start of 𝐦 and 𝐧 maps both
+# by a similarity, then we read the matrix. False means disjoint. True decides nothing, and
+# self-similarity then decides if the integral is singular.
 function connected_by_matrix(
     Γ::AbstractAttractor,
     𝐦::Vector{<:Integer},
