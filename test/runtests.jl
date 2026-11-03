@@ -178,3 +178,13 @@ end
 end
 
 include("regression_tests.jl")
+
+# total mass of a piecewise constant density
+function density_mass(ϕ)
+    return sum(
+        ϕ.coeffs[n] * ϕ.basis[n].normalisation * ϕ.basis[n].measure.suppmeasure for
+        n in eachindex(ϕ.coeffs)
+    )
+end
+
+include("exact_solution_tests.jl")

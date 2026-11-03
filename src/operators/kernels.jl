@@ -85,6 +85,14 @@ function helmholtzkernel3d_screenpot(k::Number, x, y)
     return cis.(k * r) ./ (4π * r)
 end
 
+# Laplace kernels
+laplacekernel2d(x, y) = -energykernel(0, x, y) / (2π)
+laplacekernel3d(x, y) = energykernel(1, x, y) / (4π)
+
+# screen Laplace kernels
+laplacekernel2d_screenpot(x, y) = -log.(vecdist_screenpot(x, y)) / (2π)
+laplacekernel3d_screenpot(x, y) = 1 ./ (4π * vecdist_screenpot(x, y))
+
 # Lipschitz parts of Helmholtz kernels
 function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])

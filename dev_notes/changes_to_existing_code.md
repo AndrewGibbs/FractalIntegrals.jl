@@ -35,3 +35,7 @@ Tests are in `test/regression_tests.jl`.
 ## Julia version, approved by Andrew on 2026-11-03
 
 - **`Project.toml`:** `julia = "1.7 - 1.12"` → `julia = "1.10"`, meaning 1.10 or later. The upper cap appeared to stop the package installing on the latest Julia and on nightly in CI, and 1.10 is now the oldest version CI tests.
+
+## Second round of fixes, approved by Andrew on 2026-11-03
+
+- **Laplace potential.** `potentials/potentialpresets.jl`, `operators/kernels.jl`: `singlelayer_potential_laplace` did not use the operator's Green's function. In 2D it evaluated `-2π/0 × log r`-style nonsense through `1/((n-2)Aₙ)`, and in 3D the constant was wrong and it used `Aₙ` for the wrong dimension. It now uses `-log r/(2π)` and `1/(4πr)`, with screen versions for N=1 in 2D and N=2 in 3D, as the Helmholtz potential does. Checked against the exact solution on a segment, the capacitance of a square plate, and `-Δu = φ` on a square (`test/exact_solution_tests.jl`). The operator itself was correct. The `gamma` import from SpecialFunctions was only used here, so is removed.

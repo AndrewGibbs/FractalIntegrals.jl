@@ -111,14 +111,22 @@ function singlelayer_potential_laplace(
 )
     ambient_dimension = check_ambient_dimension(ambient_dimension)
 
-    n = ambient_dimension + 1
-    n == 2 ? Aₙ = -1 / (2π) : Aₙ = 2π^((n - 1) / 2) / gammafn((n - 1) / 2)
+    # select appropriate kernel for ambient dimension
+    if ambient_dimension == 2
+        if get_ambient_dimension(ϕ.basis.measure) == 1
+            Φ = (x, y) -> laplacekernel2d_screenpot(x, y)
+        else
+            Φ = (x, y) -> laplacekernel2d(x, y)
+        end
+    elseif ambient_dimension == 3
+        if get_ambient_dimension(ϕ.basis.measure) == 2
+            Φ = (x, y) -> laplacekernel3d_screenpot(x, y)
+        else
+            Φ = (x, y) -> laplacekernel3d(x, y)
+        end
+    else
+        error("Haven't coded single layer potential for this many dimensions")
+    end
 
-    Φ = (x, y) -> 1 / ((n - 2) * Aₙ) * energykernel(n - 2, x, y)
-
-    # # map (X,W) quadrature rule to each basis element
-    # quadrules_mapped = mapquadrule_to_elements(ϕ.basis, quadrule)
-
-    # create and return instance of potential type
     return Potential(ϕ, Φ)
 end
