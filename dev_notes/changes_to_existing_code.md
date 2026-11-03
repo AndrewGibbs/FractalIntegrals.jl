@@ -25,3 +25,9 @@ Tests are in `test/regression_tests.jl`.
 - **`getindex`.** `operators/binaryoperators.jl`: the argument was *named* `BlockOperator`, so the method applied to every type. It now applies to `BlockOperator` only.
 
 - **Docs and examples.** `README.md`: `Pkg.install` → `Pkg.add`. `docs/src/integralequations.md`, `operators/integraloperators.jl` and `quadrature/senergy.jl`: kernel sign, `|x-y|^s` → `|x-y|^{-s}`, to match the code. `fractalgeometry/attractors.jl`: docstring example `Bool(ones(3,3))` → `ones(Bool, 3, 3)`. `examples/two_dimensional_scattering.jl` and `.ipynb`: replaced `Γ.n`, and in the `.jl`, `ϕ`, neither of which exist there.
+
+## Formatting and merge, approved by Andrew on 2026-11-03
+
+- **All Julia files reformatted.** Andrew asked to merge Zoïs Moitier's work from `origin/main`, which ran JuliaFormatter over the package. It also rewrites code forms: adds explicit `return`, turns one-line functions into `function ... end`, and `?:` into `if/else`. Our side was formatted the same way first. The merged code parses identically to our formatted code, and all tests pass.
+- **Comments kept.** Zoïs's formatting run removed some comments, such as `# self-adjoint`. Where the two sides conflicted the merge kept our version, so these remain.
+- **Also from that merge:** CI tests on Julia 1.10, latest and nightly (no longer 1.7.2), `test/Manifest.toml` and a notebook checkpoint removed, and a larger `.gitignore`.

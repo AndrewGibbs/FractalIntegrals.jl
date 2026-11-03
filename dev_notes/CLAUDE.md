@@ -90,7 +90,7 @@ julia --project=. -t auto -e 'using Pkg; Pkg.test()'     # test suite (test/runt
 julia --project=docs/ docs/make.jl                       # docs; needs docs env set up, see .github/workflows/docs.yml
 ```
 
-Regression tests for fixed bugs are in `test/regression_tests.jl`. Many code paths are still untested, so a passing suite does not show an area works. Local Julia is 1.12.1. `Project.toml` allows 1.7–1.12 and CI runs 1.7.2, latest stable and nightly on Linux, macOS and Windows.
+Regression tests for fixed bugs are in `test/regression_tests.jl`. Many code paths are still untested, so a passing suite does not show an area works. Local Julia is 1.12.1. CI runs 1.10, latest stable and nightly on Linux, macOS and Windows. Code is formatted with JuliaFormatter.
 
 ## Files only Andrew has
 
@@ -100,7 +100,7 @@ These are gitignored, so they are not in the GitHub repo: `todo.odt` (the origin
 
 The simple bugs are fixed: see `dev_notes/changes_to_existing_code.md`, and `dev_notes/bugs/bugs.ipynb` for what they did. These two remain:
 
-- **Fractal block reuse** (`discretisation/matrixreps.jl:108`): a wrong type parameter means `fractaldiagblocks!` never runs. Correcting only the type is **wrong**: it gives an 8% matrix error on the Koch curve, which has rotating maps. It is correct to rounding on the non-rotating Cantor set and dust. On Sierpinski and Vicsek the difference is about 1e-6, in line with the rounding issue below. Proposed for `dev-speedup`, non-rotating attractors only.
+- **Fractal block reuse** (`get_galerkinreps` in `discretisation/matrixreps.jl`): a wrong type parameter means `fractaldiagblocks!` never runs. Correcting only the type is **wrong**: it gives an 8% matrix error on the Koch curve, which has rotating maps. It is correct to rounding on the non-rotating Cantor set and dust. On Sierpinski and Vicsek the difference is about 1e-6, in line with the rounding issue below. Proposed for `dev-speedup`, non-rotating attractors only.
 - **Bounding balls** (`fractalgeometry/boundingball.jl`): the ball of radius `diam/2` does not always contain the attractor (Sierpinski reaches 1.15× the radius, Koch curve about 1.02× at its endpoints), and for touching pieces `dist⁻ <= 0` is decided by rounding. Measured on Sierpinski, the effect is small: about 1e-7 in Galerkin far fields, and at most about 0.07% in collocation solutions. Left unchanged for now, but needs solving before H-matrices rely on these balls.
 
 **Import time** (`dev_notes/next_steps.md` asks why it is slow): with a warm cache it is fast (`using Plots` 0.9 s, then `using FractalIntegrals` 0.2 s). A fresh `Pkg.test` environment precompiled 201 dependencies in 134 s, including about 59 s for Plots and 3 s for FractalIntegrals. So precompiling dependencies, mostly Plots, is the likely cause of slow imports, but what triggers it on Andrew's machine has not been investigated.
