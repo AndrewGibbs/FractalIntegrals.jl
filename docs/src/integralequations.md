@@ -110,9 +110,9 @@ The following preset constructors build the most common integral operators used 
 acoustic scattering problems.
 
 ```@docs
-singlelayer_operator_laplace
+FractalIntegrals.singlelayer_operator_laplace
 ```
 
 ```@docs
-singlelayer_operator_helmholtz
+FractalIntegrals.singlelayer_operator_helmholtz
 ```
