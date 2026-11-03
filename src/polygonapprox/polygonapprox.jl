@@ -2,7 +2,7 @@ struct Polygon{T}
     nodes::Vector{SVector{2, T}}
 end
 
-function ∪(poly1::Polygon, poly2::Polygon, pres = 8)
+function Base.:∪(poly1::Polygon, poly2::Polygon, pres = 8)
     mag = 1 # need to adjust this later
     path1 = [IntPoint(node[1], node[2], mag, pres) for node in poly1.nodes]
     path2 = [IntPoint(node[1], node[2], mag, pres) for node in poly2.nodes]

@@ -172,3 +172,5 @@ end
         end
     end
 end
+
+include("regression_tests.jl")
