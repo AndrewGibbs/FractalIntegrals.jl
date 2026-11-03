@@ -87,3 +87,17 @@ end
     Γ = getfractal("cantordust")
     @test F.discretise(F.IdentityOperator(Γ), h_mesh = 10.0).stiffness_matrix ≈ ones(1, 1)
 end
+
+@testset "inner product of elements at different depths" begin
+    μ = HausdorffMeasure(getfractal("cantordust"))
+    coarse = F.construct_quasiuniform_prebary_p0basis(μ, 0.3, 0.1)
+    fine = F.construct_quasiuniform_prebary_p0basis(μ, 0.1, 0.05)
+    a = coarse[1]
+    inside = first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] == Vector(a.vindex))
+    outside = first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] != Vector(a.vindex))
+    # the overlap is the smaller element
+    expected = inside.measure.suppmeasure * a.normalisation * inside.normalisation
+    @test dot(a, inside) ≈ expected
+    @test dot(inside, a) ≈ expected
+    @test dot(a, outside) == 0
+end
