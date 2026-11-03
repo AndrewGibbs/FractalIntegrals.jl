@@ -110,3 +110,10 @@ end
     @test F.sim_map_inv(s, s([0.3, 0.7])) ≈ [0.3, 0.7]
     @test all(n -> isdefined(F, n), names(F))
 end
+
+@testset "getindex only extended for BlockOperator" begin
+    @test_throws MethodError getindex(:not_indexable, 1, 2)
+    Γ = getfractal("cantordust")
+    S = F.singlelayer_operator_laplace((Γ, Γ + [3.0, 0.0]))
+    @test S[1, 2] === S.operators[1, 2]
+end

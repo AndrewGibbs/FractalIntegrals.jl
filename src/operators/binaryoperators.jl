@@ -74,6 +74,6 @@ struct BlockOperator{M<:MeasureUnion, B<:Matrix} <: FractalOperator{M}
     symmetric :: Bool
 end
 
-Base.getindex(BlockOperator, args...) = getindex(BlockOperator.operators, args...)
+Base.getindex(K::BlockOperator, args...) = getindex(K.operators, args...)
 
 #                      ,,,,,,,,,,,,,,,,,,,,,,,,,,,,............................................;[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
