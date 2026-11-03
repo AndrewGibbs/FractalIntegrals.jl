@@ -8,8 +8,10 @@ const F = FractalIntegrals
     S = F.singlelayer_operator_helmholtz((Γ₁, Γ₂), 2.0)
     @test S isa F.BlockOperator
     @test F.singlelayer_operator_laplace((Γ₁, Γ₂)) isa F.BlockOperator
-    bases = (F.construct_quasiuniform_prebary_p0basis(S.measures[1], 0.5, 0.1),
-            F.construct_quasiuniform_prebary_p0basis(S.measures[2], 0.5, 0.1))
+    bases = (
+        F.construct_quasiuniform_prebary_p0basis(S.measures[1], 0.5, 0.1),
+        F.construct_quasiuniform_prebary_p0basis(S.measures[2], 0.5, 0.1),
+    )
     G = F.get_galerkin_matrix(S, bases)
     n₁ = length(bases[1])
     @test size(G) == (sum(length.(bases)), sum(length.(bases)))
@@ -25,34 +27,43 @@ end
     h_quad = 0.05
 
     # as k → 0 the Helmholtz matrix must tend to the Laplace matrix
-    S₀ = F.singlelayer_operator_helmholtz(Γ, 1e-6, ambient_dimension = 3)
-    L = F.singlelayer_operator_laplace(Γ, ambient_dimension = 3)
-    A₀ = F.discretise(S₀, h_mesh = h, h_quad = h_quad).stiffness_matrix
-    Aₗ = F.discretise(L, h_mesh = h, h_quad = h_quad).stiffness_matrix
+    S₀ = F.singlelayer_operator_helmholtz(Γ, 1e-6; ambient_dimension = 3)
+    L = F.singlelayer_operator_laplace(Γ; ambient_dimension = 3)
+    A₀ = F.discretise(S₀; h_mesh = h, h_quad = h_quad).stiffness_matrix
+    Aₗ = F.discretise(L; h_mesh = h, h_quad = h_quad).stiffness_matrix
     @test norm(A₀ - Aₗ) / norm(Aₗ) < 1e-5
 
     k = 3.0
-    S = F.singlelayer_operator_helmholtz(Γ, k, ambient_dimension = 3)
-    Sₕ = F.discretise(S, h_mesh = h, h_quad = h_quad)
+    S = F.singlelayer_operator_helmholtz(Γ, k; ambient_dimension = 3)
+    Sₕ = F.discretise(S; h_mesh = h, h_quad = h_quad)
 
     # near field must tend to far field as r → ∞
     ϕ = Sₕ \ (x -> exp(im * k * x[1]))
-    slp = F.singlelayer_potential_helmholtz(ϕ, k, ambient_dimension = 3)
-    ffp = F.farfield_pattern(ϕ, k, ambient_dimension = 3)
+    slp = F.singlelayer_potential_helmholtz(ϕ, k; ambient_dimension = 3)
+    ffp = F.farfield_pattern(ϕ, k; ambient_dimension = 3)
     r = 500
-    angles = [(θ, ψ) for θ in 0.3:0.5:2.8, ψ in 0.0:1.0:5.0][:]
+    angles = [(θ, ψ) for θ = 0.3:0.5:2.8, ψ = 0.0:1.0:5.0][:]
     x = [r * [sin(θ) * cos(ψ), sin(θ) * sin(ψ), cos(θ)] for (θ, ψ) in angles]
     @test (exp(im * k * r) / r) * ffp.(angles) ≈ -slp.(x) rtol = 1e-2
 
     # reciprocity of the far-field pattern
     dirs = [(0.4, 0.3), (0.9, 1.7), (1.3, 3.1), (0.7, 4.6)]
     fθ = [x -> exp(-im * k * sin(θ) * (x[1] * cos(ψ) + x[2] * sin(ψ))) for (θ, ψ) in dirs]
-    R = [F.farfield_pattern(Sₕ \ fθ[n], k, ambient_dimension = 3)(dirs[m]) for m in eachindex(dirs), n in eachindex(dirs)]
+    R = [
+        F.farfield_pattern(Sₕ \ fθ[n], k; ambient_dimension = 3)(dirs[m]) for
+        m in eachindex(dirs), n in eachindex(dirs)
+    ]
     @test R ≈ transpose(R) rtol = 1e-2
 
     # also for a fractal with ambient dimension three
-    cube = Attractor([Similarity(1/3, [a, b, c]) for a in (0, 2/3), b in (0, 2/3), c in (0, 2/3)][:]...)
-    @test F.singlelayer_operator_helmholtz(cube, k) isa F.OscillatorySeparableIntegralOperator
+    cube = Attractor(
+        [
+            Similarity(1 / 3, [a, b, c]) for a in (0, 2 / 3), b in (0, 2 / 3),
+            c in (0, 2 / 3)
+        ][:]...,
+    )
+    @test F.singlelayer_operator_helmholtz(cube, k) isa
+          F.OscillatorySeparableIntegralOperator
 end
 
 @testset "Hausdorff dimension of presets" begin
@@ -60,7 +71,7 @@ end
     @test Γ.d ≈ log(3) / log(2)
     @test sum(HausdorffMeasure(Γ).weights) ≈ 1
     @test length(F.chaos_quadrule(Γ, 1000)[1]) == 1000
-    @test F.sierpinskicarpet(ρ = 1/4).d ≈ 3/2
+    @test F.sierpinskicarpet(; ρ = 1 / 4).d ≈ 3 / 2
     # every preset without a user-set dimension rule must have weights summing to one
     for name in ["cantorset", "cantordust", "sierpinski", "vicsek", "kochcurve", "carpet"]
         @test sum(HausdorffMeasure(getfractal(name)).weights) ≈ 1
@@ -80,12 +91,12 @@ end
     μ = @test_logs (:warn, r"not known") getmeasure("cantordust")
     @test μ isa HausdorffMeasure
     @test μ.suppmeasure == 1
-    @test getmeasure("cantordust", suppmeasure = 2.0).suppmeasure == 2
+    @test getmeasure("cantordust"; suppmeasure = 2.0).suppmeasure == 2
 end
 
 @testset "single-element mesh" begin
     Γ = getfractal("cantordust")
-    @test F.discretise(F.IdentityOperator(Γ), h_mesh = 10.0).stiffness_matrix ≈ ones(1, 1)
+    @test F.discretise(F.IdentityOperator(Γ); h_mesh = 10.0).stiffness_matrix ≈ ones(1, 1)
 end
 
 @testset "inner product of elements at different depths" begin
@@ -93,8 +104,10 @@ end
     coarse = F.construct_quasiuniform_prebary_p0basis(μ, 0.3, 0.1)
     fine = F.construct_quasiuniform_prebary_p0basis(μ, 0.1, 0.05)
     a = coarse[1]
-    inside = first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] == Vector(a.vindex))
-    outside = first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] != Vector(a.vindex))
+    inside =
+        first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] == Vector(a.vindex))
+    outside =
+        first(e for e in fine if Vector(e.vindex)[1:length(a.vindex)] != Vector(a.vindex))
     # the overlap is the smaller element
     expected = inside.measure.suppmeasure * a.normalisation * inside.normalisation
     @test dot(a, inside) ≈ expected
@@ -106,7 +119,7 @@ end
     Γ = getfractal("cantordust")
     μ = HausdorffMeasure(Γ)
     @test length(Base.:∪(μ ∪ μ, μ)) == 3
-    s = Similarity(1/3, [0.2, 0.1], [0.0 -1.0; 1.0 0.0])
+    s = Similarity(1 / 3, [0.2, 0.1], [0.0 -1.0; 1.0 0.0])
     @test F.sim_map_inv(s, s([0.3, 0.7])) ≈ [0.3, 0.7]
     @test all(n -> isdefined(F, n), names(F))
 end
@@ -119,9 +132,9 @@ end
 end
 
 @testset "docstring example for Attractor" begin
-    courage = Similarity(1/2, [0, 0])
-    wisdom  = Similarity(1/2, [1/2, 0])
-    power   = Similarity(1/2, [1/4, sqrt(3)/4])
-    Γ = Attractor(courage, wisdom, power, connectedness = ones(Bool, 3, 3))
+    courage = Similarity(1 / 2, [0, 0])
+    wisdom = Similarity(1 / 2, [1 / 2, 0])
+    power = Similarity(1 / 2, [1 / 4, sqrt(3) / 4])
+    Γ = Attractor(courage, wisdom, power; connectedness = ones(Bool, 3, 3))
     @test Γ.d ≈ log(3) / log(2)
 end

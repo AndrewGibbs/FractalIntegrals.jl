@@ -1,7 +1,7 @@
 # unions of attractors
 
 struct AttractorUnion{A<:Tuple{Vararg{<:AbstractAttractor}}} <: Fractal
-    attractors :: A
+    attractors::A
 end
 
 # Base.:∪(Γ₁::AbstractAttractor, Γ₂::AbstractAttractor) = AttractorUnion((Γ₁, Γ₂))
@@ -10,15 +10,16 @@ Base.:∪(Γunion::AttractorUnion, Γs::AbstractAttractor...) = ∪(Γunion.attr
 Base.getindex(Γunion::AttractorUnion, m::Integer) = Γunion.attractors[m]
 Base.length(Γ::AttractorUnion) = length(Γ.attractors)
 
-
 # unions of measures
 
 struct MeasureUnion{A<:Tuple{Vararg{<:AbstractInvariantMeasure}}} <: Measure
-    measures :: A
+    measures::A
 end
 
 # Base.:∪(μ₁::AbstractInvariantMeasure, μ₂::AbstractInvariantMeasure) = MeasureUnion((μ₁, μ₂))
-Base.:∪(μs::AbstractInvariantMeasure...) = MeasureUnion(embed_into_same_dimension(tuple(μs...)))
+function Base.:∪(μs::AbstractInvariantMeasure...)
+    return MeasureUnion(embed_into_same_dimension(tuple(μs...)))
+end
 Base.:∪(μnion::MeasureUnion, μs::AbstractInvariantMeasure...) = ∪(μnion.measures..., μs...)
 Base.getindex(μnion::MeasureUnion, m::Integer) = μnion.measures[m]
 Base.length(μ::MeasureUnion) = length(μ.measures)

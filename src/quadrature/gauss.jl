@@ -12,13 +12,15 @@ Mantica, 1996.
 As in this paper, the algorithm is only defined for measures and
 attractors in one ambient dimension.
 """
-function gauss_quadrule(μ::AbstractInvariantMeasure{AmdDim,<:Any,<:Any,<:AbstractAttractor},
-                        numpts::Integer) where AmdDim
+function gauss_quadrule(
+    μ::AbstractInvariantMeasure{AmdDim,<:Any,<:Any,<:AbstractAttractor},
+    numpts::Integer,
+) where {AmdDim}
     @assert AmdDim == 1 "Attractor must be compact subset of real line"
-    J = getjacobimatrix(μ, numpts-1)
+    J = getjacobimatrix(μ, numpts - 1)
     vv = real.(eigvecs(J))
     x = real.(eigvals(J))
-    w = vv[1,:].^2
+    w = vv[1, :] .^ 2
     return x, w
 end
 

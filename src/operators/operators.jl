@@ -1,4 +1,4 @@
-abstract type FractalOperator{M <: Measure} end
+abstract type FractalOperator{M<:Measure} end
 include("kernels.jl")
 include("integraloperators.jl")
 

@@ -13,11 +13,11 @@ Forte, B., Mendivil, F., Vrscay, E.:
 "Chaos games for iterated function systems with grey level
 maps", 1998.
 """
-function chaos_quadrule( μ::AbstractInvariantMeasure{<:Any,
-                                                    M}, 
-                            numpts::Integer;
-                            x₀ = get_barycentre(μ)
-                            ) where M
+function chaos_quadrule(
+    μ::AbstractInvariantMeasure{<:Any,M},
+    numpts::Integer;
+    x₀ = get_barycentre(μ),
+) where {M}
 
     # initialise output nodes
     x = Vector{eltype(μ)}(undef, numpts)
@@ -27,9 +27,9 @@ function chaos_quadrule( μ::AbstractInvariantMeasure{<:Any,
 
     # cumulative sum of probability weights is used to draw random samples
     μ_weights_cum = cumsum(μ.weights)
-    for n in 1:numpts
+    for n = 1:numpts
         # choose a random Similarity
-        τ = minimum((1:M)[rand() .< μ_weights_cum])
+        τ = minimum((1:M)[rand().<μ_weights_cum])
         x[n] = μ.supp.ifs[τ](x_prev)
 
         # log value to map next iteration
@@ -37,7 +37,7 @@ function chaos_quadrule( μ::AbstractInvariantMeasure{<:Any,
     end
 
     # return nodes and equivalued weights
-    return x, fill(1/numpts, numpts)
+    return x, fill(1 / numpts, numpts)
 end
 
 # default to Hausdorff dimension if only an attractor is given

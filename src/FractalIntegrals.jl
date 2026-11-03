@@ -9,8 +9,7 @@ import Base.Threads: @spawn, nthreads
 using Plots#, Documenter
 using Clipper
 
-export Similarity, Attractor, HausdorffMeasure, InvariantMeasure,
-        getfractal, getmeasure
+export Similarity, Attractor, HausdorffMeasure, InvariantMeasure, getfractal, getmeasure
 
 include("fractalgeometry/fractalgeometry.jl")
 include("vectorindices/vectorindices.jl")
