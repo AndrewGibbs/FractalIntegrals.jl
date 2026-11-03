@@ -47,7 +47,7 @@ function cantordust(T = Float64; ρ = 1 / T(3))
         ifs;
         d = log(T(4)) / log(1 / ρ),
         diam = sqrt(T(2)),
-        symmetries = DihedralGroup(T, 4),
+        symmetries = DihedralGroup(T, 4; centre = fill(1 / T(2), 2)),
         connectedness = connectedness,
     )
 end
@@ -84,7 +84,7 @@ function vicsek(T = Float64; ρ = 1 / T(3))
         ifs;
         d = log(T(5)) / log(1 / ρ),
         diam = sqrt(T(2)),
-        symmetries = DihedralGroup(T, 4),
+        symmetries = DihedralGroup(T, 4; centre = fill(1 / T(2), 2)),
         connectedness = connectedness,
     )
 end
@@ -108,7 +108,12 @@ function sierpinskitriangle(T = Float64; ρ = 1 / T(2))
         ifs;
         d = log(T(3)) / log(1 / T(ρ)),
         diam = one(T),
-        symmetries = DihedralGroup(T, 3),
+        symmetries = DihedralGroup(
+            T,
+            3;
+            centre = [1 / T(2), sqrt(T(3)) / 6] / (2 * (1 - ρ)),
+            angle_offest = T(π) / 6,
+        ),
         connectedness = connectedness,
     )
 end
@@ -185,7 +190,7 @@ function sierpinskicarpet(T = Float64; ρ = 1 / T(3))
         ifs;
         d = log(T(8)) / log(1 / ρ),
         diam = sqrt(T(2)),
-        symmetries = DihedralGroup(T, 4),
+        symmetries = DihedralGroup(T, 4; centre = fill(1 / T(2), 2)),
         connectedness = connectedness,
     )
 end
