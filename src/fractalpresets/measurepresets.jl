@@ -6,8 +6,8 @@ function getmeasure(
 )
     knownmeasures = Dict(
         :cantorset => T(1),
-        :kochsnowflake => T(2) * T(sqrt(3)) / T(5),
-        :heighwaydragon => T(1 / 2),
+        :kochsnowflake => 2 * sqrt(T(3)) / T(5),
+        :heighwaydragon => 1 / T(2),
     )
 
     Γ = getfractal(T, fractalname; kwargs...)

@@ -1,4 +1,4 @@
-InvariantMap(δ, A) = Similarity(1.0, δ, A)
+InvariantMap(δ, A) = Similarity(one(eltype(δ)), δ, A)
 
 # --------------------------- rotation and reflection matrices ----------------------------- #
 rotationmatrix2d(θ::T) where {T} = SMatrix{2,2,T}([cos(θ) -sin(θ); sin(θ) cos(θ)])
@@ -10,15 +10,14 @@ function get_group_operations2d(
     reflections::AbstractVector{T},
     centre::AbstractVector{T},
 ) where {T<:Number}
-    δθ = T(2π) / num_rotations
     num_reflections = length(reflections)
 
     ivmaps = Vector{Similarity{2,T}}(undef, num_rotations + num_reflections)
 
     counter = 0
-    for θ = 0:δθ:(2π-δθ)
+    for n = 0:(num_rotations-1)
         counter += 1
-        rotmat = rotationmatrix2d(θ)
+        rotmat = rotationmatrix2d(2 * T(π) * n / num_rotations)
         ivmaps[counter] = InvariantMap(centre - rotmat * centre, rotmat)
     end
     for ϑ in reflections
@@ -40,7 +39,7 @@ function DihedralGroup(
         δθ = T(π) / n
         reflections = (0:δθ:(T(π)-δθ)) .+ angle_offest
     else
-        δθ = 2π / n # for odd n, split [0,2π] into n segments
+        δθ = 2T(π) / n # for odd n, split [0,2π] into n segments
         reflections = (0:δθ:(2T(π)-δθ)) .+ angle_offest
     end
     return get_group_operations2d(n, reflections, centre)

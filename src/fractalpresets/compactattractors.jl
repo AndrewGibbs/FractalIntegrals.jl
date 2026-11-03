@@ -67,7 +67,7 @@ function vicsek(T = Float64; ρ = 1 / T(3))
     ] # keep centre around [0.5,0.5]
 
     # get connectedness matrix, depends on if subcomponents are touching
-    if ρ == 1 / 3
+    if ρ == 1 / T(3)
         connectedness = Bool[
             1 0 0 0 0
             0 1 0 0 0
@@ -89,7 +89,7 @@ function vicsek(T = Float64; ρ = 1 / T(3))
     )
 end
 
-function sierpinskitriangle(T = Float64; ρ = T(1 / 2))
+function sierpinskitriangle(T = Float64; ρ = 1 / T(2))
     @assert 0 < ρ <= 0.5 "Contraction must satisfy ρ∈(0,0.5]"
     @assert isa(ρ, T) "Contraction ρ must be same type as first input"
     # note that automatic conversion T(ρ) will truncate ρ in some cases, so is best avoided
@@ -119,7 +119,7 @@ function kochcurve(T = Float64)
     ifs = [
         Similarity(1 / T(3), [0, 0]),
         Similarity(1 / T(3), [1 / T(3), 0], rotationmatrix2d(T(π) / T(3))),
-        Similarity(1 / T(3), [1 / 2, sqrt(T(3)) / 6], rotationmatrix2d(-T(π) / T(3))),
+        Similarity(1 / T(3), [1 / T(2), sqrt(T(3)) / 6], rotationmatrix2d(-T(π) / T(3))),
         Similarity(1 / T(3), [2 / T(3), 0]),
     ]
 
@@ -145,8 +145,8 @@ function kochcurve(T = Float64)
     )
 end
 
-function sierpinskicarpet(T = Float64; ρ = T(1 / 3))
-    @assert 0 < ρ <= 1 / 3 "Contraction must satisfy ρ∈(0,1/3]"
+function sierpinskicarpet(T = Float64; ρ = 1 / T(3))
+    @assert 0 < ρ <= 1 / T(3) "Contraction must satisfy ρ∈(0,1/3]"
     @assert isa(ρ, T) "Contraction ρ must be same type as first input"
 
     ifs = [

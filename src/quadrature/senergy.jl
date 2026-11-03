@@ -1,6 +1,6 @@
 # The below variation of vcat is needed for our convention that Γ₀:=Γ
-vcat_(x, y) = vcat(x[x.!=0], y[y.!=0])
-hcat_(x, y) = hcat(x[x.!=0], y[y.!=0])
+vcat_(x, y) = vcat(x[x .!= 0], y[y .!= 0])
+hcat_(x, y) = hcat(x[x .!= 0], y[y .!= 0])
 
 # to be similar, two similarities must pass three tests:
 function similar_test_one(
@@ -9,7 +9,7 @@ function similar_test_one(
     sₘ_::AbstractSimilarity,
     sₙ_::AbstractSimilarity,
 )
-    return isapprox(sₘ.ρ / sₙ.ρ, sₘ_.ρ / sₙ_.ρ; atol = 100 * eps())
+    return isapprox(sₘ.ρ / sₙ.ρ, sₘ_.ρ / sₙ_.ρ; atol = 100 * eps(typeof(sₘ.ρ)))
 end
 
 function similar_test_two(
@@ -20,7 +20,11 @@ function similar_test_two(
     T::AbstractSimilarity,
     T_::AbstractSimilarity,
 )
-    return isapprox(sₘ.A * T.A * inv(sₙ.A), sₘ_.A * T_.A * inv(sₙ_.A); atol = 100 * eps())
+    return isapprox(
+        sₘ.A * T.A * inv(sₙ.A),
+        sₘ_.A * T_.A * inv(sₙ_.A);
+        atol = 100 * eps(typeof(sₘ.ρ)),
+    )
 end
 
 function similar_test_three(
@@ -34,7 +38,7 @@ function similar_test_three(
     return isapprox(
         sₘ.δ .- sₘ_.δ .- sₘ.ρ * sₘ.A * (T.A / sₙ.ρ * inv(sₙ.A) * sₙ.δ .- T.δ),
         .-sₘ_.ρ * sₘ_.A * (T_.A / sₙ_.ρ * inv(sₙ_.A) * sₙ_.δ .- T_.δ);
-        atol = 100 * eps(),
+        atol = 100 * eps(typeof(sₘ.ρ)),
     )
 end
 
@@ -69,7 +73,7 @@ function check_if_similar(
     if test_one_pass
         for T ∈ G, T_ ∈ G_
             if similar_test_two(sₘ, sₙ, sₘ_, sₙ_, T, T_) &&
-                similar_test_three(sₘ, sₙ, sₘ_, sₙ_, T, T_)
+               similar_test_three(sₘ, sₙ, sₘ_, sₙ_, T, T_)
                 pass_all = true
             else
                 pass_all = false
@@ -233,9 +237,10 @@ function construct_singularity_matrix(
     pw₂ = μ₂.weights
     G₂ = get_symmetries(μ₂)#μ₂.symmetries
     M = length(Γ.ifs)
-    A = zeros(1, 1)
-    B = zeros(1, 1)
-    L = zeros(1) # constant vector of log terms, only non-zero when s=0
+    T = eltype(μ₁.weights)
+    A = zeros(T, 1, 1)
+    B = zeros(T, 1, 1)
+    L = zeros(T, 1) # constant vector of log terms, only non-zero when s=0
 
     pw₁ == pw₂ ? fubuni_flag = true : fubuni_flag = false
 
@@ -247,9 +252,9 @@ function construct_singularity_matrix(
     while sum(f) < length(f) # while f contains zeros
         for ∫∫_count = 1:length(S)
             if ~f[∫∫_count]
-                a_row = zeros(length(S))
+                a_row = zeros(T, length(S))
                 a_row[∫∫_count] = 1.0
-                b_row = zeros(length(R))
+                b_row = zeros(T, length(R))
                 ∫∫_indices = S[∫∫_count]
                 if use_strategy_two # subdivide the largest subfractal
                     if ∫∫_indices[1] == [0]
@@ -323,7 +328,7 @@ function construct_singularity_matrix(
                         push!(a_row, -1.0) # increase row by one
                         push!(L, 0.0)
                         if A_rows > 0
-                            A = hcat(A, zeros(A_rows))
+                            A = hcat(A, zeros(T, A_rows))
                         end
                     elseif is_S_similar # singular, but seen similar
                         a_row[similar_index] -= scale_adjust
@@ -349,7 +354,7 @@ function construct_singularity_matrix(
                         push!(R, (mcat, mcat_))
                         push!(b_row, 1.0) # increase row by one
                         if B_rows > 0
-                            B = hcat(B, zeros(B_rows))
+                            B = hcat(B, zeros(T, B_rows))
                         end
                     end
                 end
@@ -390,7 +395,7 @@ function s_energy(
     μ₁::AbstractInvariantMeasure,
     μ₂::AbstractInvariantMeasure,
     s::Number;
-    h_quad::Float64 = 0.0,
+    h_quad::Real = 0.0,
     N_quad::Int64 = 0,
     quadrule::Tuple{AbstractArray,AbstractArray,AbstractArray} = getdefault_quad_premap(
         μ₁,
@@ -406,7 +411,7 @@ function s_energy(
     A, B, _, R, L =
         construct_singularity_matrix(μ₁, μ₂, s; use_strategy_two = use_strategy_two)
 
-    r = zeros(length(R))
+    r = zeros(eltype(B), length(R))
     for n in eachindex(r)
         (m, m_) = R[n]
         # map quadrature rule to (m,m') subcomponents

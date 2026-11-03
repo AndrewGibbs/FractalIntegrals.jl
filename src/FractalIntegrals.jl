@@ -3,6 +3,7 @@ module FractalIntegrals
 import StaticArrays: SVector, SMatrix, mul!
 import LinearAlgebra: norm, det, dot, Symmetric, kron, eigvecs, eigvals, ⋅, svd, Diagonal
 import LinearAlgebra.I as IdMat
+import LinearAlgebra: BlasFloat
 import SpecialFunctions: hankelh1
 import Roots: find_zero, Bisection
 import Base.Threads: @spawn, nthreads

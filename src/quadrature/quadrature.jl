@@ -28,10 +28,10 @@ function getdefault_quad_premap(μ, h_mesh, h_quad, n_quad)
     return getdefault_quad(μ, h_quad * diam(μ) / h_mesh, n_quad)
 end
 
-function getdefault_quad(μ::AbstractInvariantMeasure{N}, h_quad, n_quad) where {N}
+function getdefault_quad(μ::AbstractInvariantMeasure{N,<:Any,T}, h_quad, n_quad) where {N,T}
     if h_quad > 0
         x, w = barycentre_quadrule(μ, h_quad)
-    elseif N == 1
+    elseif N == 1 && T <: BlasFloat # eigenvalue solver for Gauss needs a LAPACK type
         if n_quad >= 1
             x, w = gauss_quadrule(μ, n_quad)
         else

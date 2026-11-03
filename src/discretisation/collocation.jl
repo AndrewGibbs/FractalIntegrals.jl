@@ -113,7 +113,8 @@ function get_collocation_matrix(
 
     @assert num_basis_els <= num_col_pts "Number of collocation points must be no less than basis size"
 
-    col_matrix = Matrix{ComplexF64}(undef, num_col_pts, num_basis_els)
+    col_matrix =
+        Matrix{Complex{eltype(op.measure.weights)}}(undef, num_col_pts, num_basis_els)
 
     @sync for m = 1:num_col_pts
         @spawn for n = 1:num_basis_els

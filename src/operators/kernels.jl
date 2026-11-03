@@ -86,17 +86,17 @@ function helmholtzkernel3d_screenpot(k::Number, x, y)
 end
 
 # Laplace kernels
-laplacekernel2d(x, y) = -energykernel(0, x, y) / (2π)
-laplacekernel3d(x, y) = energykernel(1, x, y) / (4π)
+laplacekernel2d(x, y) = -energykernel(0, x, y) / 2 / π
+laplacekernel3d(x, y) = energykernel(1, x, y) / 4 / π
 
 # screen Laplace kernels
-laplacekernel2d_screenpot(x, y) = -log.(vecdist_screenpot(x, y)) / (2π)
-laplacekernel3d_screenpot(x, y) = 1 ./ (4π * vecdist_screenpot(x, y))
+laplacekernel2d_screenpot(x, y) = -log.(vecdist_screenpot(x, y)) / 2 / π
+laplacekernel3d_screenpot(x, y) = 1 ./ vecdist_screenpot(x, y) / 4 / π
 
 # Lipschitz parts of Helmholtz kernels
 function helmholtzkernel2d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])
-    x_approx_y = isapprox.(x, y, atol = 100 * eps(T))
+    x_approx_y = isapprox.(x, y; atol = 100 * eps(T))
     Φ = zeros(Complex{T}, length(x))
     if false ∈ x_approx_y
         @views Φ[.~x_approx_y] .=
@@ -111,7 +111,7 @@ end
 
 function helmholtzkernel3d_lipschitzpart(k::Number, x, y)
     T = eltype(x[1])
-    x_approx_y = isapprox.(x, y, atol = 100 * eps(T))
+    x_approx_y = isapprox.(x, y; atol = 100 * eps(T))
     Φ = Vector{Complex{T}}(undef, length(x))
     if false ∈ x_approx_y
         @views r = vecdist(x[.~x_approx_y], y[.~x_approx_y])

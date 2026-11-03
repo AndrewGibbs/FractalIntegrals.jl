@@ -54,20 +54,20 @@ function singlelayer_operator_laplace(
     if ambient_dimension == 2
         K = SeparableIntegralOperator(
             μ, #fractal domain
-            (x, y) -> -energykernel(0, x, y) / (2π), # log function
+            (x, y) -> -energykernel(0, x, y) / 2 / π, # log function
             (x, y) -> zero_kernel(x, y), # kernel minus singularity
             zero(R), # strength of singularity, corresponding to log singularity
-            R(-1 / (2π)), # scaling of singularity
+            -1 / (2 * R(π)), # scaling of singularity
             true, # self-adjoint
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case        
         K = SeparableIntegralOperator(
             μ, #fractal domain
-            (x, y) -> energykernel(1, x, y) / (4π), # Green's function
+            (x, y) -> energykernel(1, x, y) / 4 / π, # Green's function
             (x, y) -> zero_kernel(x, y), # kernel minus singularity
             one(R), # strength of singularity, corresponding to 1/|x-y|
-            R(1 / (4π)), # scaling of singularity
+            1 / (4 * R(π)), # scaling of singularity
             true, # self-adjoint
         )
     else
@@ -85,7 +85,7 @@ function dom2codom_singlelayer_operator_laplace(
     if μ₁ == μ₂
         singlelayer_operator_laplace(μ₁; ambient_dimension = ambient_dimension, varargs...)
     elseif ambient_dimension == 2
-        Φ = (x, y) -> -energykernel(0, x, y) / (2π)
+        Φ = (x, y) -> -energykernel(0, x, y) / 2 / π
         K = SmoothIntegralOperator{M1,M2,typeof(Φ),T}(
             μ₁,
             μ₂, #domain -> codomain
@@ -94,7 +94,7 @@ function dom2codom_singlelayer_operator_laplace(
         )
     elseif ambient_dimension == 3
         #3D Helmholtz case  
-        Φ = (x, y) -> energykernel(1, x, y) / (4π)
+        Φ = (x, y) -> energykernel(1, x, y) / 4 / π
         K = SmoothIntegralOperator{M1,M2,typeof(Φ),T}(
             μ₁,
             μ₂, #domain -> codomain
@@ -221,7 +221,12 @@ function dom2codom_singlelayer_operator_helmholtz(
 ) where {M1<:AbstractInvariantMeasure,M2<:AbstractInvariantMeasure}
     T = eltype(eltype(μ₁))
     if μ₁ == μ₂
-        singlelayer_operator_helmholtz(μ₁, k; ambient_dimension = ambient_dimension, varargs...)
+        singlelayer_operator_helmholtz(
+            μ₁,
+            k;
+            ambient_dimension = ambient_dimension,
+            varargs...,
+        )
     elseif ambient_dimension == 2
         Φ = (x, y) -> helmholtzkernel2d(k, x, y)
         K = SmoothIntegralOperator{M1,M2,typeof(Φ),T}(

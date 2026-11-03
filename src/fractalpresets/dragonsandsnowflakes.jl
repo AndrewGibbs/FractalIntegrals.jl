@@ -26,12 +26,12 @@ function kochsnowflake(T = Float64; rescale = sqrt(T(3)) / 3)
     # construct the iterated function system for the Koch
     ifs = [
         Similarity(sqrt(1 / T(3)), rescale * [0, 0], rotationmatrix2d(T(π) / 6)),
-        Similarity(1 / 3, rescale * [0, 2 / 3]),
-        Similarity(1 / 3, rescale * [-1 / sqrt(T(3)), 1 / 3]),
-        Similarity(1 / 3, rescale * [-1 / sqrt(T(3)), -1 / 3]),
-        Similarity(1 / 3, rescale * [0, -2 / 3]),
-        Similarity(1 / 3, rescale * [1 / sqrt(T(3)), -1 / 3]),
-        Similarity(1 / 3, rescale * [1 / sqrt(T(3)), 1 / 3]),
+        Similarity(1 / T(3), rescale * [0, 2 / T(3)]),
+        Similarity(1 / T(3), rescale * [-1 / sqrt(T(3)), 1 / T(3)]),
+        Similarity(1 / T(3), rescale * [-1 / sqrt(T(3)), -1 / T(3)]),
+        Similarity(1 / T(3), rescale * [0, -2 / T(3)]),
+        Similarity(1 / T(3), rescale * [1 / sqrt(T(3)), -1 / T(3)]),
+        Similarity(1 / T(3), rescale * [1 / sqrt(T(3)), 1 / T(3)]),
     ]
 
     # create connectedness matrix

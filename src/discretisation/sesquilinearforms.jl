@@ -121,7 +121,7 @@ end
 
 function getsingularinfo(μ, s, q::QuadStruct)
     A, B, singular_indices, R, log_adjustments = construct_singularity_matrix(μ, μ, s)
-    r = Vector{Float64}(undef, length(R))
+    r = Vector{eltype(B)}(undef, length(R))
     for n in eachindex(r)
         (m, m_) = R[n]
         Xn, Wxn = mapquadrule(μ, m, q.nodes, q.weights)

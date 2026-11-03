@@ -58,8 +58,8 @@ end
     # also for a fractal with ambient dimension three
     cube = Attractor(
         [
-            Similarity(1 / 3, [a, b, c]) for a in (0, 2 / 3), b in (0, 2 / 3),
-            c in (0, 2 / 3)
+            Similarity(1 / 3, [a, b, c]) for
+            a in (0, 2 / 3), b in (0, 2 / 3), c in (0, 2 / 3)
         ][:]...,
     )
     @test F.singlelayer_operator_helmholtz(cube, k) isa
@@ -177,12 +177,18 @@ end
         μ = HausdorffMeasure(getfractal("cantordust"))
         pieces = (μ[1], μ[2], μ[3], μ[4])
         k = 5.0
-        ϕ = F.discretise(F.singlelayer_operator_helmholtz(μ, k), h_mesh = 0.1, h_quad = 0.03) \ f
-        ϕ₄ = F.discretise(
-            F.singlelayer_operator_helmholtz(pieces, k),
-            h_mesh = 0.1,
-            h_quad = 0.03,
-        ) \ f
+        ϕ =
+            F.discretise(
+                F.singlelayer_operator_helmholtz(μ, k),
+                h_mesh = 0.1,
+                h_quad = 0.03,
+            ) \ f
+        ϕ₄ =
+            F.discretise(
+                F.singlelayer_operator_helmholtz(pieces, k),
+                h_mesh = 0.1,
+                h_quad = 0.03,
+            ) \ f
         x = [0.3, 1.2]
         @test F.singlelayer_potential_helmholtz(ϕ₄, k)(x) ≈
               F.singlelayer_potential_helmholtz(ϕ, k)(x)
@@ -281,5 +287,85 @@ end
         Mᵣ = F.discretise(A, h_mesh = 0.1, h_quad = 0.01, reps = true).stiffness_matrix
         M = F.discretise(A, h_mesh = 0.1, h_quad = 0.01, reps = false).stiffness_matrix
         @test Mᵣ ≈ M
+    end
+end
+
+@testset "numeric types other than Float64" begin
+    presets = [
+        "cantorset",
+        "cantordust",
+        "sierpinskitriangle",
+        "sierpinskicarpet",
+        "vicsek",
+        "kochcurve",
+        "kochsnowflake",
+        "heighwaydragon",
+    ]
+    # the barycentre needs a linear solve, so exercises most of the geometry
+    @testset "$T, building $name" for T in (Float32, BigFloat), name in presets
+        Γ = getfractal(T, name)
+        μ = HausdorffMeasure(Γ)
+        @test Γ.ifs[1].ρ isa T
+        @test eltype(μ.weights) == T
+        @test all(eltype(s.A) == T for s in Γ.symmetries)
+        @test norm(
+            Float64.(F.get_barycentre(μ)) -
+            F.get_barycentre(HausdorffMeasure(getfractal(name))),
+        ) < (T == Float32 ? 1e-4 : 1e-12)
+    end
+
+    @testset "vicsek connectedness doesn't depend on type" begin
+        @test getfractal(Float32, "vicsek").connectedness ==
+              getfractal(BigFloat, "vicsek").connectedness ==
+              getfractal("vicsek").connectedness
+    end
+
+    @testset "$T, energies and Laplace problems on $name" for T in (Float32, BigFloat),
+        name in ("cantorset", "cantordust", "sierpinskitriangle", "kochcurve")
+
+        Γ = getfractal(T, name)
+        Γ₆₄ = getfractal(name)
+        rtol = T == Float32 ? 1e-4 : 1e-11
+        h = T(1 // 20)
+
+        E = F.s_energy(Γ, zero(T); h_quad = h)
+        @test E isa T
+        @test Float64(E) ≈ F.s_energy(Γ₆₄, 0.0; h_quad = 0.05) rtol = rtol
+
+        opts = (h_mesh = T(1 // 5), h_quad = h)
+        Sₕ = F.discretise(F.singlelayer_operator_laplace(Γ); opts...)
+        Sₕ₆₄ =
+            F.discretise(F.singlelayer_operator_laplace(Γ₆₄), h_mesh = 0.2, h_quad = 0.05)
+        @test eltype(Sₕ.stiffness_matrix) == T
+        # Touching pieces of the triangle are found by rounding (see the bounding ball issue
+        # in dev_notes/CLAUDE.md), so its Galerkin matrix depends on the type at about 3e-6.
+        @test Float64.(Sₕ.stiffness_matrix) ≈ Sₕ₆₄.stiffness_matrix rtol =
+            (name == "sierpinskitriangle" ? 1e-4 : rtol)
+    end
+
+    @testset "precision is really kept" begin
+        Γ = getfractal(BigFloat, "cantorset")
+        @test Γ.d ≈ log(big(2)) / log(big(3)) atol = big(10.0)^-70
+        @test F.get_barycentre(HausdorffMeasure(Γ)) ≈ big(1) / 2 atol = big(10.0)^-70
+        Sₕ = F.discretise(
+            F.singlelayer_operator_laplace(Γ),
+            h_mesh = big(0.2),
+            h_quad = big(0.05),
+        )
+        @test Sₕ.op.singularconst ≈ -1 / (2 * big(π)) atol = big(10.0)^-70
+    end
+
+    @testset "Float32 stays Float32 in Gauss, and collocation" begin
+        Γ = getfractal(Float32, "cantorset")
+        x, w = F.gauss_quadrule(Γ, 5)
+        @test eltype(x) == Float32
+        @test eltype(
+            F.discretise(
+                F.singlelayer_operator_laplace(Γ),
+                h_mesh = 0.2f0,
+                h_quad = 0.05f0,
+                method = :collocation,
+            ).collocation_matrix,
+        ) == ComplexF32
     end
 end

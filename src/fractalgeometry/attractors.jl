@@ -214,7 +214,7 @@ function dimH(ifs::AbstractVector{<:AbstractSimilarity})
     r = [s.ρ for s in ifs]
 
     if ishomogeneous(ifs)
-        d = log(1 / length(r)) / log(r[1])
+        d = -log(eltype(r)(length(r))) / log(r[1])
     else
         # approximate Hausdorff dimension by approximating zero of following:
         f(d) = sum(r .^ d) - 1

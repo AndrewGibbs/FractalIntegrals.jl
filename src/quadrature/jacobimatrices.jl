@@ -55,13 +55,13 @@ function get_next_modified_coeffs_from_coeffs(
         elseif j == ℓ - 1
             return r[ℓ+1] * Γⁿ⁻¹[ℓ+1]
         else
-            return 0.0
+            return zero(T)
         end
     end
 
     function get_trickier_sum(j)
-        trickier_sum = 0.0
-        for ℓ = max(0, j - 1):min(n - 1, j + 1) # limit this to the non-zero stuff
+        trickier_sum = zero(T)
+        for ℓ = max(0, j-1):min(n-1, j+1) # limit this to the non-zero stuff
             trickier_sum += γ(ℓ, j)
         end
         return trickier_sum
@@ -119,8 +119,8 @@ function get_Aₙ(
 ) where {T<:Real}
     M = length(μ.supp.ifs)
     n = length(coeffs_this_level[1]) - 1
-    big_sum = zeros(M)
-    denominator = 0.0
+    big_sum = zeros(T, M)
+    denominator = zero(T)
     for i = 1:M
         big_sum[i] += coeffs_this_level[i][n+1]^2 * μ.supp.ifs[i].δ
         for m = 0:(n-1)
