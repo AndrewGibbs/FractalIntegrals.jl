@@ -69,10 +69,10 @@ function vicsek(T = Float64; ρ = 1 / T(3))
     # get connectedness matrix, depends on if subcomponents are touching
     if ρ == 1 / T(3)
         connectedness = Bool[
-            1 0 0 0 0
-            0 1 0 0 0
-            0 0 1 0 0
-            0 0 0 1 0
+            1 0 0 0 1
+            0 1 0 0 1
+            0 0 1 0 1
+            0 0 0 1 1
             1 1 1 1 1
         ]
     else

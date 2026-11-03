@@ -90,7 +90,10 @@ end
     "cantordust",
     "sierpinskitriangle",
     "sierpinskicarpet",
+    "vicsek",
     "kochcurve",
+    "kochsnowflake",
+    "heighwaydragon",
 )
     C = getfractal(name).connectedness
     @test C == C'
