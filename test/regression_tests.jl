@@ -220,3 +220,66 @@ end
         @test_throws ArgumentError F.discretise(K, method = :collocation)
     end
 end
+
+@testset "SingularIntegralOperator" begin
+    Γ = getfractal("cantorset")
+    μ = HausdorffMeasure(Γ)
+    Φ(x, y) = -F.energykernel(0, x, y) / (2π)
+    K = F.SingularIntegralOperator(μ, Φ)
+    @test K isa F.IntegralOperator
+    @test F.SingularIntegralOperator(Γ, Φ, true).symmetric
+
+    # must match the same kernel, written as the Laplace operator
+    S = F.singlelayer_operator_laplace(μ)
+    Kₕ = F.discretise(K, h_mesh = 0.1, h_quad = 0.01, method = :collocation)
+    Sₕ = F.discretise(S, h_mesh = 0.1, h_quad = 0.01, method = :collocation)
+    @test Kₕ.collocation_matrix ≈ Sₕ.collocation_matrix
+
+    @test_throws ArgumentError F.discretise(K, h_mesh = 0.1, h_quad = 0.01)
+end
+
+@testset "second-kind equations under collocation" begin
+    Γ = getfractal("cantordust")
+    μ = HausdorffMeasure(Γ)
+    I = F.IdentityOperator(μ)
+    S = F.singlelayer_operator_laplace(μ)
+    opts = (h_mesh = 0.1, h_quad = 0.01, method = :collocation)
+
+    @testset "identity" begin
+        Iₕ = F.discretise(I; opts...)
+        Vₕ = Iₕ.basis
+        @test Iₕ.collocation_matrix ≈ F.Diagonal([ϕ.normalisation for ϕ in Vₕ])
+        # the whole attractor, index [0], contains every collocation point
+        Mₕ = F.get_collocation_matrix(
+            I,
+            F.construct_quasiuniform_prebary_p0basis(μ, 10.0, 0.5),
+            0.1,
+            0.01,
+        )[1]
+        @test all(Mₕ .== 1)
+    end
+
+    @testset "linearity" begin
+        Sₕ = F.discretise(S; opts...).collocation_matrix
+        Iₕ = F.discretise(I; opts...).collocation_matrix
+        Aₕ = F.discretise(2.5 * I + S; opts...).collocation_matrix
+        @test Aₕ ≈ 2.5 * Iₕ + Sₕ
+    end
+
+    @testset "agrees with Galerkin" begin
+        # entries differ, but they solve the same equation
+        f(x) = 1.0 + x[1] + 0im
+        A = 2 * I + S
+        c = F.discretise(A; opts...) \ f
+        g = F.discretise(A, h_mesh = 0.1, h_quad = 0.01) \ f
+        @test c.coeffs ≈ g.coeffs rtol = 0.05
+    end
+
+    @testset "keywords and default mesh widths" begin
+        A = 2 * I + S
+        @test F.getdefault_meshwidth(A) == F.getdefault_meshwidth(S)
+        Mᵣ = F.discretise(A, h_mesh = 0.1, h_quad = 0.01, reps = true).stiffness_matrix
+        M = F.discretise(A, h_mesh = 0.1, h_quad = 0.01, reps = false).stiffness_matrix
+        @test Mᵣ ≈ M
+    end
+end

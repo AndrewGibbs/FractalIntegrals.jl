@@ -49,6 +49,16 @@ function discretise(
     end
 end
 
+function getdefault_meshwidth(I::IdentityOperator)
+    return I.measure.supp.diam / DOFS_FOR_NONOSCILLATORS
+end
+
+getdefault_meshwidth(S::ScaledOperator) = getdefault_meshwidth(S.operator)
+
+function getdefault_meshwidth(S::SumOperator)
+    return min(getdefault_meshwidth(S.operator1), getdefault_meshwidth(S.operator2))
+end
+
 function getdefault_meshwidth(K::BlockOperator)
     return minimum(getdefault_meshwidth(K[n, n]) for n = 1:length(K.measures))
 end

@@ -90,6 +90,14 @@ struct SingularIntegralOperator{M<:AbstractInvariantMeasure,F<:Function,Z<:Numbe
     symmetric::Bool
 end
 
+function SingularIntegralOperator(
+    μ::M,
+    kernel::F,
+    symmetric::Bool = false,
+) where {T,M<:AbstractInvariantMeasure{<:Any,<:Any,T},F<:Function}
+    return SingularIntegralOperator{M,F,Complex{T}}(μ, kernel, symmetric)
+end
+
 # ultimately, should bin off the below type, its too messy
 struct OscillatorySeparableIntegralOperator{
     M<:AbstractInvariantMeasure,

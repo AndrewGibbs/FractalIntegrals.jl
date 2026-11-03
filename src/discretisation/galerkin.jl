@@ -62,19 +62,33 @@ function get_galerkin_matrix(
 end
 
 function get_galerkin_matrix(
+    ::SingularIntegralOperator,
+    ::FractalBasis;
+    varargs...,
+)
+    throw(
+        ArgumentError(
+            "Galerkin needs the kernel split into r^-s and a smooth part: use a SeparableIntegralOperator, or method = :collocation",
+        ),
+    )
+end
+
+function get_galerkin_matrix(
     ::IdentityOperator,
     Vₕ::FractalBasis;
+    varargs...,
     # could include 'reps' option here, eventually for homogenous cases
 )
     return [ϕ ⋅ ψ for ϕ in Vₕ, ψ in Vₕ]
 end
 
-function get_galerkin_matrix(S::ScaledOperator, Vₕ::FractalBasis)
-    return S.λ * get_galerkin_matrix(S.operator, Vₕ)
+function get_galerkin_matrix(S::ScaledOperator, Vₕ::FractalBasis; varargs...)
+    return S.λ * get_galerkin_matrix(S.operator, Vₕ; varargs...)
 end
 
-function get_galerkin_matrix(S::SumOperator, Vₕ::FractalBasis)
-    return get_galerkin_matrix(S.operator1, Vₕ) + get_galerkin_matrix(S.operator2, Vₕ)
+function get_galerkin_matrix(S::SumOperator, Vₕ::FractalBasis; varargs...)
+    return get_galerkin_matrix(S.operator1, Vₕ; varargs...) +
+           get_galerkin_matrix(S.operator2, Vₕ; varargs...)
 end
 
 # generic discretisation function

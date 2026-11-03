@@ -60,6 +60,40 @@ function compute_col_entry(
     end
 end
 
+# value of ϕ at the collocation point: non-zero when the point's element is inside ϕ's
+function compute_col_entry(
+    ::IdentityOperator,
+    ϕ::FractalBasisElement,
+    x::ColPt,
+    ::Real;
+    varargs...,
+)
+    𝐦, 𝐧 = Vector(ϕ.vindex), Vector(x.vindex)
+    nested = 𝐦 == [0] || (length(𝐦) ≤ length(𝐧) && 𝐧[1:length(𝐦)] == 𝐦)
+    return nested ? ϕ.normalisation : zero(ϕ.normalisation)
+end
+
+function compute_col_entry(
+    S::ScaledOperator,
+    ϕ::FractalBasisElement,
+    x::ColPt,
+    h_quad::Real;
+    varargs...,
+)
+    return S.λ * compute_col_entry(S.operator, ϕ, x, h_quad; varargs...)
+end
+
+function compute_col_entry(
+    S::SumOperator,
+    ϕ::FractalBasisElement,
+    x::ColPt,
+    h_quad::Real;
+    varargs...,
+)
+    return compute_col_entry(S.operator1, ϕ, x, h_quad; varargs...) +
+           compute_col_entry(S.operator2, ϕ, x, h_quad; varargs...)
+end
+
 function get_collocation_matrix(
     op::FractalOperator,
     basis::FractalBasis,

@@ -47,3 +47,9 @@ Tests are in `test/regression_tests.jl`.
   - `fractalgeometry/binaryoperations.jl`: `embed_into_same_dimension` compared with `fill(x) == tuple`, which is always false, so it re-embedded when it had nothing to do.
   - `discretisation/basis.jl`, `potentials/potentialpresets.jl`: `get_ambient_dimension` for bases, so that presets work on a `UnionBasis`.
   - Check: splitting the Cantor set or dust into its pieces gives the same matrix as the single operator, to about 1e-16.
+
+- **Docs references.** `docs/src/integralequations.md`: the `@docs` blocks now use `FractalIntegrals.singlelayer_operator_laplace` and `_helmholtz`, as these aren't exported. Without the prefix the docs build fails, and so did the Make docs CI job. This is the one edit to docs in this round.
+
+- **`SingularIntegralOperator`.** `operators/integraloperators.jl`: its type parameter `Z` wasn't in any field, so it couldn't be constructed without naming all its parameters, and the `@hausdorffdefault` method always errored. It now has a constructor, which works under collocation. Galerkin gives an `ArgumentError`, because the singular algorithm needs the split into `r^-s` and a smooth part: use `SeparableIntegralOperator`, or collocation.
+
+- **`I + S` under collocation.** `discretisation/collocation.jl`: added `compute_col_entry` for `IdentityOperator`, `ScaledOperator` and `SumOperator`, so a second-kind equation can be collocated. `discretisation/discretisation.jl`: added their default mesh widths, so `discretise` needs no `h_mesh`. `discretisation/galerkin.jl`: their Galerkin methods now accept keywords such as `reps`, as the integral operators do.
