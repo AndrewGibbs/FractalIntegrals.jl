@@ -62,3 +62,5 @@ Tests are in `test/regression_tests.jl`.
   - Not possible: BigFloat Helmholtz, because SpecialFunctions has no BigFloat `hankelh1`.
 
 - **Symmetry centres.** `fractalpresets/compactattractors.jl`: the dihedral groups of `cantordust`, `sierpinskitriangle`, `sierpinskicarpet` and `vicsek` rotated about the origin rather than the centre of the fractal, so didn't map it to itself (points moved up to about 1.4). They now use `[1/2, 1/2]`, and for the triangle `[1/2, √3/6]/(2(1-ρ))` with an angle offset of π/6. Results on these four presets are unchanged: energies and Galerkin matrices match exactly, before and after. Andrew approved this on 2026-11-03.
+
+- **Gauss rule on measures of mass other than one.** `quadrature/jacobimatrices.jl`: `A[1]` was multiplied by `μ.suppmeasure`, though the rest of the recurrence is for the normalised measure, so the Jacobi matrix had NaNs and `eigen` threw. `quadrature/gauss.jl`: the weights now sum to μ(Γ). Results on measures of mass one are unchanged. Sub-measures such as `μ[1]` now work with the default quadrature.

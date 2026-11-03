@@ -49,13 +49,27 @@ end
     @test all(F.gauss_quadrule(getfractal("cantorset"), 6)[2] .> 0)
     @test_throws AssertionError F.gauss_quadrule(getfractal("cantordust"), 3)
 
-    # A Jacobi matrix of the normalised measure is what's needed, then scale the weights.
     @testset "measures of mass other than one" begin
         μ = HausdorffMeasure(getfractal("cantorset"))
-        @test_broken begin
-            x, w = F.gauss_quadrule(μ[1], 3)
-            sum(w) ≈ μ[1].suppmeasure
-        end
+        x₀, w₀ = F.gauss_quadrule(μ, 4)
+
+        # a piece of the set: the rule should be the map of the parent's
+        x, w = F.gauss_quadrule(μ[2], 4)
+        @test sum(w) ≈ μ[2].suppmeasure
+        @test sort(x) ≈ sort(μ.supp.ifs[2].(x₀))
+        @test sum(w .* x) ≈ F.get_barycentre(μ[2]) * μ[2].suppmeasure
+
+        # same support, more mass: only the weights change
+        ν = HausdorffMeasure(μ.supp, 2.5, μ.weights)
+        x₂, w₂ = F.gauss_quadrule(ν, 4)
+        @test x₂ ≈ x₀
+        @test w₂ ≈ 2.5 * w₀
+
+        # default quadrature on a sub-measure, through a block operator
+        K = F.singlelayer_operator_laplace((μ[1], μ[2]))
+        @test F.discretise(K, h_mesh = 0.2).stiffness_matrix ≈
+              F.discretise(F.singlelayer_operator_laplace(μ), h_mesh = 0.2).stiffness_matrix rtol =
+            1e-6
     end
 end
 

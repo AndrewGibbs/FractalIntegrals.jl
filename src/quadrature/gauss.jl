@@ -20,7 +20,7 @@ function gauss_quadrule(
     J = getjacobimatrix(μ, numpts - 1)
     vv = real.(eigvecs(J))
     x = real.(eigvals(J))
-    w = vv[1, :] .^ 2
+    w = μ.suppmeasure * vv[1, :] .^ 2
     return x, w
 end
 

@@ -148,7 +148,7 @@ function getjacobimatrix(
     # M = length(μ.supp.ifs)
     coeffs_one_below = [[one(T)] for _ = 1:M]
     coeffs_two_below = [[zero(T)] for _ = 1:M]
-    A[1] = μ.suppmeasure * get_barycentre(μ) # checks out, given def'n of barycentre, should be ∫_Γ x dμ(x)
+    A[1] = get_barycentre(μ) # ∫_Γ x dμ(x) for μ normalised to a probability measure
 
     # iteration
     for n = 1:N #we've done n=0 above
