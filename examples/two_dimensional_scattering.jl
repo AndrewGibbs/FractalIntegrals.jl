@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 38d67822-1d98-11ef-1aea-915089b3d1a9
 begin
-    import Pkg
+    using Pkg: Pkg
     # activate the shared project environment
     Pkg.activate(Base.current_project())
 end
@@ -128,7 +128,7 @@ end
 md"""## Plotting far field pattern"""
 
 # ╔═╡ bd4de407-a217-4d6a-99e0-b98f35efca37
-θ = 0:0.01:2π
+θ = 0:0.01:(2π)
 
 # ╔═╡ c6ffa209-db0f-4ff5-84e9-84ad165fc3db
 ffp = farfield_pattern(vₕ, k)

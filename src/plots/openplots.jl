@@ -33,7 +33,7 @@ function Plots.plot(
         pel_polygon = Γ_boundary_approx
 
         # apply maps of mesh element in reverse order to get approximation to mesh element bdry
-        for mᵢ ∈ reverse(el.vindex)
+        for mᵢ in reverse(el.vindex)
             pel_polygon = Γ.ifs[mᵢ](pel_polygon)
         end
 

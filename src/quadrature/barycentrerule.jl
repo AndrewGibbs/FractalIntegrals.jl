@@ -38,7 +38,7 @@ function barycentre_quadrule(
     # the above line is the only one which needs modifying for more general measures
     x = Vector{eltype(μ)}(undef, max_num_pts)
     x[1] = get_barycentre(μ)
-    @inbounds for ℓ ∈ 1:ℓmax
+    @inbounds for ℓ = 1:ℓmax
         @views x[1:(M^ℓ)] .= μ.supp(x[1:(M^(ℓ-1))])
     end
     return x, get_bary_weights(μ, ℓmax)
