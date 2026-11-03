@@ -1,6 +1,7 @@
 using FractalIntegrals
 using Test, MAT
-import LinearAlgebra: norm, transpose
+import LinearAlgebra: norm, transpose, ⋅
+import Random
 
 # test that fractal presets all load
 @testset "Preset fractals" begin
@@ -188,3 +189,6 @@ function density_mass(ϕ)
 end
 
 include("exact_solution_tests.jl")
+include("geometry_tests.jl")
+include("quadrature_tests.jl")
+include("operator_tests.jl")

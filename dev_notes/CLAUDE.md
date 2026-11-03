@@ -71,7 +71,7 @@ FractalOperator{M}
 4. `sesquilinearform` computes each matrix entry. If `dist⁻` of the two supports is ≤ 0, it looks for a similar canonical singular integral and returns scaled singular part + quadrature of the Lipschitz part. Otherwise it uses tensor quadrature of the full kernel.
 5. `get_galerkinreps` marks repeated entries (symmetry, and fractal block structure), and entries are computed with `@spawn`.
 
-**Collocation** (`method = :collocation`): nodes are barycentres. `h_col` oversamples, in which case the solve uses truncated SVD. Near-singular entries use graded quadrature, which drops elements close to the node. Only `IntegralOperator` is supported, with no block logic and no repeated-entry reuse.
+**Collocation** (`method = :collocation`): nodes are barycentres. `h_col` oversamples, in which case the solve uses truncated SVD. Near-singular entries use graded quadrature, which drops elements close to the node. `IntegralOperator`, `IdentityOperator` and their scaled and summed combinations are supported, with no block logic and no repeated-entry reuse.
 
 ### Conventions and pitfalls
 
@@ -90,7 +90,7 @@ julia --project=. -t auto -e 'using Pkg; Pkg.test()'     # test suite (test/runt
 julia --project=docs/ docs/make.jl                       # docs; needs docs env set up, see .github/workflows/docs.yml
 ```
 
-Regression tests for fixed bugs are in `test/regression_tests.jl`. Many code paths are still untested, so a passing suite does not show an area works. Local Julia is 1.12.1. CI runs 1.10, latest stable and nightly on Linux, macOS and Windows. Code is formatted with JuliaFormatter.
+Regression tests for fixed bugs are in `test/regression_tests.jl`. Also in `test/`: `exact_solution_tests.jl` (answers known independently of the package), `geometry_tests.jl`, `quadrature_tests.jl`, `operator_tests.jl`. A `@test_broken` marks a known unfixed bug. Plots, polygon approximation and graded meshes are still lightly tested, so a passing suite does not show an area works. Local Julia is 1.12.1. CI runs 1.10, latest stable and nightly on Linux, macOS and Windows. Code is formatted with JuliaFormatter.
 
 ## Files only Andrew has
 
@@ -98,9 +98,13 @@ These are gitignored, so they are not in the GitHub repo: `todo.odt` (the origin
 
 ## Known issues (found 2026-11-03)
 
-The simple bugs are fixed: see `dev_notes/changes_to_existing_code.md`, and `dev_notes/bugs/bugs.ipynb` for what they did. These two remain:
+The simple bugs are fixed: see `dev_notes/changes_to_existing_code.md`, and `dev_notes/bugs/bugs.ipynb` for what the first round did. These remain:
 
 - **Fractal block reuse** (`get_galerkinreps` in `discretisation/matrixreps.jl`): a wrong type parameter means `fractaldiagblocks!` never runs. Correcting only the type is **wrong**: it gives an 8% matrix error on the Koch curve, which has rotating maps. It is correct to rounding on the non-rotating Cantor set and dust. On Sierpinski and Vicsek the difference is about 1e-6, in line with the rounding issue below. Proposed for `dev-speedup`, non-rotating attractors only.
 - **Bounding balls** (`fractalgeometry/boundingball.jl`): the ball of radius `diam/2` does not always contain the attractor (Sierpinski reaches 1.15× the radius, Koch curve about 1.02× at its endpoints), and for touching pieces `dist⁻ <= 0` is decided by rounding. Measured on Sierpinski, the effect is small: about 1e-7 in Galerkin far fields, and at most about 0.07% in collocation solutions. Left unchanged for now, but needs solving before H-matrices rely on these balls.
+
+- **Gauss rule on measures of mass other than one** (`quadrature/jacobimatrices.jl`, `gauss.jl`): `A[1] = μ.suppmeasure * get_barycentre(μ)` is wrong for the normalised recurrence, so the Jacobi matrix has NaNs and `eigen` throws. The weights also sum to one rather than to μ(Γ). It fails loudly. So `μ[1]`, and any block operator on sub-measures, needs `h_quad > 0`. Marked `@test_broken` in `test/quadrature_tests.jl`. Awaiting approval.
+- **Vicsek connectedness** (`fractalpresets/compactattractors.jl`): the matrix isn't symmetric, because the corner pieces touch the centre but aren't marked as doing so. Making it symmetric changes energies by about 1e-6 (s = 0.5) and the Galerkin matrix by about 5e-7. Awaiting approval.
+- **Log capacity near one:** on the logarithmic kernel in 2D, the single layer operator is singular when the set's log capacity is one, so some separations of a union give huge densities (the Cantor set with the dust 2 above it has condition 564 and total mass about -600). This is the mathematics rather than a bug, but there is no warning.
 
 **Import time** (`dev_notes/next_steps.md` asks why it is slow): with a warm cache it is fast (`using Plots` 0.9 s, then `using FractalIntegrals` 0.2 s). A fresh `Pkg.test` environment precompiled 201 dependencies in 134 s, including about 59 s for Plots and 3 s for FractalIntegrals. So precompiling dependencies, mostly Plots, is the likely cause of slow imports, but what triggers it on Andrew's machine has not been investigated.
