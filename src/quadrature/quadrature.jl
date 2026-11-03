@@ -53,6 +53,7 @@ getdefault_quad_premap(μ₁, μ₂, h_mesh = max(diam(μ₁), diam(μ₂)); h_q
 # generic quadrature function:
 
 function mapquadrule(μ::AbstractInvariantMeasure, m::AbstractVector{<:Integer}, X, W)
+    m == [0] && return X, W # Γ₀ := Γ, so nothing to map
     for mᵢ in reverse(m)
         X = μ.supp.ifs[mᵢ].(X)
     end

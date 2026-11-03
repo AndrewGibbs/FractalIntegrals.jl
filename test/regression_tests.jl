@@ -82,3 +82,8 @@ end
     @test μ.suppmeasure == 1
     @test getmeasure("cantordust", suppmeasure = 2.0).suppmeasure == 2
 end
+
+@testset "single-element mesh" begin
+    Γ = getfractal("cantordust")
+    @test F.discretise(F.IdentityOperator(Γ), h_mesh = 10.0).stiffness_matrix ≈ ones(1, 1)
+end
