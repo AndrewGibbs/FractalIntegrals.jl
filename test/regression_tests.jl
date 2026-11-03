@@ -75,3 +75,10 @@ end
     # the first moment is integrated exactly, which also checks weights match their nodes
     @test sum(w .* x) ≈ F.get_barycentre(μ)
 end
+
+@testset "getmeasure with unknown measure" begin
+    μ = @test_logs (:warn, r"not known") getmeasure("cantordust")
+    @test μ isa HausdorffMeasure
+    @test μ.suppmeasure == 1
+    @test getmeasure("cantordust", suppmeasure = 2.0).suppmeasure == 2
+end

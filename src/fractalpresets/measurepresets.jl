@@ -22,6 +22,7 @@ function getmeasure(T::Type, fractalname::Union{Symbol, String};
             @warn "The $measuretype measure of $fractalnamestring is not known. 
                 Thus, the measure will be scaled by the Hausdorff measure of the attractor. 
                 Note that this will lead to meaningless results for second-kind integral equations."
+            suppmeasure = one(T)
         end
     end
 
