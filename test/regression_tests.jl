@@ -54,3 +54,15 @@ end
     cube = Attractor([Similarity(1/3, [a, b, c]) for a in (0, 2/3), b in (0, 2/3), c in (0, 2/3)][:]...)
     @test F.singlelayer_operator_helmholtz(cube, k) isa F.OscillatorySeparableIntegralOperator
 end
+
+@testset "Hausdorff dimension of presets" begin
+    Γ = getfractal("sierpinski")
+    @test Γ.d ≈ log(3) / log(2)
+    @test sum(HausdorffMeasure(Γ).weights) ≈ 1
+    @test length(F.chaos_quadrule(Γ, 1000)[1]) == 1000
+    @test F.sierpinskicarpet(ρ = 1/4).d ≈ 3/2
+    # every preset without a user-set dimension rule must have weights summing to one
+    for name in ["cantorset", "cantordust", "sierpinski", "vicsek", "kochcurve", "carpet"]
+        @test sum(HausdorffMeasure(getfractal(name)).weights) ≈ 1
+    end
+end

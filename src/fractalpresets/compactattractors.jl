@@ -94,7 +94,7 @@ function sierpinskitriangle(T = Float64; ρ = T(1/2))
 
     # return fractal attractor
     return Attractor(ifs,
-                    d = log(T(5))/log(1/T(ρ)),
+                    d = log(T(3))/log(1/T(ρ)),
                     diam = one(T),
                     symmetries = DihedralGroup(T, 3),
                     connectedness = connectedness)
@@ -162,7 +162,7 @@ function sierpinskicarpet(T = Float64; ρ = T(1/3))
 
     # return attractor
     return Attractor(ifs,
-                    d = log(T(8))/log(T(3)),
+                    d = log(T(8))/log(1/ρ),
                     diam = sqrt(T(2)),
                     symmetries = DihedralGroup(T, 4),
                     connectedness = connectedness)
