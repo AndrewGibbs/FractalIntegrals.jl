@@ -1,4 +1,4 @@
-function get_bary_weights(μ::AbstractInvariantMeasure{<:HomogenousAttractor},
+function get_bary_weights(μ::AbstractInvariantMeasure{<:Any, <:Any, <:Any, <:HomogenousAttractor},
                         ℓmax::Integer
                         )
     w = μ.suppmeasure*copy(μ.weights)

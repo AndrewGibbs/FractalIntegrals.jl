@@ -66,3 +66,12 @@ end
         @test sum(HausdorffMeasure(getfractal(name)).weights) ≈ 1
     end
 end
+
+@testset "barycentre rule, non-Hausdorff measure on homogeneous attractor" begin
+    μ = InvariantMeasure(getfractal("cantordust"), [0.1, 0.2, 0.3, 0.4])
+    x, w = F.barycentre_quadrule(μ, 0.1)
+    @test length(x) == length(w)
+    @test sum(w) ≈ 1
+    # the first moment is integrated exactly, which also checks weights match their nodes
+    @test sum(w .* x) ≈ F.get_barycentre(μ)
+end
