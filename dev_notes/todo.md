@@ -55,6 +55,8 @@ General
 
 - Error catching for s-energy based on (s,d)
 
+- Warn when someone tries to solve a problem on a fractal with d ≤ n-2 in ambient dimension n, e.g. a 1D fractal in 3D. The set has zero capacity, so the solution is always zero
+
 - Consider removing barycentres from measure properties? It’s only fundamental in our opinion, as the creators of the barycentre rule…
 
 - The bounding ball problem. Is not true in general, but I think the constant can be improved from a half to something much bigger.
