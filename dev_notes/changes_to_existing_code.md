@@ -7,3 +7,5 @@ Every AI change to code that already existed is recorded here (ground rule 3). S
 Tests are in `test/regression_tests.jl`.
 
 - **Block operators.** `polygonapprox/polygonapprox.jl`: `function ∪` → `function Base.:∪`. It created a new `∪` inside the package, so internal calls failed. Broken since `4f26c84`.
+
+- **3D Helmholtz operator.** `operators/operatorpresets.jl`: `ComplexF64{R}` → `Complex{R}`. Broken since `0e0055f`.

@@ -196,7 +196,7 @@ function singlelayer_operator_helmholtz(μ::AbstractInvariantMeasure{
             (x,y) -> helmholtzkernel3d(k,x,y), # Green's function
             (x,y) -> helmholtzkernel3d_lipschitzpart(k,x,y), # kernel minus singularity
             one(R), # strength of singularity, corresponding to 1/|x-y|
-            ComplexF64{R}(1/(4π)), # scaling of singularity
+            Complex{R}(1/(4π)), # scaling of singularity
             true, # self-adjoint
             R(k)
             )
