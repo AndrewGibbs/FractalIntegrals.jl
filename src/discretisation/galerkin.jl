@@ -95,13 +95,12 @@ function get_galerkin_matrix(K::BlockOperator, Vₕ::Tuple{Vararg{FractalBasis}}
             if m == n
                 get_galerkin_matrix(K[m, n], Vₕ[m]; varargs...)
             else
-                get_galerkin_matrix(K[m, n], Vₕ[m], Vₕ[n]; varargs...)
+                get_galerkin_matrix(K[m, n], Vₕ[m], Vₕ[n])
             end
         ) for n = 1:num_bases, m = 1:num_bases
     ]
     full_width = sum(length.(Vₕ))
-    # need to intelligently initialise matrix based on types of block matrices
-    full_matrix = Matrix{ComplexF64}(undef, full_width, full_width)
+    full_matrix = Matrix{promote_type(eltype.(block_form)...)}(undef, full_width, full_width)
     col_loc_start_index = 1
     for n = 1:num_bases # block columns
         # loc_num_rows, loc_num_cols = size(block_form[m,n])
@@ -117,6 +116,10 @@ function get_galerkin_matrix(K::BlockOperator, Vₕ::Tuple{Vararg{FractalBasis}}
         col_loc_start_index = col_inds[end] + 1
     end
     return full_matrix
+end
+
+function get_galerkin_matrix(K::BlockOperator, Vₕ::UnionBasis; varargs...)
+    return get_galerkin_matrix(K, Vₕ.bases; varargs...)
 end
 
 function Base.:\(op::DiscreteGalerkinOperator, f::Function)

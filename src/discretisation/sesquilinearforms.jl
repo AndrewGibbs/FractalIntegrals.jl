@@ -46,7 +46,7 @@ function sesquilinearform(
         ψ.quadrule.nodes,
         ψ.quadrule.weights,
     )
-    return dot(conj(w), op.kernel(x, y))
+    return dot(conj(w), op.kernel(x, y)) * ϕ.normalisation * conj(ψ.normalisation)
 end
 
 function sesquilinearform(

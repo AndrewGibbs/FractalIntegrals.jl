@@ -78,12 +78,12 @@ end
 function dom2codom_singlelayer_operator_laplace(
     μ₁::M1,
     μ₂::M2;
-    ambient_dimension = max(get_ambient_dimension.(μ₁, μ₂)...),
+    ambient_dimension = max(get_ambient_dimension(μ₁), get_ambient_dimension(μ₂)),
     varargs...,
 ) where {M1<:AbstractInvariantMeasure,M2<:AbstractInvariantMeasure}
     T = eltype(eltype(μ₁))
     if μ₁ == μ₂
-        singlelayer_operator_laplace(μ₁; varargs...)
+        singlelayer_operator_laplace(μ₁; ambient_dimension = ambient_dimension, varargs...)
     elseif ambient_dimension == 2
         Φ = (x, y) -> -energykernel(0, x, y) / (2π)
         K = SmoothIntegralOperator{M1,M2,typeof(Φ),T}(
@@ -111,6 +111,7 @@ function singlelayer_operator_laplace(
     ambient_dimension = max.(get_ambient_dimension.(μple)...),
     varargs...,
 )
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     # first make sure all supports have the same ambient dimension
     μple = embed_into_same_dimension(μple)
@@ -215,12 +216,12 @@ function dom2codom_singlelayer_operator_helmholtz(
     μ₁::M1,
     μ₂::M2,
     k::Number;
-    ambient_dimension = max(get_ambient_dimension.(μ₁, μ₂)...),
+    ambient_dimension = max(get_ambient_dimension(μ₁), get_ambient_dimension(μ₂)),
     varargs...,
 ) where {M1<:AbstractInvariantMeasure,M2<:AbstractInvariantMeasure}
     T = eltype(eltype(μ₁))
     if μ₁ == μ₂
-        singlelayer_operator_helmholtz(μ₁, k; varargs...)
+        singlelayer_operator_helmholtz(μ₁, k; ambient_dimension = ambient_dimension, varargs...)
     elseif ambient_dimension == 2
         Φ = (x, y) -> helmholtzkernel2d(k, x, y)
         K = SmoothIntegralOperator{M1,M2,typeof(Φ),T}(
@@ -249,6 +250,7 @@ function singlelayer_operator_helmholtz(
     ambient_dimension = max.(get_ambient_dimension.(μple)...),
     varargs...,
 )
+    ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     # first make sure all supports have the same ambient dimension
     μple = embed_into_same_dimension(μple)

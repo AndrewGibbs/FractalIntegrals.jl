@@ -49,6 +49,32 @@ function discretise(
     end
 end
 
+function getdefault_meshwidth(K::BlockOperator)
+    return minimum(getdefault_meshwidth(K[n, n]) for n = 1:length(K.measures))
+end
+
+# block operators have one mesh and one quadrature rule per component of the union
+function discretise(
+    K::BlockOperator;
+    h_mesh::Real = getdefault_meshwidth(K),
+    h_quad::Real = 0.0,
+    N_quad::Integer = 0,
+    method::Symbol = :galerkin,
+    kwargs...,
+)
+    method == :galerkin ||
+        throw(ArgumentError("block operators can only be discretised by Galerkin"))
+    bases = map(K.measures.measures) do μ
+        return construct_quasiuniform_p0basis(
+            μ,
+            h_mesh,
+            getdefault_quad_premap(μ, h_mesh, h_quad, N_quad),
+        )
+    end
+    Vₕ = UnionBasis(K.measures, bases, collect(length.(bases)))
+    return discretise_galerkin(K, Vₕ; kwargs...)
+end
+
 struct Projection{B<:FractalBasis,V<:AbstractVector}
     basis::B
     coeffs::V

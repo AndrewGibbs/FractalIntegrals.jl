@@ -114,7 +114,7 @@ function embed_into_same_dimension(
     μple::Union{Tuple{Vararg{AbstractInvariantMeasure}},Tuple{Vararg{AbstractAttractor}}},
 )
     amb_dims = get_ambient_dimension.(μple)
-    if fill(amb_dims[1]) == amb_dims
+    if all(==(amb_dims[1]), amb_dims)
         return μple
     else
         n = maximum(amb_dims)

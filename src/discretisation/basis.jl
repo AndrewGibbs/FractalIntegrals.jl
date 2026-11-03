@@ -135,3 +135,6 @@ end
 
 Base.length(b::UnionBasis) = sum(length.(b.bases))
 Base.size(b::UnionBasis) = (length(b),)
+
+get_ambient_dimension(Vₕ::InvariantMeasureBasis) = get_ambient_dimension(Vₕ.measure)
+get_ambient_dimension(Vₕ::UnionBasis) = get_ambient_dimension(Vₕ.measures[1])

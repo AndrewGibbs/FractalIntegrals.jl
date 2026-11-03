@@ -1,7 +1,7 @@
 function singlelayer_potential_helmholtz(
     ϕ::Projection,
     k::Number;
-    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),#,
+    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis),#,
     # h_quad::Real = 0.0,
     # N_quad::Integer = 0,
     # quadrule::QuadStruct =
@@ -15,13 +15,13 @@ function singlelayer_potential_helmholtz(
 
     # select appropriate kernel for ambient dimension
     if ambient_dimension == 2
-        if get_ambient_dimension(ϕ.basis.measure) == 1
+        if get_ambient_dimension(ϕ.basis) == 1
             Φ = (x, y) -> helmholtzkernel2d_screenpot(k, x, y)
         else
             Φ = (x, y) -> helmholtzkernel2d(k, x, y)
         end
     elseif ambient_dimension == 3
-        if get_ambient_dimension(ϕ.basis.measure) == 2
+        if get_ambient_dimension(ϕ.basis) == 2
             Φ = (x, y) -> helmholtzkernel3d_screenpot(k, x, y)
         else
             Φ = (x, y) -> helmholtzkernel3d(k, x, y)
@@ -40,7 +40,7 @@ end
 function farfield_pattern(
     ϕ::Projection,
     k::Number;
-    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),#,
+    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis),#,
     # h_quad::Real = 0.0,
     # N_quad::Integer = 0,
     # quadrule::QuadStruct =
@@ -56,7 +56,7 @@ function farfield_pattern(
     ambient_dimension = check_ambient_dimension(ambient_dimension)
 
     if ambient_dimension == 2
-        if get_ambient_dimension(ϕ.basis.measure) == 1
+        if get_ambient_dimension(ϕ.basis) == 1
             ffkernel = (θ, y) -> -sqrt(1im / (8π * k)) * cis.(-k * (cos(θ) * y))
         else
             ffkernel =
@@ -65,7 +65,7 @@ function farfield_pattern(
                     cis.(-k * (cos(θ) * [y[1] for y in Y] + sin(θ) * [y[2] for y in Y]))
         end
     elseif ambient_dimension == 3
-        if get_ambient_dimension(ϕ.basis.measure) == 2
+        if get_ambient_dimension(ϕ.basis) == 2
             ffkernel =
                 ((θ, ψ), Y) ->
                     -(1 / (4π)) *
@@ -99,7 +99,7 @@ end
 
 function singlelayer_potential_laplace(
     ϕ::Projection;
-    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis.measure),#,
+    ambient_dimension::Integer = get_ambient_dimension(ϕ.basis),#,
     # h_quad::Real = 0.0,
     # N_quad::Integer = 0,
     # quadrule::QuadStruct =
@@ -113,13 +113,13 @@ function singlelayer_potential_laplace(
 
     # select appropriate kernel for ambient dimension
     if ambient_dimension == 2
-        if get_ambient_dimension(ϕ.basis.measure) == 1
+        if get_ambient_dimension(ϕ.basis) == 1
             Φ = (x, y) -> laplacekernel2d_screenpot(x, y)
         else
             Φ = (x, y) -> laplacekernel2d(x, y)
         end
     elseif ambient_dimension == 3
-        if get_ambient_dimension(ϕ.basis.measure) == 2
+        if get_ambient_dimension(ϕ.basis) == 2
             Φ = (x, y) -> laplacekernel3d_screenpot(x, y)
         else
             Φ = (x, y) -> laplacekernel3d(x, y)

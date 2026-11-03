@@ -1,5 +1,5 @@
 # One test set per fixed bug: see dev_notes/changes_to_existing_code.md
-import LinearAlgebra: dot
+import LinearAlgebra: dot, norm
 const F = FractalIntegrals
 
 @testset "block operators: ∪ inside the package" begin
@@ -137,4 +137,86 @@ end
     power = Similarity(1 / 2, [1 / 4, sqrt(3) / 4])
     Γ = Attractor(courage, wisdom, power; connectedness = ones(Bool, 3, 3))
     @test Γ.d ≈ log(3) / log(2)
+end
+
+@testset "block operators solve and give fields" begin
+    f(x) = 1.0 + 0im
+    # Splitting a fractal into its components should change nothing but the block layout
+    relerr(A, B) = norm(A - B) / norm(A)
+    matrix(K; kw...) = F.discretise(K; h_mesh = 0.1, h_quad = 0.03, kw...).stiffness_matrix
+
+    @testset "Cantor set in two parts" begin
+        μ = HausdorffMeasure(getfractal("cantorset"))
+        pieces = (μ[1], μ[2])
+        @test relerr(
+            matrix(F.singlelayer_operator_laplace(μ)),
+            matrix(F.singlelayer_operator_laplace(pieces)),
+        ) < 1e-13
+        @test relerr(
+            matrix(F.singlelayer_operator_helmholtz(μ, 5.0)),
+            matrix(F.singlelayer_operator_helmholtz(pieces, 5.0)),
+        ) < 1e-13
+    end
+
+    @testset "Cantor dust in four parts" begin
+        μ = HausdorffMeasure(getfractal("cantordust"))
+        pieces = (μ[1], μ[2], μ[3], μ[4])
+        K = F.singlelayer_operator_laplace(pieces)
+        @test relerr(matrix(F.singlelayer_operator_laplace(μ)), matrix(K)) < 1e-13
+        @test eltype(matrix(K)) <: Real
+        @test matrix(K) ≈ matrix(K; reps = false)
+
+        # the choice of ambient dimension must reach the diagonal blocks too
+        K₃ = F.singlelayer_operator_laplace(pieces, ambient_dimension = 3)
+        @test all(K₃[n, n].s == 1 for n = 1:4)
+        S₃ = F.singlelayer_operator_laplace(μ, ambient_dimension = 3)
+        @test relerr(matrix(S₃), matrix(K₃)) < 1e-13
+    end
+
+    @testset "solution and fields" begin
+        μ = HausdorffMeasure(getfractal("cantordust"))
+        pieces = (μ[1], μ[2], μ[3], μ[4])
+        k = 5.0
+        ϕ = F.discretise(F.singlelayer_operator_helmholtz(μ, k), h_mesh = 0.1, h_quad = 0.03) \ f
+        ϕ₄ = F.discretise(
+            F.singlelayer_operator_helmholtz(pieces, k),
+            h_mesh = 0.1,
+            h_quad = 0.03,
+        ) \ f
+        x = [0.3, 1.2]
+        @test F.singlelayer_potential_helmholtz(ϕ₄, k)(x) ≈
+              F.singlelayer_potential_helmholtz(ϕ, k)(x)
+        @test F.farfield_pattern(ϕ₄, k)(0.3) ≈ F.farfield_pattern(ϕ, k)(0.3)
+    end
+
+    @testset "default mesh width, and one-dimensional sets with ambient dimension one" begin
+        Γ = getfractal("cantorset")
+        K = F.singlelayer_operator_laplace((Γ, Γ + 3.0), ambient_dimension = 1)
+        ϕ = F.discretise(K) \ f
+        @test isfinite(F.singlelayer_potential_laplace(ϕ)([0.5, 1.0]))
+    end
+
+    @testset "union of sets with different ambient dimensions" begin
+        # The separation is chosen so that the log capacity of the union is far from one.
+        # (At a separation of 2 the block matrix is nearly singular, as it should be.)
+        Γ₁ = getfractal("cantorset")
+        Γ₂ = getfractal("cantordust") + [0.0, 1.2]
+        K = F.singlelayer_operator_laplace((Γ₁, Γ₂))
+        @test all(F.get_ambient_dimension(K.measures[n]) == 2 for n = 1:2)
+        ϕ = F.discretise(K, h_mesh = 0.05, h_quad = 0.0125) \ f
+        slp = F.singlelayer_potential_laplace(ϕ)
+        @test real(slp([0.0, 1.2])) ≈ 1 atol = 0.1 # corner of the dust
+        @test real(slp([1 / 3, 0.0])) ≈ 1 atol = 0.2 # a point of the Cantor set
+
+        # embedding must not change a matrix
+        S₁ = F.singlelayer_operator_laplace(HausdorffMeasure(Γ₁))
+        S₂ = F.singlelayer_operator_laplace(HausdorffMeasure(F.embed(Γ₁, 2)))
+        @test matrix(S₁) ≈ matrix(S₂)
+    end
+
+    @testset "collocation is refused with a clear error" begin
+        μ = HausdorffMeasure(getfractal("cantorset"))
+        K = F.singlelayer_operator_laplace((μ[1], μ[2]))
+        @test_throws ArgumentError F.discretise(K, method = :collocation)
+    end
 end
