@@ -9,7 +9,7 @@ As an official Julia package, `FractalIntegrals` can be installed via the Julia 
 
 ```
 using Pkg
-Pkg.install("FractalIntegrals")
+Pkg.add("FractalIntegrals")
 ```
 
 ## Documentation and examples

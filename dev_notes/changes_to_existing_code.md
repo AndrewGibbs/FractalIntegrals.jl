@@ -23,3 +23,5 @@ Tests are in `test/regression_tests.jl`.
 - **Small definition errors.** `fractalgeometry/unions.jl`: `.attractors` → `.measures`. `fractalgeometry/similarities.jl`: `sim_map_inv` used a field that doesn't exist, and divided on the wrong side. `FractalIntegrals.jl`: removed the export of `FractaPresets`, which doesn't exist.
 
 - **`getindex`.** `operators/binaryoperators.jl`: the argument was *named* `BlockOperator`, so the method applied to every type. It now applies to `BlockOperator` only.
+
+- **Docs and examples.** `README.md`: `Pkg.install` → `Pkg.add`. `docs/src/integralequations.md`, `operators/integraloperators.jl` and `quadrature/senergy.jl`: kernel sign, `|x-y|^s` → `|x-y|^{-s}`, to match the code. `fractalgeometry/attractors.jl`: docstring example `Bool(ones(3,3))` → `ones(Bool, 3, 3)`. `examples/two_dimensional_scattering.jl` and `.ipynb`: replaced `Γ.n`, and in the `.jl`, `ϕ`, neither of which exist there.

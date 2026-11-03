@@ -59,7 +59,7 @@ where $K_\mathrm{smooth}\in C^{2}(\mathbb{R}^n)$ and
 
 ```math
 K_s(x,y) := \left\{\begin{array}{cc} \log|x-y|,& s=0,\\
-                |x-y|^s,& s>0, \end{array}\right.,
+                |x-y|^{-s},& s>0, \end{array}\right.,
 ```
 
 for some $s\geq0$. Because our approximation to the unknown $\phi$ is piecewise constant, we can write

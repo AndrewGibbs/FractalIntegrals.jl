@@ -44,7 +44,7 @@ cantor_set = Attractor(s₁, s₂)
 courage = Similarity(1/2, [0, 0])
 wisdom  = Similarity(1/2, [1/2, 0])
 power   = Similarity(1/2, [1/4, sqrt(3)/4])
-sierpinski_triangle = Attractor(courage, wisdom, power, connectedness = Bool(ones(3,3)))
+sierpinski_triangle = Attractor(courage, wisdom, power, connectedness = ones(Bool, 3, 3))
 ```
 Note how the connectedness matrix for the Sierpinski triangle is all ones,
 because the subcomponents all touch at the corners.

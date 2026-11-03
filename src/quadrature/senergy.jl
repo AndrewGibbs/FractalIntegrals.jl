@@ -283,7 +283,7 @@ end
     s_energy(  μ::AbstractInvariantMeasure, s::Number)
     s_energy(  μ₁::AbstractInvariantMeasure, μ₂::AbstractInvariantMeasure, s::Number)
 Computes the s-energy of the measure μ, or possibly of two measures (with shared support) μ₁ and μ₂.
-The integrand is `|x-y|ˢ` when `s` is different from zero, and `log|x-y|` when `s=0`.
+The integrand is `|x-y|⁻ˢ` when `s` is different from zero, and `log|x-y|` when `s=0`.
 
 # Optional Inputs
 - `h_quad`: Uses barycentre to evaluate integrals, with this parameter

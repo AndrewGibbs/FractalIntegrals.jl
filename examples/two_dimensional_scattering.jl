@@ -56,7 +56,7 @@ Sₖ = singlelayer_operator_helmholtz(Γ, k, ambient_dimension = 2);
 md"""Define RHS data"""
 
 # ╔═╡ 1640b341-3d3f-4a5d-b2c0-d62114ffbf4b
-Γ.n == 1 ? f(x) = exp(im*k*d[1]*x) : f(x) = uⁱ(x)
+FractalIntegrals.get_ambient_dimension(Γ) == 1 ? f(x) = exp(im*k*d[1]*x) : f(x) = uⁱ(x)
 
 # ╔═╡ 031bfe28-6d37-4e6d-8d27-82ae130e1bff
 md"""Consider the BIE
@@ -121,7 +121,7 @@ md"""## Plotting far field pattern"""
 θ = 0:0.01:2π
 
 # ╔═╡ c6ffa209-db0f-4ff5-84e9-84ad165fc3db
-ffp = farfield_pattern(ϕ, k)
+ffp = farfield_pattern(vₕ, k)
 
 # ╔═╡ 8f26187a-8dbe-4e3d-8b9b-322d2296a8da
 plot(θ, [real.(ffp.(θ)), imag.(ffp.(θ))], labels = ["realffp" "imagffp"])

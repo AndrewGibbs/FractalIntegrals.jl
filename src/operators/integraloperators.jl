@@ -15,7 +15,7 @@ K(x,y) = K_{\\mathrm{smooth}}(x,y) + c \\cdot K_s(x,y),
 where ``K_{\\mathrm{smooth}} \\in C^{2}(\\mathbb{R}^n)`` and
 
 ```math
-K_s(x,y) := \\begin{cases} \\log|x-y|, & s=0, \\\\ |x-y|^s, & s>0, \\end{cases}
+K_s(x,y) := \\begin{cases} \\log|x-y|, & s=0, \\\\ |x-y|^{-s}, & s>0, \\end{cases}
 ```
 
 for some ``s \\geq 0``. This decomposition enables efficient numerical treatment:

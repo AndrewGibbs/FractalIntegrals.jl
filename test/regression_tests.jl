@@ -117,3 +117,11 @@ end
     S = F.singlelayer_operator_laplace((Γ, Γ + [3.0, 0.0]))
     @test S[1, 2] === S.operators[1, 2]
 end
+
+@testset "docstring example for Attractor" begin
+    courage = Similarity(1/2, [0, 0])
+    wisdom  = Similarity(1/2, [1/2, 0])
+    power   = Similarity(1/2, [1/4, sqrt(3)/4])
+    Γ = Attractor(courage, wisdom, power, connectedness = ones(Bool, 3, 3))
+    @test Γ.d ≈ log(3) / log(2)
+end
