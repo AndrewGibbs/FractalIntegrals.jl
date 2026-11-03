@@ -31,3 +31,7 @@ Tests are in `test/regression_tests.jl`.
 - **All Julia files reformatted.** Andrew asked to merge Zoïs Moitier's work from `origin/main`, which ran JuliaFormatter over the package. It also rewrites code forms: adds explicit `return`, turns one-line functions into `function ... end`, and `?:` into `if/else`. Our side was formatted the same way first. The merged code parses identically to our formatted code, and all tests pass.
 - **Comments kept.** Zoïs's formatting run removed some comments, such as `# self-adjoint`. Where the two sides conflicted the merge kept our version, so these remain.
 - **Also from that merge:** CI tests on Julia 1.10, latest and nightly (no longer 1.7.2), `test/Manifest.toml` and a notebook checkpoint removed, and a larger `.gitignore`.
+
+## Julia version, approved by Andrew on 2026-11-03
+
+- **`Project.toml`:** `julia = "1.7 - 1.12"` → `julia = "1.10"`, meaning 1.10 or later. The upper cap appeared to stop the package installing on the latest Julia and on nightly in CI, and 1.10 is now the oldest version CI tests.
